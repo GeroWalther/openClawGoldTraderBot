@@ -1,8 +1,15 @@
 #!/bin/bash
 set -e
 
-VPS_HOST="root@77.37.125.65"
-VPS_PATH="/opt/gold-trader"
+# Load config from .env
+if [ -f .env ]; then
+  export $(grep -E '^(VPS_HOST|VPS_PATH)=' .env | xargs)
+fi
+
+if [ -z "$VPS_HOST" ] || [ -z "$VPS_PATH" ]; then
+  echo "Error: VPS_HOST and VPS_PATH must be set in .env"
+  exit 1
+fi
 
 echo "Deploying gold-trader to VPS..."
 
