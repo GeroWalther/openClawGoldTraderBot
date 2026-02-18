@@ -1,0 +1,18 @@
+services:
+  ib-gateway:
+    image: ghcr.io/gnzsnz/ib-gateway:stable
+    container_name: ib-gateway
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4001:4003"  # gnzsnz/ib-gateway uses 4003 for live API
+    env_file:
+      - .env.production
+    volumes:
+      - ib-gateway-data:/opt/ibc
+    ulimits:
+      nofile:
+        soft: 10240
+        hard: 10240
+
+volumes:
+  ib-gateway-data:

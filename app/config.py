@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # IBKR Connection (IB Gateway)
     ibkr_host: str = "127.0.0.1"
-    ibkr_port: int = 4002  # 4001=live, 4002=paper
+    ibkr_port: int = 4001  # 4001=live, 4002=paper
     ibkr_client_id: int = 1
 
     # Trading parameters

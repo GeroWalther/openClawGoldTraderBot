@@ -29,6 +29,7 @@ class IBKRClient:
             host=self.settings.ibkr_host,
             port=self.settings.ibkr_port,
             clientId=self.settings.ibkr_client_id,
+            timeout=20,
         )
         self._connected = True
 
@@ -194,12 +195,29 @@ class IBKRClient:
     async def get_account_info(self) -> dict:
         """Get account balance and margin info."""
         await self.ensure_connected()
-        summary = self._ib.accountSummary()
+        accounts = self._ib.managedAccounts()
+        logger.info("Managed accounts: %s", accounts)
+
+        # Use cached account values (ib_async auto-subscribes on connect).
+        # Only request fresh data if cache is empty.
+        values = self._ib.accountValues()
+        if not values and accounts:
+            try:
+                await asyncio.wait_for(
+                    self._ib.accountSummaryAsync(), timeout=10
+                )
+            except asyncio.TimeoutError:
+                logger.warning("accountSummaryAsync timed out, using cached values")
+            values = self._ib.accountValues()
+
+        logger.info("Account values count: %d", len(values))
         info = {}
-        for item in summary:
-            if item.tag in ("NetLiquidation", "TotalCashValue", "AvailableFunds",
-                            "BuyingPower", "MaintMarginReq", "GrossPositionValue"):
+        target_tags = {"NetLiquidation", "TotalCashValue", "AvailableFunds",
+                       "BuyingPower", "MaintMarginReq", "GrossPositionValue"}
+        for item in values:
+            if item.tag in target_tags and item.tag not in info:
                 info[item.tag] = float(item.value)
+        info["accounts"] = accounts
         return info
 
     async def _wait_for_fill(self, trade: IBTrade, timeout: float = 30.0):
