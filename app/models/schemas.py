@@ -37,6 +37,21 @@ class PositionResponse(BaseModel):
     limit_level: float | None
 
 
+class ClosePositionRequest(BaseModel):
+    direction: str = Field(..., pattern="^(BUY|SELL)$", description="Direction of the position to close")
+    size: float | None = Field(None, description="Size to close (omit to close full position)")
+    reasoning: str | None = None
+
+
+class ClosePositionResponse(BaseModel):
+    status: str
+    direction: str
+    size: float
+    close_price: float | None
+    pnl: float | None
+    message: str
+
+
 class TradeHistoryItem(BaseModel):
     id: int
     deal_id: str | None

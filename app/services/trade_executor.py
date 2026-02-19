@@ -80,20 +80,20 @@ class TradeExecutor:
         else:
             size = request.size
 
-        # 4. Calculate absolute SL/TP prices from distances
+        # 4. Calculate absolute TP price and keep SL as trailing distance
         if request.direction == "BUY":
-            stop_price = current_price - stop_distance
+            stop_price = current_price - stop_distance  # for DB logging
             tp_price = current_price + limit_distance
         else:
-            stop_price = current_price + stop_distance
+            stop_price = current_price + stop_distance  # for DB logging
             tp_price = current_price - limit_distance
 
-        # 5. Execute on IBKR
+        # 5. Execute on IBKR (trailing stop uses distance, not absolute price)
         try:
             result = await self.ibkr.open_position(
                 direction=request.direction,
                 size=size,
-                stop_price=stop_price,
+                stop_distance=stop_distance,
                 take_profit_price=tp_price,
             )
             deal_id = result.get("dealId")

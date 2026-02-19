@@ -91,24 +91,24 @@ class IBKRClient:
         self,
         direction: str,
         size: float,
-        stop_price: float | None = None,
+        stop_distance: float | None = None,
         take_profit_price: float | None = None,
     ) -> dict:
         """
-        Open a XAUUSD position with optional bracket orders (SL + TP).
+        Open a XAUUSD position with optional bracket orders (trailing SL + TP).
 
         Args:
             direction: "BUY" or "SELL"
             size: Number of troy ounces
-            stop_price: Absolute price for stop-loss
+            stop_distance: Trailing stop distance in USD/oz
             take_profit_price: Absolute price for take-profit
         """
         await self.ensure_connected()
 
-        if stop_price and take_profit_price:
-            # Bracket order: entry + SL + TP
+        if stop_distance and take_profit_price:
+            # Bracket order: entry + trailing SL + TP
             return await self._place_bracket_order(
-                direction, size, stop_price, take_profit_price
+                direction, size, stop_distance, take_profit_price
             )
         else:
             # Simple market order
@@ -121,10 +121,10 @@ class IBKRClient:
         self,
         direction: str,
         size: float,
-        stop_price: float,
+        stop_distance: float,
         take_profit_price: float,
     ) -> dict:
-        """Place a bracket order (entry + stop-loss + take-profit)."""
+        """Place a bracket order (entry + trailing stop-loss + take-profit)."""
         parent_id = self._ib.client.getReqId()
         reverse = "SELL" if direction == "BUY" else "BUY"
 
@@ -148,13 +148,13 @@ class IBKRClient:
             transmit=False,
         )
 
-        # Stop-loss: stop order
+        # Trailing stop-loss: trails by stop_distance dollars
         sl = Order(
             orderId=parent_id + 2,
             action=reverse,
-            orderType="STP",
+            orderType="TRAIL",
             totalQuantity=size,
-            auxPrice=stop_price,
+            auxPrice=stop_distance,
             parentId=parent_id,
             transmit=True,  # transmit all at once
         )
