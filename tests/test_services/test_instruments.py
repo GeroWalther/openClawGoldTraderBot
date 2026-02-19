@@ -85,13 +85,14 @@ def test_futures_expiry_no_cycle_raises():
         get_next_futures_expiry(spec)
 
 
-def test_build_ibkr_contract_crypto():
+def test_build_ibkr_contract_btc_future():
     spec = INSTRUMENTS["BTC"]
     contract = build_ibkr_contract(spec)
-    assert contract.symbol == "BRR"
-    assert contract.secType == "CRYPTO"
-    assert contract.exchange == "PAXOS"
+    assert contract.symbol == "MBT"
+    assert contract.secType == "FUT"
+    assert contract.exchange == "CME"
     assert contract.currency == "USD"
+    assert contract.lastTradeDateOrContractMonth is not None
 
 
 def test_instrument_spec_fields():

@@ -1,4 +1,5 @@
 import logging
+import math
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -93,7 +94,14 @@ class TradeExecutor:
             stop_price = current_price + stop_distance  # for DB logging
             tp_price = current_price - limit_distance
 
-        # 5. Execute on IBKR (trailing stop uses distance, not absolute price)
+        # 5. Sanity check — never send NaN/invalid prices to IBKR
+        if any(math.isnan(v) or math.isinf(v) for v in (stop_price, tp_price, stop_distance)):
+            return self._reject(
+                request, instrument.key,
+                f"Invalid price calculation (price={current_price}, sd={stop_distance}, tp={tp_price})"
+            )
+
+        # 6. Execute on IBKR
         try:
             result = await self.ibkr.open_position(
                 direction=request.direction,
@@ -101,6 +109,7 @@ class TradeExecutor:
                 stop_distance=stop_distance,
                 take_profit_price=tp_price,
                 instrument_key=instrument.key,
+                stop_price=stop_price,
             )
             deal_id = result.get("dealId")
             fill_price = result.get("fillPrice") or current_price
@@ -117,7 +126,7 @@ class TradeExecutor:
             status = TradeStatus.FAILED
             message = f"Execution failed: {e}"
 
-        # 6. Log to DB
+        # 7. Log to DB
         trade = Trade(
             deal_id=deal_id,
             direction=request.direction,
@@ -136,7 +145,7 @@ class TradeExecutor:
         await self.db.commit()
         await self.db.refresh(trade)
 
-        # 7. Notify via Telegram
+        # 8. Notify via Telegram
         await self.notifier.send_trade_update(trade)
 
         return TradeSubmitResponse(

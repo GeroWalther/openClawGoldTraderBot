@@ -29,12 +29,15 @@ class IBKRClient:
         # Qualify all instrument contracts
         for key, spec in INSTRUMENTS.items():
             raw = build_ibkr_contract(spec)
-            qualified = await self._ib.qualifyContractsAsync(raw)
-            if qualified:
-                self._contracts[key] = qualified[0]
-                logger.info("%s contract qualified: %s", key, qualified[0])
-            else:
-                logger.warning("Failed to qualify %s contract — skipping", key)
+            try:
+                qualified = await self._ib.qualifyContractsAsync(raw)
+                if qualified and qualified[0] and qualified[0].conId:
+                    self._contracts[key] = qualified[0]
+                    logger.info("%s contract qualified: %s", key, qualified[0])
+                else:
+                    logger.warning("Failed to qualify %s contract — skipping", key)
+            except Exception as e:
+                logger.warning("Error qualifying %s contract: %s — skipping", key, e)
 
         if not self._contracts:
             raise RuntimeError("Failed to qualify any instrument contracts")
@@ -73,26 +76,46 @@ class IBKRClient:
         """Backward-compat alias."""
         return self.get_contract("XAUUSD")
 
+    @staticmethod
+    def _valid_price(val) -> float | None:
+        """Return a valid price or None. Filters out nan, inf, -1, 0."""
+        import math
+        if val is None:
+            return None
+        try:
+            f = float(val)
+        except (TypeError, ValueError):
+            return None
+        if math.isnan(f) or math.isinf(f) or f <= 0:
+            return None
+        return f
+
     async def get_price(self, instrument_key: str = "XAUUSD") -> dict:
         """Get current bid/ask price for an instrument."""
         await self.ensure_connected()
         contract = self.get_contract(instrument_key)
-        ticker = self._ib.reqMktData(contract, genericTickList="", snapshot=True)
-        # Wait for snapshot data
-        for _ in range(50):  # 5 seconds max
+        # Use streaming (not snapshot) — more reliable for forex and futures
+        ticker = self._ib.reqMktData(contract, genericTickList="", snapshot=False)
+        # Wait for data to arrive
+        for _ in range(100):  # 10 seconds max
             await asyncio.sleep(0.1)
-            if ticker.last is not None or ticker.bid is not None:
+            if self._valid_price(ticker.bid) or self._valid_price(ticker.last):
                 break
 
-        bid = ticker.bid if ticker.bid is not None else ticker.last
-        ask = ticker.ask if ticker.ask is not None else ticker.last
+        bid = self._valid_price(ticker.bid) or self._valid_price(ticker.last)
+        ask = self._valid_price(ticker.ask) or self._valid_price(ticker.last)
+        last = self._valid_price(ticker.last)
+
+        # For forex, midpoint is often more useful if last is missing
+        if last is None and bid and ask:
+            last = (bid + ask) / 2
 
         self._ib.cancelMktData(contract)
 
         return {
-            "bid": float(bid) if bid is not None else 0.0,
-            "ask": float(ask) if ask is not None else 0.0,
-            "last": float(ticker.last) if ticker.last is not None else 0.0,
+            "bid": bid or 0.0,
+            "ask": ask or 0.0,
+            "last": last or 0.0,
         }
 
     async def get_gold_price(self) -> dict:
@@ -106,23 +129,25 @@ class IBKRClient:
         stop_distance: float | None = None,
         take_profit_price: float | None = None,
         instrument_key: str = "XAUUSD",
+        stop_price: float | None = None,
     ) -> dict:
         """
-        Open a position with optional bracket orders (trailing SL + TP).
+        Open a position with bracket orders (market entry + STP + LMT).
 
         Args:
             direction: "BUY" or "SELL"
             size: Position size in instrument units
-            stop_distance: Trailing stop distance
+            stop_distance: Stop distance (kept for backward compat / logging)
             take_profit_price: Absolute price for take-profit
             instrument_key: Instrument to trade
+            stop_price: Absolute stop-loss price
         """
         await self.ensure_connected()
         contract = self.get_contract(instrument_key)
 
-        if stop_distance and take_profit_price:
+        if stop_price and take_profit_price:
             return await self._place_bracket_order(
-                contract, direction, size, stop_distance, take_profit_price
+                contract, direction, size, stop_price, take_profit_price,
             )
         else:
             order = MarketOrder(direction, size)
@@ -135,10 +160,10 @@ class IBKRClient:
         contract: Contract,
         direction: str,
         size: float,
-        stop_distance: float,
+        stop_price: float,
         take_profit_price: float,
     ) -> dict:
-        """Place a bracket order (entry + trailing stop-loss + take-profit)."""
+        """Place a bracket order: market entry + fixed stop-loss + limit take-profit."""
         parent_id = self._ib.client.getReqId()
         reverse = "SELL" if direction == "BUY" else "BUY"
 
@@ -162,15 +187,15 @@ class IBKRClient:
             transmit=False,
         )
 
-        # Trailing stop-loss: trails by stop_distance
+        # Stop-loss: fixed stop at absolute price
         sl = Order(
             orderId=parent_id + 2,
             action=reverse,
-            orderType="TRAIL",
+            orderType="STP",
             totalQuantity=size,
-            auxPrice=stop_distance,
+            auxPrice=stop_price,
             parentId=parent_id,
-            transmit=True,  # transmit all at once
+            transmit=True,
         )
 
         # Place all three

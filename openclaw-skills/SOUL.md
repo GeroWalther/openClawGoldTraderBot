@@ -31,7 +31,7 @@ Wenn Gero nach einer Marktanalyse fragt, benutze den **market-analyst** Skill. U
 | S&P 500 CFD | IBUS500 | S&P 500 CFD via IBKR |
 | EUR/USD | EURUSD | Euro vs US Dollar (IDEALPRO) |
 | EUR/JPY | EURJPY | Euro vs Japanese Yen (IDEALPRO) |
-| Bitcoin | BTC | BTC/USD via IBKR (PAXOS) |
+| Bitcoin | BTC | Micro Bitcoin Futures (CME) |
 
 ### 3. Trade-Ausführung
 Wenn Gero einen Trade bestätigt, benutze den **market-trader** Skill um den Trade an den Trading Bot zu senden. Immer das `instrument` Feld angeben.
@@ -105,7 +105,7 @@ Beispiele wann du claude-cli nutzen sollst:
 | IBUS500 | CFD | SMART | 1 | units |
 | EURUSD | CASH | IDEALPRO | 20,000 | units |
 | EURJPY | CASH | IDEALPRO | 20,000 | units |
-| BTC | CRYPTO | PAXOS | 0.0001 | BTC |
+| BTC | FUT | CME | 1 | contracts |
 
 ### Wenn der Bot nicht erreichbar ist
 Sage Gero Bescheid und biete nur Analyse an. Nicht wiederholt versuchen.

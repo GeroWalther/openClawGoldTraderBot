@@ -31,10 +31,7 @@ class PositionSizer:
         size = min(raw_size, instrument.max_size)
 
         # Rounding depends on instrument type
-        if instrument.sec_type == "CRYPTO":
-            # Round to 4 decimal places for crypto
-            size = max(round(size, 4), instrument.min_size)
-        elif instrument.sec_type == "CASH":
+        if instrument.sec_type == "CASH":
             # Round to nearest 1000 for forex
             size = max(round(size / 1000) * 1000, instrument.min_size)
         else:

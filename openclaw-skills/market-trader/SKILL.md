@@ -21,7 +21,7 @@ requires:
 | IBUS500 | S&P 500 CFD | 1 | units | Points (e.g. 20 = 20 pts) |
 | EURUSD | EUR/USD | 20000 | units | Pips as decimal (e.g. 0.0050 = 50 pips) |
 | EURJPY | EUR/JPY | 20000 | units | Pips as decimal (e.g. 0.50 = 50 pips) |
-| BTC | Bitcoin | 0.0001 | BTC | USD (e.g. 2000 = $2,000) |
+| BTC | Micro Bitcoin Futures | 1 | contracts | USD (e.g. 2000 = $2,000) |
 
 ## Open a Trade
 
