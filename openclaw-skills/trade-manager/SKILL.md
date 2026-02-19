@@ -19,48 +19,53 @@ curl -s "$TRADING_BOT_URL/api/v1/positions/status" \
   -H "X-API-Key: $TRADING_BOT_API_KEY" | jq '.'
 ```
 
-This returns:
-- **positions**: Open positions (instrument, direction, size, avg_cost)
-- **open_orders**: Active SL/TP orders (orderId, parentId, orderType, action, price, status)
-- **account**: Balance, available funds, margin
-- **recent_trades**: Last 10 trades from DB with status and P&L
+The response contains: `positions`, `open_orders`, `account`, `recent_trades`.
+
+Each position already includes: `instrument`, `direction`, `size`, `size_unit`, `avg_cost`, `current_price`, `unrealized_pnl`, `stop_loss`, `take_profit`.
 
 ## Step 2: Present the Dashboard
 
-Format the data clearly for the user:
+**IMPORTANT: You MUST show ALL of the following fields for each position. Do not simplify or skip fields.**
 
 ### Open Positions
-Show each position as:
+
+For EACH position in `positions`, show ALL of these fields:
+
 ```
-📊 [Instrument] — [Direction] [Size] [Unit]
-   Entry: [avg_cost] | Unrealized P&L: [if available]
+📊 [instrument] — [direction] [size] [size_unit]
+   Entry: $[avg_cost]  |  Current: $[current_price]
+   🛑 Stop Loss: $[stop_loss]  |  🎯 Take Profit: $[take_profit]
+   P&L: [unrealized_pnl] (show + or - with $ sign, green/red emoji)
 ```
 
-### Active Orders (SL/TP)
-For each open order with parentId > 0:
+Example:
 ```
-   🛑 Stop Loss: [auxPrice] (Order #[orderId])
-   🎯 Take Profit: [lmtPrice] (Order #[orderId])
-```
-
-### Account
-```
-💰 Net Liquidation: $[value]
-   Available Funds: $[value]
-   Margin Used: $[value]
+📊 XAUUSD — SELL 10 oz
+   Entry: $4,981.23  |  Current: $4,986.58
+   🛑 SL: $5,081.92  |  🎯 TP: $4,831.92
+   P&L: -$53.42 📉
 ```
 
-### Recent Trades
-Show last 5 trades:
+### Account Summary
+
 ```
-[direction] [instrument] — [status] | Entry: [price] | P&L: [pnl] | [date]
+💰 Balance: $[NetLiquidation]
+   Available: $[AvailableFunds]  |  Margin: $[MaintMarginReq]
 ```
+
+### Recent Trades (last 5 with status "executed" or "closed")
+
+```
+[direction] [epic] — [status] | Entry: $[entry_price] | SL: $[stop_loss] | TP: $[take_profit] | P&L: $[pnl] | [created_at date]
+```
+
+Skip trades with status "failed" unless they are the only ones.
 
 ## Step 3: Ask What the User Wants to Do
 
-After showing the dashboard, ask:
-- **Modify SL/TP** — adjust stop-loss or take-profit on an open position
-- **Close a position** — close an existing position
+After showing the full dashboard, ask:
+- **Modify SL/TP** — adjust stop-loss or take-profit
+- **Close a position** — close an open position
 - **Refresh** — get updated status
 
 ## Modify SL/TP
@@ -93,7 +98,8 @@ curl -s -X POST "$TRADING_BOT_URL/api/v1/positions/close" \
 
 ## Rules
 
-- Always show the dashboard first before any action
+- ALWAYS show the FULL dashboard with ALL fields (SL, TP, P&L per position) before any action
+- Never skip or summarize fields — the user needs to see entry, current price, SL, TP, and P&L for every position
 - Confirm with the user before modifying SL/TP or closing positions
 - When modifying, show old and new values clearly
 - If no open positions exist, say so clearly

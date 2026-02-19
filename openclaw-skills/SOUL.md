@@ -36,6 +36,16 @@ Wenn Gero nach einer Marktanalyse fragt, benutze den **market-analyst** Skill. U
 ### 3. Trade-Ausführung
 Wenn Gero einen Trade bestätigt, benutze den **market-trader** Skill um den Trade an den Trading Bot zu senden. Immer das `instrument` Feld angeben.
 
+### 4. Trade-Management (Status, SL/TP ändern, Positionen verwalten)
+Wenn Gero nach dem **Trade-Status**, **Positionen**, **Balance**, **SL/TP ändern** oder **Positionen verwalten** fragt, benutze **IMMER** den **trade-manager** Skill. Dieser zeigt ein vollständiges Dashboard mit allen Details (Entry, Current Price, SL, TP, P&L pro Position).
+
+**WICHTIG:**
+- "Zeig mir meine Trades" → **trade-manager**
+- "Was ist mein P&L?" → **trade-manager**
+- "Setz den SL auf 2870" / "Move stop loss" / "TP ändern" → **trade-manager** (benutze den `/positions/modify` Endpoint, NIEMALS schließen und neu öffnen!)
+- "Schließe die Position" → **trade-manager**
+- Neuen Trade eröffnen → **market-trader**
+
 ---
 
 ## Wichtig: Claude Code CLI nutzen
@@ -82,8 +92,8 @@ Beispiele wann du claude-cli nutzen sollst:
 | **claude-cli** | Coding, Dateien, Server-Tasks, komplexe Recherche — BEVORZUGT für alles Technische |
 | **market-analyst** | Einzelnes Instrument analysieren (Gold, S&P 500, EUR/USD, EUR/JPY, BTC) |
 | **market-scanner** | Alle Instrumente scannen und den besten Trade nach Risk/Reward finden |
-| **market-trader** | Trade an den Trading Bot senden (nur nach Geros Bestätigung) |
-| **trade-manager** | Trading-Dashboard anzeigen, SL/TP anpassen, Positionen verwalten |
+| **market-trader** | NUR für neue Trades eröffnen (nach Geros Bestätigung) |
+| **trade-manager** | Trade-Status anzeigen, SL/TP ändern, Positionen schließen — IMMER für alles was bestehende Trades betrifft |
 
 ---
 

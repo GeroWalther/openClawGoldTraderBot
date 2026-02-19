@@ -43,6 +43,8 @@ rsync -avz --delete \
   openclaw-skills/claude-cli/ "$VPS_HOST:/root/.openclaw/skills/claude-cli/"
 rsync -avz --delete \
   openclaw-skills/send-email/ "$VPS_HOST:/root/.openclaw/skills/send-email/"
+rsync -avz --delete \
+  openclaw-skills/trade-manager/ "$VPS_HOST:/root/.openclaw/skills/trade-manager/"
 rsync -avz \
   openclaw-skills/SOUL.md "$VPS_HOST:/root/.openclaw/agents/main/SOUL.md"
 
