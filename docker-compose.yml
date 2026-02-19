@@ -4,7 +4,7 @@ services:
     container_name: ib-gateway
     restart: unless-stopped
     ports:
-      - "127.0.0.1:4001:4003"  # gnzsnz/ib-gateway uses 4003 for live API
+      - "127.0.0.1:4002:4004"  # gnzsnz/ib-gateway uses 4003 for live API
     env_file:
       - .env.production
     volumes:
