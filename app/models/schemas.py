@@ -56,6 +56,32 @@ class ClosePositionResponse(BaseModel):
     message: str
 
 
+class ModifyPositionRequest(BaseModel):
+    instrument: str | None = None
+    direction: str = Field(..., pattern="^(BUY|SELL)$")
+    new_stop_loss: float | None = None
+    new_take_profit: float | None = None
+    reasoning: str | None = None
+
+
+class ModifyPositionResponse(BaseModel):
+    status: str
+    instrument: str
+    direction: str
+    old_stop_loss: float | None
+    old_take_profit: float | None
+    new_stop_loss: float | None
+    new_take_profit: float | None
+    message: str
+
+
+class TradeStatusResponse(BaseModel):
+    positions: list[dict]
+    open_orders: list[dict]
+    account: dict
+    recent_trades: list[dict]
+
+
 class TradeHistoryItem(BaseModel):
     id: int
     deal_id: str | None

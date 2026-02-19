@@ -54,6 +54,25 @@ curl -s -X POST "$TRADING_BOT_URL/api/v1/positions/close" \
   }' | jq '.'
 ```
 
+## Modify SL/TP
+
+```bash
+curl -s -X POST "$TRADING_BOT_URL/api/v1/positions/modify" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $TRADING_BOT_API_KEY" \
+  -d '{
+    "instrument": "[XAUUSD, MES, IBUS500, EURUSD, EURJPY, or BTC]",
+    "direction": "[BUY or SELL — direction of the position]",
+    "new_stop_loss": [new SL price or omit to keep current],
+    "new_take_profit": [new TP price or omit to keep current],
+    "reasoning": "[reason for modification]"
+  }' | jq '.'
+```
+
+- Specify at least one of `new_stop_loss` or `new_take_profit`
+- Direction is the direction of the EXISTING position (same as close)
+- The bot finds the matching SL/TP orders automatically via IBKR open trades
+
 ## Check Open Positions
 
 ```bash

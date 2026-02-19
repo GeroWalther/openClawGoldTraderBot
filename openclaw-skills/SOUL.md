@@ -83,6 +83,7 @@ Beispiele wann du claude-cli nutzen sollst:
 | **market-analyst** | Einzelnes Instrument analysieren (Gold, S&P 500, EUR/USD, EUR/JPY, BTC) |
 | **market-scanner** | Alle Instrumente scannen und den besten Trade nach Risk/Reward finden |
 | **market-trader** | Trade an den Trading Bot senden (nur nach Geros Bestätigung) |
+| **trade-manager** | Trading-Dashboard anzeigen, SL/TP anpassen, Positionen verwalten |
 
 ---
 

@@ -26,6 +26,9 @@ class IBKRClient:
         )
         self._connected = True
 
+        # Request delayed data as fallback when live data isn't subscribed
+        self._ib.reqMarketDataType(4)  # 4 = delayed-frozen
+
         # Qualify all instrument contracts
         for key, spec in INSTRUMENTS.items():
             raw = build_ibkr_contract(spec)
@@ -205,6 +208,107 @@ class IBKRClient:
 
         await self._wait_for_fill(parent_trade)
         return self._trade_to_dict(parent_trade)
+
+    async def get_open_orders(
+        self, instrument_key: str | None = None
+    ) -> list[dict]:
+        """Get all open/active orders, optionally filtered by instrument."""
+        await self.ensure_connected()
+        trades = self._ib.openTrades()
+        result = []
+        for t in trades:
+            resolved_key = self._resolve_instrument_key(t.contract)
+            if resolved_key is None:
+                continue
+            if instrument_key and resolved_key != instrument_key:
+                continue
+            order = t.order
+            result.append({
+                "orderId": order.orderId,
+                "parentId": order.parentId,
+                "orderType": order.orderType,
+                "action": order.action,
+                "totalQuantity": float(order.totalQuantity),
+                "lmtPrice": getattr(order, "lmtPrice", None),
+                "auxPrice": getattr(order, "auxPrice", None),
+                "status": t.orderStatus.status,
+                "instrument": resolved_key,
+            })
+        return result
+
+    async def modify_order(self, order_id: int, new_price: float) -> dict:
+        """Modify an existing order's price (STP → auxPrice, LMT → lmtPrice)."""
+        await self.ensure_connected()
+        for t in self._ib.openTrades():
+            if t.order.orderId == order_id:
+                order = t.order
+                if order.orderType == "STP":
+                    order.auxPrice = new_price
+                elif order.orderType == "LMT":
+                    order.lmtPrice = new_price
+                else:
+                    return {"success": False, "error": f"Unsupported order type: {order.orderType}"}
+                self._ib.placeOrder(t.contract, order)
+                logger.info("Modified order %d to price %.5f", order_id, new_price)
+                return {"success": True, "orderId": order_id, "newPrice": new_price}
+        return {"success": False, "error": f"Order {order_id} not found"}
+
+    async def modify_sl_tp(
+        self,
+        instrument_key: str,
+        direction: str,
+        new_sl: float | None = None,
+        new_tp: float | None = None,
+    ) -> dict:
+        """
+        Modify SL and/or TP for an open position identified by instrument + direction.
+
+        Finds child orders (parentId > 0) with the reverse action, then:
+        - STP order = stop-loss → update auxPrice
+        - LMT order = take-profit → update lmtPrice
+        """
+        await self.ensure_connected()
+        reverse = "SELL" if direction == "BUY" else "BUY"
+        contract = self.get_contract(instrument_key)
+
+        old_sl = None
+        old_tp = None
+        sl_order_id = None
+        tp_order_id = None
+
+        for t in self._ib.openTrades():
+            resolved_key = self._resolve_instrument_key(t.contract)
+            if resolved_key != instrument_key:
+                continue
+            order = t.order
+            # Child orders have parentId > 0 and reverse action
+            if order.parentId > 0 and order.action == reverse:
+                if order.orderType == "STP":
+                    old_sl = order.auxPrice
+                    sl_order_id = order.orderId
+                elif order.orderType == "LMT":
+                    old_tp = order.lmtPrice
+                    tp_order_id = order.orderId
+
+        results = {"old_sl": old_sl, "old_tp": old_tp, "new_sl": None, "new_tp": None}
+
+        if new_sl is not None:
+            if sl_order_id is None:
+                raise RuntimeError(f"No STP (stop-loss) order found for {instrument_key} {direction}")
+            res = await self.modify_order(sl_order_id, new_sl)
+            if not res["success"]:
+                raise RuntimeError(f"Failed to modify SL: {res['error']}")
+            results["new_sl"] = new_sl
+
+        if new_tp is not None:
+            if tp_order_id is None:
+                raise RuntimeError(f"No LMT (take-profit) order found for {instrument_key} {direction}")
+            res = await self.modify_order(tp_order_id, new_tp)
+            if not res["success"]:
+                raise RuntimeError(f"Failed to modify TP: {res['error']}")
+            results["new_tp"] = new_tp
+
+        return results
 
     async def close_position(
         self, direction: str, size: float, instrument_key: str = "XAUUSD"

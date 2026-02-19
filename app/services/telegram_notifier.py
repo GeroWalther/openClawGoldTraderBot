@@ -48,6 +48,28 @@ class TelegramNotifier:
         except Exception:
             logger.exception("Failed to send Telegram rejection")
 
+    async def send_modify_update(
+        self,
+        instrument,
+        direction: str,
+        old_sl: float | None,
+        old_tp: float | None,
+        new_sl: float | None,
+        new_tp: float | None,
+    ):
+        name = instrument.display_name if hasattr(instrument, "display_name") else str(instrument)
+        lines = [f"SL/TP Modified — {name}", f"Direction: {direction}"]
+        if new_sl is not None:
+            old_str = f"{old_sl:.2f}" if old_sl is not None else "N/A"
+            lines.append(f"Stop Loss: {old_str} → {new_sl:.2f}")
+        if new_tp is not None:
+            old_str = f"{old_tp:.2f}" if old_tp is not None else "N/A"
+            lines.append(f"Take Profit: {old_str} → {new_tp:.2f}")
+        try:
+            await self.bot.send_message(chat_id=self.chat_id, text="\n".join(lines))
+        except Exception:
+            logger.exception("Failed to send Telegram modify update")
+
     async def send_message(self, text: str):
         try:
             await self.bot.send_message(chat_id=self.chat_id, text=text)
