@@ -7,12 +7,8 @@ class Settings(BaseSettings):
     ibkr_port: int = 4001  # 4001=live, 4002=paper
     ibkr_client_id: int = 1
 
-    # Trading parameters
+    # Trading parameters (per-instrument settings live in app/instruments.py)
     max_risk_percent: float = 1.0
-    max_position_size: float = 10.0  # max ounces per trade
-    min_position_size: float = 1.0  # IBKR minimum: 1 troy ounce
-    default_sl_distance: float = 50.0  # USD per ounce
-    default_tp_distance: float = 100.0  # USD per ounce
 
     # Telegram
     telegram_bot_token: str
@@ -23,4 +19,4 @@ class Settings(BaseSettings):
     database_url: str = "sqlite+aiosqlite:///./trades.db"
     log_level: str = "INFO"
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}

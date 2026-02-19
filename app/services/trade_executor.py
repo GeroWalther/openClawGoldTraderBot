@@ -3,6 +3,7 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings
+from app.instruments import get_instrument
 from app.models.trade import Trade, TradeStatus
 from app.models.schemas import TradeSubmitRequest, TradeSubmitResponse
 from app.services.ibkr_client import IBKRClient
@@ -33,21 +34,24 @@ class TradeExecutor:
         self.settings = settings
 
     async def submit_trade(self, request: TradeSubmitRequest) -> TradeSubmitResponse:
+        # 0. Resolve instrument
+        instrument = get_instrument(request.instrument)
+
         # 1. Get current price
-        price_data = await self.ibkr.get_gold_price()
+        price_data = await self.ibkr.get_price(instrument.key)
         current_price = price_data["bid"] if request.direction == "SELL" else price_data["ask"]
 
         if current_price <= 0:
             current_price = price_data["last"]
         if current_price <= 0:
-            return self._reject(request, "Cannot get current gold price from IBKR")
+            return self._reject(request, instrument.key, f"Cannot get current {instrument.display_name} price from IBKR")
 
         # 2. Validate
-        valid, message = await self.validator.validate(request, current_price)
+        valid, message = await self.validator.validate(request, current_price, instrument)
         if not valid:
             trade = Trade(
                 direction=request.direction,
-                epic="XAUUSD",
+                epic=instrument.key,
                 size=0,
                 status=TradeStatus.REJECTED,
                 rejection_reason=message,
@@ -61,6 +65,7 @@ class TradeExecutor:
             return TradeSubmitResponse(
                 trade_id=trade.id,
                 deal_id=None,
+                instrument=instrument.key,
                 status=TradeStatus.REJECTED,
                 direction=request.direction,
                 size=0,
@@ -70,13 +75,13 @@ class TradeExecutor:
             )
 
         # 3. Calculate position size
-        stop_distance = request.stop_distance or self.settings.default_sl_distance
-        limit_distance = request.limit_distance or self.settings.default_tp_distance
+        stop_distance = request.stop_distance or instrument.default_sl_distance
+        limit_distance = request.limit_distance or instrument.default_tp_distance
 
         if request.size is None:
             account_info = await self.ibkr.get_account_info()
             balance = account_info.get("NetLiquidation", 10000.0)
-            size = await self.sizer.calculate(balance, stop_distance)
+            size = await self.sizer.calculate(balance, stop_distance, instrument)
         else:
             size = request.size
 
@@ -95,6 +100,7 @@ class TradeExecutor:
                 size=size,
                 stop_distance=stop_distance,
                 take_profit_price=tp_price,
+                instrument_key=instrument.key,
             )
             deal_id = result.get("dealId")
             fill_price = result.get("fillPrice") or current_price
@@ -115,7 +121,7 @@ class TradeExecutor:
         trade = Trade(
             deal_id=deal_id,
             direction=request.direction,
-            epic="XAUUSD",
+            epic=instrument.key,
             size=size,
             stop_distance=stop_distance,
             limit_distance=limit_distance,
@@ -136,6 +142,7 @@ class TradeExecutor:
         return TradeSubmitResponse(
             trade_id=trade.id,
             deal_id=deal_id,
+            instrument=instrument.key,
             status=status,
             direction=request.direction,
             size=size,
@@ -144,10 +151,11 @@ class TradeExecutor:
             message=message,
         )
 
-    def _reject(self, request: TradeSubmitRequest, reason: str) -> TradeSubmitResponse:
+    def _reject(self, request: TradeSubmitRequest, instrument_key: str, reason: str) -> TradeSubmitResponse:
         return TradeSubmitResponse(
             trade_id=0,
             deal_id=None,
+            instrument=instrument_key,
             status=TradeStatus.REJECTED,
             direction=request.direction,
             size=0,

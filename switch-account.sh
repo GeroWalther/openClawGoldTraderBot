@@ -1,13 +1,18 @@
 #!/bin/bash
 set -e
 
-# Load VPS config from .env
+# Load config from .env
 if [ -f .env ]; then
-  export $(grep -E '^(VPS_HOST|VPS_PATH)=' .env | xargs)
+  export $(grep -E '^(VPS_HOST|VPS_PATH|TELEGRAM_BOT_TOKEN|TELEGRAM_CHAT_ID|API_SECRET_KEY)=' .env | xargs)
 fi
 
 if [ -z "$VPS_HOST" ] || [ -z "$VPS_PATH" ]; then
   echo "Error: VPS_HOST and VPS_PATH must be set in .env"
+  exit 1
+fi
+
+if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$API_SECRET_KEY" ]; then
+  echo "Error: TELEGRAM_BOT_TOKEN and API_SECRET_KEY must be set in .env"
   exit 1
 fi
 
@@ -67,11 +72,11 @@ READ_ONLY_API=no
 TWOFA_TIMEOUT_ACTION=restart
 
 # Telegram
-TELEGRAM_BOT_TOKEN=8462892020:AAGYbPSdQ41XcVMPJwGCkDwYYHOsAAT7-4s
-TELEGRAM_CHAT_ID=7524185386
+TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN
+TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-7524185386}
 
 # App
-API_SECRET_KEY=gold-trader-api-secret-2024
+API_SECRET_KEY=$API_SECRET_KEY
 EOF
 
 # Update IBKR_PORT in local .env to match
@@ -117,5 +122,5 @@ ssh "$VPS_HOST" "curl -sf http://localhost:8001/health" && echo "" && echo "Bot 
 # Show account info
 echo ""
 echo "Account info:"
-ssh "$VPS_HOST" "curl -s -H 'X-API-Key: gold-trader-api-secret-2024' http://localhost:8001/api/v1/positions/account"
+ssh "$VPS_HOST" "curl -s -H 'X-API-Key: $API_SECRET_KEY' http://localhost:8001/api/v1/positions/account"
 echo ""

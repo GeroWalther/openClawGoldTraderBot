@@ -1,11 +1,12 @@
 import logging
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_db_session, get_ibkr_client, get_settings
+from app.instruments import get_instrument
 from app.models.schemas import ClosePositionRequest, ClosePositionResponse
 from app.models.trade import Trade, TradeStatus
 from app.services.ibkr_client import IBKRClient
@@ -19,12 +20,13 @@ router = APIRouter(prefix="/api/v1/positions", tags=["positions"])
 @router.get("/")
 async def get_positions(
     x_api_key: str = Header(...),
+    instrument: str | None = Query(None, description="Filter by instrument key"),
     ibkr_client: IBKRClient = Depends(get_ibkr_client),
     settings=Depends(get_settings),
 ):
     if x_api_key != settings.api_secret_key:
         raise HTTPException(status_code=401, detail="Invalid API key")
-    positions = await ibkr_client.get_open_positions()
+    positions = await ibkr_client.get_open_positions(instrument_key=instrument)
     return {"positions": positions}
 
 
@@ -51,14 +53,16 @@ async def close_position(
     if x_api_key != settings.api_secret_key:
         raise HTTPException(status_code=401, detail="Invalid API key")
 
-    # Find the open position matching this direction
-    positions = await ibkr_client.get_open_positions()
+    instrument = get_instrument(request.instrument)
+
+    # Find the open position matching this direction and instrument
+    positions = await ibkr_client.get_open_positions(instrument_key=instrument.key)
     matching = [p for p in positions if p["direction"] == request.direction]
 
     if not matching:
         raise HTTPException(
             status_code=404,
-            detail=f"No open {request.direction} position found",
+            detail=f"No open {request.direction} {instrument.display_name} position found",
         )
 
     position = matching[0]
@@ -71,22 +75,25 @@ async def close_position(
         )
 
     try:
-        result = await ibkr_client.close_position(request.direction, close_size)
+        result = await ibkr_client.close_position(
+            request.direction, close_size, instrument_key=instrument.key
+        )
         close_price = result.get("fillPrice")
         status = "closed" if result.get("status") == "Filled" else result.get("status", "unknown")
 
-        # Calculate P&L
+        # Calculate P&L (multiply by instrument multiplier)
         pnl = None
         if close_price and position["avg_cost"]:
             if request.direction == "BUY":
-                pnl = (close_price - position["avg_cost"]) * close_size
+                pnl = (close_price - position["avg_cost"]) * close_size * instrument.multiplier
             else:
-                pnl = (position["avg_cost"] - close_price) * close_size
+                pnl = (position["avg_cost"] - close_price) * close_size * instrument.multiplier
 
-        # Update the most recent executed trade for this direction
+        # Update the most recent executed trade for this direction + instrument
         stmt = (
             select(Trade)
             .where(Trade.direction == request.direction)
+            .where(Trade.epic == instrument.key)
             .where(Trade.status == TradeStatus.EXECUTED)
             .order_by(Trade.id.desc())
             .limit(1)
@@ -103,21 +110,22 @@ async def close_position(
         notifier = TelegramNotifier(settings)
         pnl_str = f"${pnl:+.2f}" if pnl is not None else "N/A"
         await notifier.send_message(
-            f"Position CLOSED\n"
+            f"Position CLOSED — {instrument.display_name}\n"
             f"Direction: {request.direction}\n"
-            f"Size: {close_size} oz\n"
-            f"Close Price: ${close_price:.2f}\n"
+            f"Size: {close_size} {instrument.size_unit}\n"
+            f"Close Price: {close_price}\n"
             f"P&L: {pnl_str}"
             + (f"\n\nReasoning: {request.reasoning[:200]}" if request.reasoning else "")
         )
 
         return ClosePositionResponse(
             status=status,
+            instrument=instrument.key,
             direction=request.direction,
             size=close_size,
             close_price=close_price,
             pnl=pnl,
-            message=f"Position closed at ${close_price:.2f}" if close_price else "Close order submitted",
+            message=f"Position closed at {close_price}" if close_price else "Close order submitted",
         )
 
     except HTTPException:

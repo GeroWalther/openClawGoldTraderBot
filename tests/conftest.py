@@ -18,10 +18,6 @@ def settings():
         ibkr_port=4002,
         ibkr_client_id=99,
         max_risk_percent=1.0,
-        max_position_size=10.0,
-        min_position_size=1.0,
-        default_sl_distance=50.0,
-        default_tp_distance=100.0,
         telegram_bot_token="123456:ABC-test",
         telegram_chat_id="123456789",
         api_secret_key="test_secret",
@@ -49,6 +45,12 @@ async def db_session(db_engine):
 @pytest.fixture
 def mock_ibkr_client():
     client = AsyncMock()
+    client.get_price.return_value = {
+        "bid": 2900.50,
+        "ask": 2901.00,
+        "last": 2900.75,
+    }
+    # Backward-compat alias
     client.get_gold_price.return_value = {
         "bid": 2900.50,
         "ask": 2901.00,

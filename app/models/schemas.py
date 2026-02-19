@@ -7,6 +7,7 @@ from app.models.trade import TradeStatus
 
 class TradeSubmitRequest(BaseModel):
     direction: str = Field(..., pattern="^(BUY|SELL)$")
+    instrument: str | None = None
     size: float | None = None
     stop_distance: float | None = None
     limit_distance: float | None = None
@@ -19,6 +20,7 @@ class TradeSubmitRequest(BaseModel):
 class TradeSubmitResponse(BaseModel):
     trade_id: int
     deal_id: str | None
+    instrument: str
     status: TradeStatus
     direction: str
     size: float
@@ -39,12 +41,14 @@ class PositionResponse(BaseModel):
 
 class ClosePositionRequest(BaseModel):
     direction: str = Field(..., pattern="^(BUY|SELL)$", description="Direction of the position to close")
+    instrument: str | None = None
     size: float | None = Field(None, description="Size to close (omit to close full position)")
     reasoning: str | None = None
 
 
 class ClosePositionResponse(BaseModel):
     status: str
+    instrument: str
     direction: str
     size: float
     close_price: float | None

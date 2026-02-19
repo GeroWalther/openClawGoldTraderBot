@@ -3,6 +3,7 @@ import logging
 from telegram import Bot
 
 from app.config import Settings
+from app.instruments import INSTRUMENTS
 from app.models.trade import Trade
 
 logger = logging.getLogger(__name__)
@@ -14,12 +15,16 @@ class TelegramNotifier:
         self.chat_id = settings.telegram_chat_id
 
     async def send_trade_update(self, trade: Trade):
+        spec = INSTRUMENTS.get(trade.epic)
+        name = spec.display_name if spec else trade.epic
+        unit = spec.size_unit if spec else "units"
+
         text = (
-            f"Trade {trade.status.value.upper()}\n"
+            f"Trade {trade.status.value.upper()} — {name}\n"
             f"Direction: {trade.direction}\n"
-            f"Size: {trade.size} oz\n"
-            f"Entry: ${trade.entry_price:.2f}\n"
-            f"SL: ${trade.stop_loss:.2f} | TP: ${trade.take_profit:.2f}\n"
+            f"Size: {trade.size} {unit}\n"
+            f"Entry: {trade.entry_price}\n"
+            f"SL: {trade.stop_loss} | TP: {trade.take_profit}\n"
             f"Order: {trade.deal_id or 'N/A'}"
         )
         if trade.claude_reasoning:
@@ -30,8 +35,11 @@ class TelegramNotifier:
             logger.exception("Failed to send Telegram trade update")
 
     async def send_rejection(self, trade: Trade, reason: str):
+        spec = INSTRUMENTS.get(trade.epic)
+        name = spec.display_name if spec else trade.epic
+
         text = (
-            f"Trade REJECTED\n"
+            f"Trade REJECTED — {name}\n"
             f"Direction: {trade.direction}\n"
             f"Reason: {reason}"
         )

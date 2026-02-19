@@ -31,13 +31,18 @@ rsync -avz --delete \
 # Sync .env.production separately (contains IB Gateway credentials)
 rsync -avz .env.production "$VPS_HOST:$VPS_PATH/.env.production"
 
-# Sync OpenClaw skills
+# Sync OpenClaw skills (remove old skill dirs, deploy new ones)
+ssh "$VPS_HOST" "rm -rf /root/.openclaw/skills/gold-analyst /root/.openclaw/skills/gold-trader"
 rsync -avz --delete \
-  openclaw-skills/gold-analyst/ "$VPS_HOST:/root/.openclaw/skills/gold-analyst/"
+  openclaw-skills/market-analyst/ "$VPS_HOST:/root/.openclaw/skills/market-analyst/"
 rsync -avz --delete \
-  openclaw-skills/gold-trader/ "$VPS_HOST:/root/.openclaw/skills/gold-trader/"
+  openclaw-skills/market-trader/ "$VPS_HOST:/root/.openclaw/skills/market-trader/"
+rsync -avz --delete \
+  openclaw-skills/market-scanner/ "$VPS_HOST:/root/.openclaw/skills/market-scanner/"
 rsync -avz --delete \
   openclaw-skills/claude-cli/ "$VPS_HOST:/root/.openclaw/skills/claude-cli/"
+rsync -avz --delete \
+  openclaw-skills/send-email/ "$VPS_HOST:/root/.openclaw/skills/send-email/"
 rsync -avz \
   openclaw-skills/SOUL.md "$VPS_HOST:/root/.openclaw/agents/main/SOUL.md"
 

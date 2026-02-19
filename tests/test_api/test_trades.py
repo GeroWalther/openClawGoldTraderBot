@@ -53,3 +53,27 @@ async def test_submit_trade_success(mock_bot_cls, client, mock_ibkr_client):
     assert data["status"] == "executed"
     assert data["direction"] == "BUY"
     assert data["size"] == 1
+    assert data["instrument"] == "XAUUSD"
+
+
+@pytest.mark.asyncio
+@patch("app.services.telegram_notifier.Bot")
+async def test_submit_trade_with_instrument(mock_bot_cls, client, mock_ibkr_client):
+    mock_bot = AsyncMock()
+    mock_bot_cls.return_value = mock_bot
+
+    response = await client.post(
+        "/api/v1/trades/submit",
+        json={
+            "instrument": "XAUUSD",
+            "direction": "SELL",
+            "stop_distance": 50,
+            "limit_distance": 100,
+            "size": 1,
+        },
+        headers={"X-API-Key": "test_secret"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["instrument"] == "XAUUSD"
+    assert data["direction"] == "SELL"

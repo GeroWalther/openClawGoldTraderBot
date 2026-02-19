@@ -45,7 +45,7 @@ async def lifespan(app: FastAPI):
     app.state.settings = settings
 
     logger.info(
-        "Gold Trader v2 started (IBKR %s:%s, connected=%s)",
+        "Trader Bot v3 started (IBKR %s:%s, connected=%s)",
         settings.ibkr_host,
         settings.ibkr_port,
         app.state.ibkr_connected,
@@ -54,10 +54,10 @@ async def lifespan(app: FastAPI):
 
     await ibkr_client.disconnect()
     await engine.dispose()
-    logger.info("Gold Trader shut down")
+    logger.info("Trader Bot shut down")
 
 
-app = FastAPI(title="Gold Trader", version="2.0.0", lifespan=lifespan)
+app = FastAPI(title="Trader Bot", version="3.0.0", lifespan=lifespan)
 
 from app.api.router import api_router  # noqa: E402
 
