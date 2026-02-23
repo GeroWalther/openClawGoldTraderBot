@@ -39,9 +39,40 @@ curl -s -X POST "$TRADING_BOT_URL/api/v1/trades/submit" \
     "size": [position size or omit for auto-sizing],
     "source": "openclaw",
     "reasoning": "[analysis summary]",
-    "conviction": "[HIGH, MEDIUM, or LOW — from analysis score]"
+    "conviction": "[HIGH, MEDIUM, or LOW — from analysis score]",
+    "order_type": "[MARKET, LIMIT, or STOP — default MARKET]",
+    "entry_price": [required for LIMIT/STOP orders — price to enter at]
   }' | jq '.'
 ```
+
+### Order Types
+
+| Type | Description | entry_price Rule |
+|------|-------------|-----------------|
+| MARKET | Execute immediately at current price (default) | Not needed |
+| LIMIT | Enter on pullback/reversal | BUY: below current price, SELL: above current price |
+| STOP | Enter on breakout | BUY: above current price, SELL: below current price |
+
+- `order_type` defaults to `"MARKET"` if omitted (backward compatible)
+- `entry_price` is **required** for LIMIT and STOP orders
+- SL/TP distances are calculated from `entry_price` (not current price) for pending orders
+- Pending orders use GTC (Good Till Cancel) — they stay active until filled or cancelled
+
+## Cancel a Pending Order
+
+```bash
+curl -s -X POST "$TRADING_BOT_URL/api/v1/trades/cancel" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $TRADING_BOT_API_KEY" \
+  -d '{
+    "instrument": "[XAUUSD, MES, IBUS500, EURUSD, EURJPY, CADJPY, USDJPY, or BTC]",
+    "direction": "[BUY or SELL]",
+    "order_id": [specific order ID, or omit to cancel by instrument+direction]
+  }' | jq '.'
+```
+
+- Cancels the parent order; IBKR auto-cancels SL/TP children
+- Use `order_id` to cancel a specific order, or omit to cancel all matching pending orders
 
 ## Close a Position
 

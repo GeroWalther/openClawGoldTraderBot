@@ -227,6 +227,30 @@ async def get_trade_status(
     positions = await ibkr_client.get_open_positions()
     open_orders = await ibkr_client.get_open_orders()
     account = await ibkr_client.get_account_info()
+    pending_orders_raw = await ibkr_client.get_pending_orders()
+
+    # Build pending orders section with SL/TP from children
+    pending_orders = []
+    for po in pending_orders_raw:
+        entry = {
+            "orderId": po["orderId"],
+            "instrument": po["instrument"],
+            "direction": po["action"],
+            "size": po["totalQuantity"],
+            "order_type": "LIMIT" if po["orderType"] == "LMT" else "STOP",
+            "entry_price": po["entryPrice"],
+            "status": po["status"],
+            "stop_loss": None,
+            "take_profit": None,
+        }
+        for child in po.get("children", []):
+            if child["orderType"] == "STP":
+                entry["stop_loss"] = child["auxPrice"]
+            elif child["orderType"] == "LMT":
+                # Pick the first LMT as TP (or last if multiple)
+                if entry["take_profit"] is None:
+                    entry["take_profit"] = child["lmtPrice"]
+        pending_orders.append(entry)
 
     # Enrich each position with SL/TP from open orders and unrealized P&L
     for pos in positions:
@@ -289,6 +313,7 @@ async def get_trade_status(
 
     return TradeStatusResponse(
         positions=positions,
+        pending_orders=pending_orders,
         open_orders=open_orders,
         account=account,
         recent_trades=recent_trades,

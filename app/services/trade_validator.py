@@ -20,6 +20,7 @@ class TradeValidator:
         request: TradeSubmitRequest,
         current_price: float,
         instrument: InstrumentSpec | None = None,
+        entry_price: float | None = None,
     ) -> tuple[bool, str]:
         errors: list[str] = []
 
@@ -27,6 +28,9 @@ class TradeValidator:
         if instrument is None:
             from app.instruments import get_instrument
             instrument = get_instrument(None)
+
+        # For pending orders, use entry_price for distance calculations
+        reference_price = entry_price if entry_price is not None else current_price
 
         # Session check first — reject immediately if outside session
         if self.session_filter is not None:

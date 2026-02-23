@@ -47,8 +47,17 @@ class TradeExecutor:
         self.atr_calculator = atr_calculator
 
     async def submit_trade(self, request: TradeSubmitRequest) -> TradeSubmitResponse:
-        # 0. Resolve instrument
+        # 0. Resolve instrument and order type
         instrument = get_instrument(request.instrument)
+        order_type = (request.order_type or "MARKET").upper()
+        is_pending = order_type in ("LIMIT", "STOP")
+
+        # 0a. Validate entry_price for pending orders
+        if is_pending and request.entry_price is None:
+            return self._reject(
+                request, instrument.key,
+                f"entry_price is required for {order_type} orders",
+            )
 
         # 1. Risk manager check (cooldown + daily limits)
         if self.risk_manager is not None:
@@ -70,10 +79,41 @@ class TradeExecutor:
         if current_price <= 0:
             return self._reject(request, instrument.key, f"Cannot get current {instrument.display_name} price from IBKR")
 
-        expected_price = current_price
+        # 2a. Validate entry_price direction for pending orders
+        if is_pending:
+            entry_price = request.entry_price
+            if order_type == "LIMIT":
+                if request.direction == "BUY" and entry_price >= current_price:
+                    return self._reject(
+                        request, instrument.key,
+                        f"BUY LIMIT entry_price ({entry_price}) must be below current price ({current_price})",
+                    )
+                if request.direction == "SELL" and entry_price <= current_price:
+                    return self._reject(
+                        request, instrument.key,
+                        f"SELL LIMIT entry_price ({entry_price}) must be above current price ({current_price})",
+                    )
+            elif order_type == "STOP":
+                if request.direction == "BUY" and entry_price <= current_price:
+                    return self._reject(
+                        request, instrument.key,
+                        f"BUY STOP entry_price ({entry_price}) must be above current price ({current_price})",
+                    )
+                if request.direction == "SELL" and entry_price >= current_price:
+                    return self._reject(
+                        request, instrument.key,
+                        f"SELL STOP entry_price ({entry_price}) must be below current price ({current_price})",
+                    )
+
+        # For pending orders, SL/TP are calculated from entry_price
+        reference_price = request.entry_price if is_pending else current_price
+        expected_price = reference_price
 
         # 3. Validate (now includes session check)
-        valid, message = await self.validator.validate(request, current_price, instrument)
+        valid, message = await self.validator.validate(
+            request, current_price, instrument,
+            entry_price=request.entry_price if is_pending else None,
+        )
         if not valid:
             trade = Trade(
                 direction=request.direction,
@@ -84,6 +124,7 @@ class TradeExecutor:
                 source=request.source,
                 claude_reasoning=request.reasoning,
                 conviction=request.conviction,
+                order_type=order_type,
             )
             self.db.add(trade)
             await self.db.commit()
@@ -100,6 +141,8 @@ class TradeExecutor:
                 limit_distance=None,
                 conviction=request.conviction,
                 spread_at_entry=spread,
+                order_type=order_type,
+                entry_price=request.entry_price,
                 message=message,
             )
 
@@ -129,53 +172,79 @@ class TradeExecutor:
         else:
             size = request.size
 
-        # 6. Calculate absolute TP price and SL price
+        # 6. Calculate absolute TP price and SL price from reference_price
         if request.direction == "BUY":
-            stop_price = current_price - stop_distance
-            tp_price = current_price + limit_distance
+            stop_price = reference_price - stop_distance
+            tp_price = reference_price + limit_distance
         else:
-            stop_price = current_price + stop_distance
-            tp_price = current_price - limit_distance
+            stop_price = reference_price + stop_distance
+            tp_price = reference_price - limit_distance
 
         # Sanity check
         if any(math.isnan(v) or math.isinf(v) for v in (stop_price, tp_price, stop_distance)):
             return self._reject(
                 request, instrument.key,
-                f"Invalid price calculation (price={current_price}, sd={stop_distance}, tp={tp_price})"
+                f"Invalid price calculation (price={reference_price}, sd={stop_distance}, tp={tp_price})"
             )
 
-        # 7. Execute — with partial TP if enabled
+        # 7. Execute — pending vs market
         try:
-            if self.settings.partial_tp_enabled and self._can_split(size, instrument):
-                result = await self._execute_partial_tp(
-                    request.direction, size, stop_price, tp_price,
-                    stop_distance, instrument,
-                )
+            if is_pending:
+                # Pending order path
+                if self.settings.partial_tp_enabled and self._can_split(size, instrument):
+                    result = await self._execute_pending_partial_tp(
+                        request.direction, size, request.entry_price, order_type,
+                        stop_price, tp_price, stop_distance, instrument,
+                    )
+                else:
+                    result = await self.ibkr.open_pending_position(
+                        direction=request.direction,
+                        size=size,
+                        entry_price=request.entry_price,
+                        order_type=order_type,
+                        stop_price=stop_price,
+                        take_profit_price=tp_price,
+                        instrument_key=instrument.key,
+                    )
+                deal_id = result.get("dealId")
+                status = TradeStatus.PENDING_ORDER
+                message = f"Pending {order_type} order placed: order {deal_id}"
             else:
-                result = await self.ibkr.open_position(
-                    direction=request.direction,
-                    size=size,
-                    stop_distance=stop_distance,
-                    take_profit_price=tp_price,
-                    instrument_key=instrument.key,
-                    stop_price=stop_price,
+                # Market order path (existing behavior)
+                if self.settings.partial_tp_enabled and self._can_split(size, instrument):
+                    result = await self._execute_partial_tp(
+                        request.direction, size, stop_price, tp_price,
+                        stop_distance, instrument,
+                    )
+                else:
+                    result = await self.ibkr.open_position(
+                        direction=request.direction,
+                        size=size,
+                        stop_distance=stop_distance,
+                        take_profit_price=tp_price,
+                        instrument_key=instrument.key,
+                        stop_price=stop_price,
+                    )
+                deal_id = result.get("dealId")
+                fill_price = result.get("fillPrice") or current_price
+                status = (
+                    TradeStatus.EXECUTED
+                    if result.get("status") == "Filled"
+                    else TradeStatus.FAILED
                 )
-            deal_id = result.get("dealId")
-            fill_price = result.get("fillPrice") or current_price
-            status = (
-                TradeStatus.EXECUTED
-                if result.get("status") == "Filled"
-                else TradeStatus.FAILED
-            )
-            message = f"Trade {result.get('status', 'unknown')}: order {deal_id}"
+                message = f"Trade {result.get('status', 'unknown')}: order {deal_id}"
         except Exception as e:
             logger.exception("Trade execution failed")
             deal_id = None
-            fill_price = current_price
+            fill_price = current_price if not is_pending else None
             status = TradeStatus.FAILED
             message = f"Execution failed: {e}"
 
-        # 8. Log to DB with new columns
+        # 8. Log to DB
+        if is_pending:
+            db_entry_price = request.entry_price
+        else:
+            db_entry_price = fill_price
         trade = Trade(
             deal_id=deal_id,
             direction=request.direction,
@@ -185,21 +254,25 @@ class TradeExecutor:
             limit_distance=limit_distance,
             stop_loss=stop_price,
             take_profit=tp_price,
-            entry_price=fill_price,
+            entry_price=db_entry_price,
             status=status,
             source=request.source,
             claude_reasoning=request.reasoning,
             conviction=request.conviction,
             expected_price=expected_price,
-            actual_price=fill_price,
+            actual_price=db_entry_price,
             spread_at_entry=spread,
+            order_type=order_type,
         )
         self.db.add(trade)
         await self.db.commit()
         await self.db.refresh(trade)
 
         # 9. Notify via Telegram
-        await self.notifier.send_trade_update(trade)
+        if is_pending:
+            await self.notifier.send_pending_order_update(trade)
+        else:
+            await self.notifier.send_trade_update(trade)
 
         return TradeSubmitResponse(
             trade_id=trade.id,
@@ -212,6 +285,8 @@ class TradeExecutor:
             limit_distance=limit_distance,
             conviction=request.conviction,
             spread_at_entry=spread,
+            order_type=order_type,
+            entry_price=db_entry_price,
             message=message,
         )
 
@@ -253,6 +328,41 @@ class TradeExecutor:
         return await self.ibkr.open_position_with_partial_tp(
             direction=direction,
             size=size,
+            stop_price=stop_price,
+            tp1_price=tp1_price,
+            tp2_price=tp_price,
+            tp1_size=tp1_size,
+            tp2_size=tp2_size,
+            instrument_key=instrument.key,
+        )
+
+    async def _execute_pending_partial_tp(
+        self, direction, size, entry_price, order_type,
+        stop_price, tp_price, stop_distance, instrument,
+    ) -> dict:
+        """Execute pending order with partial TP: TP1 at 1R, TP2 at full TP."""
+        tp1_size_raw = size * (self.settings.partial_tp_percent / 100.0)
+        tp2_size_raw = size - tp1_size_raw
+
+        if instrument.sec_type == "CASH":
+            tp1_size = max(round(tp1_size_raw / 1000) * 1000, instrument.min_size)
+            tp2_size = max(round(tp2_size_raw / 1000) * 1000, instrument.min_size)
+        else:
+            tp1_size = max(round(tp1_size_raw), int(instrument.min_size))
+            tp2_size = max(round(tp2_size_raw), int(instrument.min_size))
+
+        # TP1 at 1R distance from entry_price
+        r_distance = stop_distance * self.settings.partial_tp_r_multiple
+        if direction == "BUY":
+            tp1_price = entry_price + r_distance
+        else:
+            tp1_price = entry_price - r_distance
+
+        return await self.ibkr.open_pending_position_with_partial_tp(
+            direction=direction,
+            size=size,
+            entry_price=entry_price,
+            order_type=order_type,
             stop_price=stop_price,
             tp1_price=tp1_price,
             tp2_price=tp_price,

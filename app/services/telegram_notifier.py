@@ -70,6 +70,45 @@ class TelegramNotifier:
         except Exception:
             logger.exception("Failed to send Telegram modify update")
 
+    async def send_pending_order_update(self, trade: Trade):
+        spec = INSTRUMENTS.get(trade.epic)
+        name = spec.display_name if spec else trade.epic
+        unit = spec.size_unit if spec else "units"
+
+        text = (
+            f"PENDING {trade.order_type} ORDER — {name}\n"
+            f"Direction: {trade.direction}\n"
+            f"Size: {trade.size} {unit}\n"
+            f"Entry Price: {trade.entry_price}\n"
+            f"SL: {trade.stop_loss} | TP: {trade.take_profit}\n"
+            f"Order: {trade.deal_id or 'N/A'}\n"
+            f"Status: Waiting for price to reach {trade.entry_price}"
+        )
+        if trade.claude_reasoning:
+            text += f"\n\nReasoning: {trade.claude_reasoning[:200]}"
+        try:
+            await self.bot.send_message(chat_id=self.chat_id, text=text)
+        except Exception:
+            logger.exception("Failed to send Telegram pending order update")
+
+    async def send_cancel_update(
+        self,
+        instrument,
+        direction: str,
+        cancelled_order_ids: list[int],
+    ):
+        name = instrument.display_name if hasattr(instrument, "display_name") else str(instrument)
+        ids_str = ", ".join(str(oid) for oid in cancelled_order_ids)
+        text = (
+            f"ORDER CANCELLED — {name}\n"
+            f"Direction: {direction}\n"
+            f"Cancelled Order IDs: {ids_str}"
+        )
+        try:
+            await self.bot.send_message(chat_id=self.chat_id, text=text)
+        except Exception:
+            logger.exception("Failed to send Telegram cancel update")
+
     async def send_message(self, text: str):
         try:
             await self.bot.send_message(chat_id=self.chat_id, text=text)

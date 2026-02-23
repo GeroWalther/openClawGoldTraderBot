@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from ib_async import IB, Contract, MarketOrder, LimitOrder, Order, Trade as IBTrade
+from ib_async import IB, Contract, MarketOrder, LimitOrder, StopOrder, Order, Trade as IBTrade
 
 from app.config import Settings
 from app.instruments import INSTRUMENTS, InstrumentSpec, build_ibkr_contract, get_instrument
@@ -396,6 +396,271 @@ class IBKRClient:
 
         await self._wait_for_fill(parent_trade)
         return self._trade_to_dict(parent_trade)
+
+    async def open_pending_position(
+        self,
+        direction: str,
+        size: float,
+        entry_price: float,
+        order_type: str,
+        stop_price: float,
+        take_profit_price: float,
+        instrument_key: str = "XAUUSD",
+    ) -> dict:
+        """
+        Place a pending bracket order (LMT or STP entry + SL + TP children).
+
+        Does NOT wait for fill — returns immediately after placing.
+
+        Args:
+            direction: "BUY" or "SELL"
+            size: Position size
+            entry_price: Price at which the parent order triggers/fills
+            order_type: "LIMIT" or "STOP"
+            stop_price: Absolute stop-loss price
+            take_profit_price: Absolute take-profit price
+            instrument_key: Instrument to trade
+        """
+        await self.ensure_connected()
+        contract = self.get_contract(instrument_key)
+        parent_id = self._ib.client.getReqId()
+        reverse = "SELL" if direction == "BUY" else "BUY"
+
+        # Parent: limit or stop entry
+        if order_type == "LIMIT":
+            parent = Order(
+                orderId=parent_id,
+                action=direction,
+                orderType="LMT",
+                totalQuantity=size,
+                lmtPrice=entry_price,
+                tif="GTC",
+                transmit=False,
+            )
+        else:  # STOP
+            parent = Order(
+                orderId=parent_id,
+                action=direction,
+                orderType="STP",
+                totalQuantity=size,
+                auxPrice=entry_price,
+                tif="GTC",
+                transmit=False,
+            )
+
+        # Take-profit child
+        tp = Order(
+            orderId=parent_id + 1,
+            action=reverse,
+            orderType="LMT",
+            totalQuantity=size,
+            lmtPrice=take_profit_price,
+            parentId=parent_id,
+            transmit=False,
+        )
+
+        # Stop-loss child
+        sl = Order(
+            orderId=parent_id + 2,
+            action=reverse,
+            orderType="STP",
+            totalQuantity=size,
+            auxPrice=stop_price,
+            parentId=parent_id,
+            transmit=True,
+        )
+
+        parent_trade = self._ib.placeOrder(contract, parent)
+        self._ib.placeOrder(contract, tp)
+        self._ib.placeOrder(contract, sl)
+
+        # Don't wait for fill — pending orders sit until price is reached
+        logger.info(
+            "Pending %s %s order placed: entry=%.5f SL=%.5f TP=%.5f (orderId=%d)",
+            order_type, direction, entry_price, stop_price, take_profit_price, parent_id,
+        )
+        return {
+            "orderId": parent_id,
+            "status": "PreSubmitted",
+            "direction": direction,
+            "size": float(size),
+            "fillPrice": None,
+            "dealId": str(parent_id),
+        }
+
+    async def open_pending_position_with_partial_tp(
+        self,
+        direction: str,
+        size: float,
+        entry_price: float,
+        order_type: str,
+        stop_price: float,
+        tp1_price: float,
+        tp2_price: float,
+        tp1_size: float,
+        tp2_size: float,
+        instrument_key: str = "XAUUSD",
+    ) -> dict:
+        """
+        Place a pending bracket order with split TP (LMT or STP entry + SL + TP1 + TP2).
+
+        Does NOT wait for fill. Falls back to single TP if sizes are too small.
+        """
+        await self.ensure_connected()
+        instrument = get_instrument(instrument_key)
+
+        if tp1_size < instrument.min_size or tp2_size < instrument.min_size:
+            logger.info(
+                "Partial TP sizes too small (%.1f/%.1f, min=%.1f) — falling back to single pending TP",
+                tp1_size, tp2_size, instrument.min_size,
+            )
+            return await self.open_pending_position(
+                direction=direction, size=size, entry_price=entry_price,
+                order_type=order_type, stop_price=stop_price,
+                take_profit_price=tp2_price, instrument_key=instrument_key,
+            )
+
+        contract = self.get_contract(instrument_key)
+        parent_id = self._ib.client.getReqId()
+        reverse = "SELL" if direction == "BUY" else "BUY"
+
+        # Parent: limit or stop entry
+        if order_type == "LIMIT":
+            parent = Order(
+                orderId=parent_id,
+                action=direction,
+                orderType="LMT",
+                totalQuantity=size,
+                lmtPrice=entry_price,
+                tif="GTC",
+                transmit=False,
+            )
+        else:  # STOP
+            parent = Order(
+                orderId=parent_id,
+                action=direction,
+                orderType="STP",
+                totalQuantity=size,
+                auxPrice=entry_price,
+                tif="GTC",
+                transmit=False,
+            )
+
+        # TP1: partial take-profit
+        tp1 = Order(
+            orderId=parent_id + 1,
+            action=reverse,
+            orderType="LMT",
+            totalQuantity=tp1_size,
+            lmtPrice=tp1_price,
+            parentId=parent_id,
+            transmit=False,
+        )
+
+        # TP2: remaining take-profit
+        tp2 = Order(
+            orderId=parent_id + 2,
+            action=reverse,
+            orderType="LMT",
+            totalQuantity=tp2_size,
+            lmtPrice=tp2_price,
+            parentId=parent_id,
+            transmit=False,
+        )
+
+        # SL: full size stop-loss
+        sl = Order(
+            orderId=parent_id + 3,
+            action=reverse,
+            orderType="STP",
+            totalQuantity=size,
+            auxPrice=stop_price,
+            parentId=parent_id,
+            transmit=True,
+        )
+
+        parent_trade = self._ib.placeOrder(contract, parent)
+        self._ib.placeOrder(contract, tp1)
+        self._ib.placeOrder(contract, tp2)
+        self._ib.placeOrder(contract, sl)
+
+        logger.info(
+            "Pending %s %s order with partial TP placed: entry=%.5f SL=%.5f TP1=%.5f TP2=%.5f (orderId=%d)",
+            order_type, direction, entry_price, stop_price, tp1_price, tp2_price, parent_id,
+        )
+        return {
+            "orderId": parent_id,
+            "status": "PreSubmitted",
+            "direction": direction,
+            "size": float(size),
+            "fillPrice": None,
+            "dealId": str(parent_id),
+        }
+
+    async def cancel_order(self, order_id: int) -> dict:
+        """Cancel an order by ID. IBKR auto-cancels child orders when parent is cancelled."""
+        await self.ensure_connected()
+        for t in self._ib.openTrades():
+            if t.order.orderId == order_id:
+                self._ib.cancelOrder(t.order)
+                logger.info("Cancelled order %d", order_id)
+                return {"success": True, "orderId": order_id}
+        return {"success": False, "error": f"Order {order_id} not found"}
+
+    async def get_pending_orders(self, instrument_key: str | None = None) -> list[dict]:
+        """Get unfilled parent orders (pending entries waiting at price)."""
+        await self.ensure_connected()
+        trades = self._ib.openTrades()
+        result = []
+        for t in trades:
+            order = t.order
+            status = t.orderStatus.status
+            # Parent orders have parentId == 0, pending statuses
+            if order.parentId != 0:
+                continue
+            if status not in ("PreSubmitted", "Submitted"):
+                continue
+            # Only LMT/STP entry orders (not MKT)
+            if order.orderType not in ("LMT", "STP"):
+                continue
+
+            resolved_key = self._resolve_instrument_key(t.contract)
+            if resolved_key is None:
+                continue
+            if instrument_key and resolved_key != instrument_key:
+                continue
+
+            # Find child orders (SL/TP) for this parent
+            children = []
+            for ct in trades:
+                if ct.order.parentId == order.orderId:
+                    children.append({
+                        "orderId": ct.order.orderId,
+                        "orderType": ct.order.orderType,
+                        "action": ct.order.action,
+                        "totalQuantity": float(ct.order.totalQuantity),
+                        "lmtPrice": getattr(ct.order, "lmtPrice", None),
+                        "auxPrice": getattr(ct.order, "auxPrice", None),
+                        "status": ct.orderStatus.status,
+                    })
+
+            entry_price = None
+            if order.orderType == "LMT":
+                entry_price = order.lmtPrice
+            elif order.orderType == "STP":
+                entry_price = order.auxPrice
+
+            result.append({
+                "orderId": order.orderId,
+                "orderType": order.orderType,
+                "action": order.action,
+                "totalQuantity": float(order.totalQuantity),
+                "entryPrice": entry_price,
+                "status": status,
+                "instrument": resolved_key,
+                "children": children,
+            })
+        return result
 
     async def close_position(
         self, direction: str, size: float, instrument_key: str = "XAUUSD"

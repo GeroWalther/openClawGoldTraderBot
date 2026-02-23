@@ -13,6 +13,8 @@ class TradeStatus(str, enum.Enum):
     EXECUTED = "executed"
     FAILED = "failed"
     CLOSED = "closed"
+    PENDING_ORDER = "pending_order"
+    CANCELLED = "cancelled"
 
 
 class Trade(Base):
@@ -37,6 +39,7 @@ class Trade(Base):
     expected_price = Column(Float, nullable=True)
     actual_price = Column(Float, nullable=True)
     spread_at_entry = Column(Float, nullable=True)
+    order_type = Column(String, default="MARKET")  # MARKET, LIMIT, STOP
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
     closed_at = Column(DateTime, nullable=True)

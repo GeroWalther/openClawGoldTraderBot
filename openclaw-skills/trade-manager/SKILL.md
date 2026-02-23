@@ -19,13 +19,36 @@ curl -s "$TRADING_BOT_URL/api/v1/positions/status" \
   -H "X-API-Key: $TRADING_BOT_API_KEY" | jq '.'
 ```
 
-The response contains: `positions`, `open_orders`, `account`, `recent_trades`.
+The response contains: `positions`, `pending_orders`, `open_orders`, `account`, `recent_trades`.
 
 Each position already includes: `instrument`, `direction`, `size`, `size_unit`, `avg_cost`, `current_price`, `unrealized_pnl`, `stop_loss`, `take_profit`.
 
+Each pending order includes: `orderId`, `instrument`, `direction`, `size`, `order_type`, `entry_price`, `status`, `stop_loss`, `take_profit`.
+
 ## Step 2: Present the Dashboard
 
-**IMPORTANT: You MUST show ALL of the following fields for each position. Do not simplify or skip fields.**
+**IMPORTANT: You MUST show ALL of the following fields for each position and pending order. Do not simplify or skip fields.**
+
+### Pending Orders
+
+For EACH entry in `pending_orders`, show ALL of these fields:
+
+```
+⏳ [instrument] — [order_type] [direction] [size] (Pending)
+   Entry: $[entry_price]  |  Order ID: [orderId]
+   🛑 Stop Loss: $[stop_loss]  |  🎯 Take Profit: $[take_profit]
+   Status: [status]
+```
+
+Example:
+```
+⏳ XAUUSD — LIMIT BUY 10 oz (Pending)
+   Entry: $4,850.00  |  Order ID: 42
+   🛑 SL: $4,800.00  |  🎯 TP: $4,950.00
+   Status: PreSubmitted
+```
+
+If no pending orders exist, skip this section.
 
 ### Open Positions
 
@@ -66,6 +89,7 @@ Skip trades with status "failed" unless they are the only ones.
 After showing the full dashboard, ask:
 - **Modify SL/TP** — adjust stop-loss or take-profit
 - **Close a position** — close an open position
+- **Cancel pending order** — cancel a pending LIMIT/STOP order
 - **Refresh** — get updated status
 
 ## Modify SL/TP
@@ -95,6 +119,23 @@ curl -s -X POST "$TRADING_BOT_URL/api/v1/positions/close" \
     "reasoning": "[reason]"
   }' | jq '.'
 ```
+
+## Cancel a Pending Order
+
+```bash
+curl -s -X POST "$TRADING_BOT_URL/api/v1/trades/cancel" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $TRADING_BOT_API_KEY" \
+  -d '{
+    "instrument": "[XAUUSD, MES, IBUS500, EURUSD, EURJPY, CADJPY, USDJPY, or BTC]",
+    "direction": "[BUY or SELL]",
+    "order_id": [specific order ID, or omit to cancel by instrument+direction]
+  }' | jq '.'
+```
+
+- Use `order_id` from the pending orders section to cancel a specific order
+- Omit `order_id` to cancel all pending orders matching instrument + direction
+- IBKR auto-cancels child SL/TP orders when the parent is cancelled
 
 ## Performance Analytics
 

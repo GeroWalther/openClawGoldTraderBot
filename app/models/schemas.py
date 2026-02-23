@@ -16,6 +16,8 @@ class TradeSubmitRequest(BaseModel):
     conviction: str | None = Field(None, pattern="^(HIGH|MEDIUM|LOW)$")
     source: str = "manual"
     reasoning: str | None = None
+    order_type: str | None = Field("MARKET", pattern="^(MARKET|LIMIT|STOP)$")
+    entry_price: float | None = None
 
 
 class TradeSubmitResponse(BaseModel):
@@ -29,6 +31,22 @@ class TradeSubmitResponse(BaseModel):
     limit_distance: float | None
     conviction: str | None = None
     spread_at_entry: float | None = None
+    order_type: str | None = None
+    entry_price: float | None = None
+    message: str
+
+
+class CancelOrderRequest(BaseModel):
+    instrument: str | None = None
+    direction: str = Field(..., pattern="^(BUY|SELL)$")
+    order_id: int | None = None
+
+
+class CancelOrderResponse(BaseModel):
+    status: str
+    instrument: str
+    direction: str
+    cancelled_order_ids: list[int]
     message: str
 
 
@@ -80,6 +98,7 @@ class ModifyPositionResponse(BaseModel):
 
 class TradeStatusResponse(BaseModel):
     positions: list[dict]
+    pending_orders: list[dict] = []
     open_orders: list[dict]
     account: dict
     recent_trades: list[dict]
