@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     ibkr_client_id: int = 1
 
     # Trading parameters (per-instrument settings live in app/instruments.py)
-    max_risk_percent: float = 1.0
+    max_risk_percent: float = 3.0
 
     # Session filter
     session_filter_enabled: bool = True
@@ -37,9 +37,9 @@ class Settings(BaseSettings):
 
     # Conviction-based position sizing
     conviction_sizing_enabled: bool = True
-    conviction_high_risk_pct: float = 1.0
-    conviction_medium_risk_pct: float = 0.75
-    conviction_low_risk_pct: float = 0.5
+    conviction_high_risk_pct: float = 3.0
+    conviction_medium_risk_pct: float = 2.25
+    conviction_low_risk_pct: float = 1.5
 
     # Telegram
     telegram_bot_token: str

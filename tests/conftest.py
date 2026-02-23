@@ -17,7 +17,7 @@ def settings():
         ibkr_host="127.0.0.1",
         ibkr_port=4002,
         ibkr_client_id=99,
-        max_risk_percent=1.0,
+        max_risk_percent=3.0,
         telegram_bot_token="123456:ABC-test",
         telegram_chat_id="123456789",
         api_secret_key="test_secret",

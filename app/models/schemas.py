@@ -140,7 +140,7 @@ class BacktestRequest(BaseModel):
     end_date: str | None = None    # "YYYY-MM-DD" — overrides period if set
     max_trades: int | None = None  # Stop after N trades
     initial_balance: float = 10000.0
-    risk_percent: float = 1.0
+    risk_percent: float = 3.0
     atr_sl_multiplier: float = 1.5
     atr_tp_multiplier: float = 2.0
     session_filter: bool = True
