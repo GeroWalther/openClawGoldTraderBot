@@ -21,6 +21,8 @@ You are a professional multi-asset trader. When asked to scan markets or find th
 | MES / S&P 500 | ES=F / ^GSPC | ES1! / SPX | Equity Index |
 | EURUSD | EURUSD=X | EURUSD | Forex |
 | EURJPY | EURJPY=X | EURJPY | Forex |
+| CADJPY | CADJPY=X | CADJPY | Forex |
+| USDJPY | JPY=X | USDJPY | Forex |
 | BTC | BTC-USD | BTCUSD | Crypto |
 
 ---
@@ -30,7 +32,7 @@ You are a professional multi-asset trader. When asked to scan markets or find th
 ### Step 1: Fetch Current Prices (All Instruments)
 
 ```bash
-for SYMBOL in "GC=F" "ES=F" "EURUSD=X" "EURJPY=X" "BTC-USD"; do
+for SYMBOL in "GC=F" "ES=F" "EURUSD=X" "EURJPY=X" "CADJPY=X" "JPY=X" "BTC-USD"; do
   echo "=== $SYMBOL ==="
   curl -s "https://query1.finance.yahoo.com/v8/finance/chart/$SYMBOL?range=5d&interval=1d" | jq '{
     symbol: .chart.result[0].meta.symbol,
@@ -53,6 +55,12 @@ curl -s "https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?range=5d&inter
 
 # US 10Y Yield (affects gold, equities)
 curl -s "https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?range=5d&interval=1d" | jq '{close: .chart.result[0].indicators.quote[0].close}'
+
+# Crude Oil (affects CADJPY)
+curl -s "https://query1.finance.yahoo.com/v8/finance/chart/CL=F?range=5d&interval=1d" | jq '{close: .chart.result[0].indicators.quote[0].close}'
+
+# 13-Week T-Bill Yield (for yield curve spread = ^TNX - ^IRX)
+curl -s "https://query1.finance.yahoo.com/v8/finance/chart/%5EIRX?range=5d&interval=1d" | jq '{close: .chart.result[0].indicators.quote[0].close}'
 ```
 
 ### Step 3: Economic Calendar
@@ -61,15 +69,29 @@ curl -s "https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?range=5d&inter
 curl -s "https://nfs.faireconomy.media/ff_calendar_thisweek.json" 2>/dev/null | jq '[.[] | select((.impact == "High") and (.country == "USD" or .country == "EUR" or .country == "JPY" or .country == "ALL"))] | .[:10] | .[] | {title, country, date, time, impact}'
 ```
 
-### Step 4: TradingView Quick Scan
+### Step 4: TradingView Quick Scan (via Tavily)
 
-For each instrument, check TradingView's **Technicals summary** (1H, 4H, Daily):
-- Strong Buy / Buy / Neutral / Sell / Strong Sell ratings
-- RSI (14) on the 4H chart
+For each instrument, use **Tavily** to fetch TradingView technical ratings:
+
+```
+tavily_search: "TradingView [TRADINGVIEW_SYMBOL] technical analysis daily 4h summary rating"
+```
+
+Also extract the technicals page:
+```
+tavily_extract: "https://www.tradingview.com/symbols/[TRADINGVIEW_SYMBOL]/technicals/"
+```
+
+For each instrument, report:
+- **TradingView Technicals rating**: 1H, 4H, Daily (Strong Buy / Buy / Neutral / Sell / Strong Sell)
+- **RSI (14)** on the 4H chart
+- **D1 trend direction**: SMA alignment, higher highs/lows or lower highs/lows
 - Key support and resistance levels
-- Any obvious chart pattern (breakout, reversal, consolidation)
+- Any obvious chart pattern (breakout, reversal, consolidation, flag, wedge)
 
-Do NOT do a full multi-timeframe deep dive — keep it quick. You'll do a detailed analysis later on the winning instrument.
+**Priority rule:** Daily trend > 4H setup > 1H signal. Instruments where all 3 timeframes align rank higher.
+
+Keep it quick — you'll do a detailed analysis on the winning instrument via market-analyst.
 
 ---
 
@@ -93,8 +115,20 @@ For each instrument, assign quick scores (-2 to +2):
 - RSI < 25 and signal would be SELL → skip
 - Major economic event within 4 hours affecting this instrument → skip
 - Market closed → skip
+- Outside active trading session → skip (see session hours below)
 - Score between -4 and +4 → insufficient edge, skip
 - No clear S/R level for stop placement → skip
+
+### Active Trading Sessions (UTC)
+| Instrument | Sessions | Hours (UTC) |
+|---|---|---|
+| XAUUSD | London / New York | 07-16 / 13-21 |
+| MES / S&P 500 | US Market | 13-20 |
+| EURUSD | London+NY | 07-21 |
+| EURJPY | Tokyo / London | 00-09 / 07-16 |
+| CADJPY | Tokyo / London+NY | 00-09 / 07-21 |
+| USDJPY | Tokyo / London+NY | 00-09 / 07-21 |
+| BTC | 24/7 | All hours (low liquidity weekends) |
 
 ### Risk/Reward Assessment
 
@@ -126,7 +160,7 @@ Where:
 MARKET SCAN — [DATE] [TIME] UTC
 
 ━━━ MACRO CONTEXT ━━━
-DXY: [value] [↑/↓] | VIX: [value] [↑/↓] | US 10Y: [value] [↑/↓]
+DXY: [value] [↑/↓] | VIX: [value] [↑/↓] | US 10Y: [value] [↑/↓] | Crude: [value] [↑/↓] | Yield Curve: [spread] [steepening/flattening]
 Upcoming Events: [next high-impact event or "none within 4h"]
 Overall Regime: [Risk-On / Risk-Off / Mixed]
 
@@ -138,6 +172,8 @@ Overall Regime: [Risk-On / Risk-Off / Mixed]
 | S&P 500    | $X    | X%   | X     | X   | X   | X   | X    | X   | X/12  | BUY/SELL/- |
 | EUR/USD    | X     | X%   | X     | X   | X   | X   | X    | X   | X/12  | BUY/SELL/- |
 | EUR/JPY    | X     | X%   | X     | X   | X   | X   | X    | X   | X/12  | BUY/SELL/- |
+| CAD/JPY    | X     | X%   | X     | X   | X   | X   | X    | X   | X/12  | BUY/SELL/- |
+| USD/JPY    | X     | X%   | X     | X   | X   | X   | X    | X   | X/12  | BUY/SELL/- |
 | BTC        | $X    | X%   | X     | X   | X   | X   | X    | X   | X/12  | BUY/SELL/- |
 
 Disqualified: [list instruments that were filtered out and why]
@@ -154,8 +190,9 @@ Instrument: [KEY]
 Direction: [BUY/SELL]
 Score: [X/12]
 Confidence: [LOW/MEDIUM/HIGH]
+Conviction: [HIGH / MEDIUM / LOW]
 Entry: Around [price]
-Stop Distance: [number] (trailing, beyond [S/R level at $X])
+Stop Distance: [number] (fixed bracket, beyond [S/R level at $X])
 Limit Distance: [number] (target [S/R level at $X])
 R:R Ratio: [X:1]
 Risk: 1% of account

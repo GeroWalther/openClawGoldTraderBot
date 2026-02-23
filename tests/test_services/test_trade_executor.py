@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.models.schemas import TradeSubmitRequest
 from app.models.trade import TradeStatus
@@ -110,3 +110,130 @@ async def test_executor_with_explicit_instrument(mock_logger, settings, db_sessi
 
     assert response.status == TradeStatus.EXECUTED
     assert response.instrument == "XAUUSD"
+
+
+@pytest.mark.asyncio
+@patch("app.services.trade_executor.logger")
+async def test_executor_backward_compat_no_new_services(mock_logger, settings, db_session, mock_ibkr_client, mock_notifier):
+    """TradeExecutor works without risk_manager and atr_calculator (backward compat)."""
+    validator = TradeValidator(settings)
+    sizer = PositionSizer(settings)
+
+    executor = TradeExecutor(
+        ibkr_client=mock_ibkr_client,
+        validator=validator,
+        sizer=sizer,
+        db_session=db_session,
+        notifier=mock_notifier,
+        settings=settings,
+        risk_manager=None,
+        atr_calculator=None,
+    )
+
+    request = TradeSubmitRequest(
+        direction="BUY", stop_distance=50, limit_distance=100, size=1
+    )
+    response = await executor.submit_trade(request)
+    assert response.status == TradeStatus.EXECUTED
+
+
+@pytest.mark.asyncio
+async def test_executor_risk_manager_blocks_trade(settings, db_session, mock_ibkr_client, mock_notifier, mock_risk_manager):
+    mock_risk_manager.can_trade.return_value = (False, "Cooldown active: 2 consecutive losses")
+
+    validator = TradeValidator(settings)
+    sizer = PositionSizer(settings)
+
+    executor = TradeExecutor(
+        ibkr_client=mock_ibkr_client,
+        validator=validator,
+        sizer=sizer,
+        db_session=db_session,
+        notifier=mock_notifier,
+        settings=settings,
+        risk_manager=mock_risk_manager,
+    )
+
+    request = TradeSubmitRequest(
+        direction="BUY", stop_distance=50, limit_distance=100, size=1
+    )
+    response = await executor.submit_trade(request)
+
+    assert response.status == TradeStatus.REJECTED
+    assert "Cooldown active" in response.message
+
+
+@pytest.mark.asyncio
+@patch("app.services.trade_executor.logger")
+async def test_executor_atr_provides_defaults(mock_logger, settings, db_session, mock_ibkr_client, mock_notifier, mock_atr_calculator):
+    validator = TradeValidator(settings)
+    sizer = PositionSizer(settings)
+
+    executor = TradeExecutor(
+        ibkr_client=mock_ibkr_client,
+        validator=validator,
+        sizer=sizer,
+        db_session=db_session,
+        notifier=mock_notifier,
+        settings=settings,
+        atr_calculator=mock_atr_calculator,
+    )
+
+    # No stop/limit distances — ATR should provide defaults
+    request = TradeSubmitRequest(
+        direction="BUY", stop_distance=None, limit_distance=None, size=1,
+        stop_level=1.0,  # Need stop_level to pass validation
+    )
+    response = await executor.submit_trade(request)
+
+    # ATR mock returns (45.0, 90.0)
+    assert response.stop_distance == 45.0
+    assert response.limit_distance == 90.0
+
+
+@pytest.mark.asyncio
+@patch("app.services.trade_executor.logger")
+async def test_executor_conviction_in_response(mock_logger, settings, db_session, mock_ibkr_client, mock_notifier):
+    validator = TradeValidator(settings)
+    sizer = PositionSizer(settings)
+
+    executor = TradeExecutor(
+        ibkr_client=mock_ibkr_client,
+        validator=validator,
+        sizer=sizer,
+        db_session=db_session,
+        notifier=mock_notifier,
+        settings=settings,
+    )
+
+    request = TradeSubmitRequest(
+        direction="BUY", stop_distance=50, limit_distance=100,
+        size=1, conviction="HIGH",
+    )
+    response = await executor.submit_trade(request)
+
+    assert response.conviction == "HIGH"
+
+
+@pytest.mark.asyncio
+@patch("app.services.trade_executor.logger")
+async def test_executor_spread_tracking(mock_logger, settings, db_session, mock_ibkr_client, mock_notifier):
+    validator = TradeValidator(settings)
+    sizer = PositionSizer(settings)
+
+    executor = TradeExecutor(
+        ibkr_client=mock_ibkr_client,
+        validator=validator,
+        sizer=sizer,
+        db_session=db_session,
+        notifier=mock_notifier,
+        settings=settings,
+    )
+
+    request = TradeSubmitRequest(
+        direction="BUY", stop_distance=50, limit_distance=100, size=1,
+    )
+    response = await executor.submit_trade(request)
+
+    # bid=2900.50, ask=2901.00 → spread=0.50
+    assert response.spread_at_entry == pytest.approx(0.5)

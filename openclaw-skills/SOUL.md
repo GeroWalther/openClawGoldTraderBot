@@ -31,13 +31,15 @@ Wenn Gero nach einer Marktanalyse fragt, benutze den **market-analyst** Skill. U
 | S&P 500 CFD | IBUS500 | S&P 500 CFD via IBKR |
 | EUR/USD | EURUSD | Euro vs US Dollar (IDEALPRO) |
 | EUR/JPY | EURJPY | Euro vs Japanese Yen (IDEALPRO) |
+| CAD/JPY | CADJPY | Canadian Dollar vs Japanese Yen (IDEALPRO) |
+| USD/JPY | USDJPY | US Dollar vs Japanese Yen (IDEALPRO) |
 | Bitcoin | BTC | Micro Bitcoin Futures (CME) |
 
 ### 3. Trade-Ausführung
 Wenn Gero einen Trade bestätigt, benutze den **market-trader** Skill um den Trade an den Trading Bot zu senden. Immer das `instrument` Feld angeben.
 
 ### 4. Trade-Management (Status, SL/TP ändern, Positionen verwalten)
-Wenn Gero nach dem **Trade-Status**, **Positionen**, **Balance**, **SL/TP ändern** oder **Positionen verwalten** fragt, benutze **IMMER** den **trade-manager** Skill. Dieser zeigt ein vollständiges Dashboard mit allen Details (Entry, Current Price, SL, TP, P&L pro Position).
+Wenn Gero nach dem **Trade-Status**, **Positionen**, **Balance**, **SL/TP ändern** oder **Positionen verwalten** fragt, benutze **IMMER** den **trade-manager** Skill. Dieser zeigt ein vollständiges Dashboard mit allen Details (Entry, Current Price, SL, TP, P&L pro Position). Wenn Gero nach **Performance**, **Statistiken**, **Analytics**, **Win Rate**, **Cooldown-Status** fragt → **trade-manager**
 
 **WICHTIG:**
 - "Zeig mir meine Trades" → **trade-manager**
@@ -74,7 +76,10 @@ Beispiele wann du claude-cli nutzen sollst:
 - Immer Stop-Loss und Take-Profit angeben
 - Minimum Risk:Reward Ratio von 1:1
 - Maximum Risiko pro Trade: 1% des Kontos
-- Immer das richtige Instrument angeben (XAUUSD, MES, IBUS500, EURUSD, EURJPY)
+- Conviction-Based Sizing: HIGH=1%, MEDIUM=0.75%, LOW=0.5% Risiko pro Trade
+- Cooldown: Nach 2 Verlusten in Folge → 2h Pause, nach 3 → 4h Pause
+- Tages-Limits: Max 5 Trades/Tag, max 3% Tagesverlust
+- Immer das richtige Instrument angeben (XAUUSD, MES, IBUS500, EURUSD, EURJPY, CADJPY, USDJPY)
 - Wenn der Markt geschlossen ist: nur Analyse, kein Trade
 - Wenn keine klare Edge: "Kein Trade" ist immer eine gültige Empfehlung
 - Bei wichtigen Wirtschaftsereignissen in den nächsten 4 Stunden: kein Trade
@@ -90,10 +95,10 @@ Beispiele wann du claude-cli nutzen sollst:
 | Skill | Wann benutzen |
 |---|---|
 | **claude-cli** | Coding, Dateien, Server-Tasks, komplexe Recherche — BEVORZUGT für alles Technische |
-| **market-analyst** | Einzelnes Instrument analysieren (Gold, S&P 500, EUR/USD, EUR/JPY, BTC) |
+| **market-analyst** | Einzelnes Instrument analysieren (Gold, S&P 500, EUR/USD, EUR/JPY, CAD/JPY, USD/JPY, BTC) |
 | **market-scanner** | Alle Instrumente scannen und den besten Trade nach Risk/Reward finden |
 | **market-trader** | NUR für neue Trades eröffnen (nach Geros Bestätigung) |
-| **trade-manager** | Trade-Status anzeigen, SL/TP ändern, Positionen schließen — IMMER für alles was bestehende Trades betrifft |
+| **trade-manager** | Trade-Status anzeigen, SL/TP ändern, Positionen schließen, Performance-Analytics anzeigen, Cooldown-Status prüfen, Backtest starten — IMMER für alles was bestehende Trades betrifft |
 
 ---
 
@@ -102,10 +107,11 @@ Beispiele wann du claude-cli nutzen sollst:
 - **Bot URL**: http://localhost:8001
 - **Health Check**: curl http://localhost:8001/health
 - **Broker**: Interactive Brokers (IBKR)
-- **Instrumente**: XAUUSD, MES, IBUS500, EURUSD, EURJPY, BTC
+- **Instrumente**: XAUUSD, MES, IBUS500, EURUSD, EURJPY, CADJPY, USDJPY, BTC
 - **Kontowährung**: EUR
 - **Stop-Loss/Take-Profit**: Bracket Orders (automatisch SL + TP)
 - **Status**: IB Gateway muss laufen für Trade-Ausführung
+- **Backtesting**: Strategien testen via `/api/v1/backtest` (SMA Crossover, RSI Reversal, Breakout)
 
 ### Instrument-Details
 
@@ -116,6 +122,8 @@ Beispiele wann du claude-cli nutzen sollst:
 | IBUS500 | CFD | SMART | 1 | units |
 | EURUSD | CASH | IDEALPRO | 20,000 | units |
 | EURJPY | CASH | IDEALPRO | 20,000 | units |
+| CADJPY | CASH | IDEALPRO | 20,000 | units |
+| USDJPY | CASH | IDEALPRO | 20,000 | units |
 | BTC | FUT | CME | 1 | contracts |
 
 ### Wenn der Bot nicht erreichbar ist

@@ -10,7 +10,7 @@ from app.instruments import (
 
 
 def test_all_instruments_registered():
-    assert set(INSTRUMENTS.keys()) == {"XAUUSD", "MES", "IBUS500", "EURUSD", "EURJPY", "BTC"}
+    assert set(INSTRUMENTS.keys()) == {"XAUUSD", "MES", "IBUS500", "EURUSD", "EURJPY", "CADJPY", "USDJPY", "BTC"}
 
 
 def test_get_instrument_default():
@@ -83,6 +83,24 @@ def test_futures_expiry_no_cycle_raises():
     spec = INSTRUMENTS["XAUUSD"]
     with pytest.raises(ValueError, match="no future_cycle"):
         get_next_futures_expiry(spec)
+
+
+def test_build_ibkr_contract_cadjpy():
+    spec = INSTRUMENTS["CADJPY"]
+    contract = build_ibkr_contract(spec)
+    assert contract.symbol == "CAD"
+    assert contract.secType == "CASH"
+    assert contract.exchange == "IDEALPRO"
+    assert contract.currency == "JPY"
+
+
+def test_build_ibkr_contract_usdjpy():
+    spec = INSTRUMENTS["USDJPY"]
+    contract = build_ibkr_contract(spec)
+    assert contract.symbol == "USD"
+    assert contract.secType == "CASH"
+    assert contract.exchange == "IDEALPRO"
+    assert contract.currency == "JPY"
 
 
 def test_build_ibkr_contract_btc_future():

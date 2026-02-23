@@ -14,6 +14,7 @@ dependencies = [
     "python-telegram-bot",
     "pydantic-settings",
     "python-dotenv",
+    "yfinance",
 ]
 
 [project.optional-dependencies]

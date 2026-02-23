@@ -33,6 +33,10 @@ class Trade(Base):
     claude_reasoning = Column(String, nullable=True)
     rejection_reason = Column(String, nullable=True)
     pnl = Column(Float, nullable=True)
+    conviction = Column(String, nullable=True)  # HIGH, MEDIUM, LOW
+    expected_price = Column(Float, nullable=True)
+    actual_price = Column(Float, nullable=True)
+    spread_at_entry = Column(Float, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
     closed_at = Column(DateTime, nullable=True)

@@ -1,5 +1,12 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, timedelta
+
+
+@dataclass(frozen=True)
+class TradingSession:
+    name: str
+    start_hour_utc: int  # 0-23
+    end_hour_utc: int    # 0-23 (exclusive), wraps past midnight if end < start
 
 
 @dataclass(frozen=True)
@@ -21,6 +28,8 @@ class InstrumentSpec:
     size_unit: str
     is_future: bool = False
     future_cycle: str | None = None  # e.g. "HMUZ" for quarterly
+    trading_sessions: tuple[TradingSession, ...] = ()
+    warn_low_liquidity: bool = False
 
 
 INSTRUMENTS: dict[str, InstrumentSpec] = {
@@ -40,6 +49,10 @@ INSTRUMENTS: dict[str, InstrumentSpec] = {
         yahoo_symbol="GC=F",
         display_name="Gold (XAUUSD)",
         size_unit="oz",
+        trading_sessions=(
+            TradingSession("London", 7, 16),
+            TradingSession("New York", 13, 21),
+        ),
     ),
     "MES": InstrumentSpec(
         key="MES",
@@ -59,6 +72,9 @@ INSTRUMENTS: dict[str, InstrumentSpec] = {
         size_unit="contracts",
         is_future=True,
         future_cycle="HMUZ",
+        trading_sessions=(
+            TradingSession("US Market", 13, 20),
+        ),
     ),
     "IBUS500": InstrumentSpec(
         key="IBUS500",
@@ -76,6 +92,9 @@ INSTRUMENTS: dict[str, InstrumentSpec] = {
         yahoo_symbol="^GSPC",
         display_name="S&P 500 CFD",
         size_unit="units",
+        trading_sessions=(
+            TradingSession("US Market", 13, 20),
+        ),
     ),
     "EURUSD": InstrumentSpec(
         key="EURUSD",
@@ -93,6 +112,9 @@ INSTRUMENTS: dict[str, InstrumentSpec] = {
         yahoo_symbol="EURUSD=X",
         display_name="EUR/USD",
         size_unit="units",
+        trading_sessions=(
+            TradingSession("London+NY", 7, 21),
+        ),
     ),
     "EURJPY": InstrumentSpec(
         key="EURJPY",
@@ -110,6 +132,52 @@ INSTRUMENTS: dict[str, InstrumentSpec] = {
         yahoo_symbol="EURJPY=X",
         display_name="EUR/JPY",
         size_unit="units",
+        trading_sessions=(
+            TradingSession("Tokyo", 0, 9),
+            TradingSession("London", 7, 16),
+        ),
+    ),
+    "CADJPY": InstrumentSpec(
+        key="CADJPY",
+        symbol="CAD",
+        sec_type="CASH",
+        exchange="IDEALPRO",
+        currency="JPY",
+        multiplier=1,
+        min_size=20000,
+        max_size=500000,
+        default_sl_distance=0.50,
+        default_tp_distance=1.00,
+        min_stop_distance=0.05,
+        max_stop_distance=5.00,
+        yahoo_symbol="CADJPY=X",
+        display_name="CAD/JPY",
+        size_unit="units",
+        trading_sessions=(
+            TradingSession("Tokyo", 0, 9),
+            TradingSession("London+NY", 7, 21),
+        ),
+    ),
+    "USDJPY": InstrumentSpec(
+        key="USDJPY",
+        symbol="USD",
+        sec_type="CASH",
+        exchange="IDEALPRO",
+        currency="JPY",
+        multiplier=1,
+        min_size=20000,
+        max_size=500000,
+        default_sl_distance=0.50,
+        default_tp_distance=1.00,
+        min_stop_distance=0.05,
+        max_stop_distance=5.00,
+        yahoo_symbol="JPY=X",
+        display_name="USD/JPY",
+        size_unit="units",
+        trading_sessions=(
+            TradingSession("Tokyo", 0, 9),
+            TradingSession("London+NY", 7, 21),
+        ),
     ),
     "BTC": InstrumentSpec(
         key="BTC",
@@ -129,6 +197,8 @@ INSTRUMENTS: dict[str, InstrumentSpec] = {
         size_unit="contracts",
         is_future=True,
         future_cycle="FGHJKMNQUVXZ",  # monthly
+        trading_sessions=(),  # 24/7 crypto
+        warn_low_liquidity=True,  # weekends
     ),
 }
 

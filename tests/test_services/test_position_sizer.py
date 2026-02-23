@@ -89,3 +89,92 @@ async def test_defaults_to_xauusd(settings):
     sizer = PositionSizer(settings)
     size = await sizer.calculate(account_balance=10000, stop_distance=50)
     assert size == 2.0
+
+
+# --- Conviction-based sizing tests ---
+
+@pytest.mark.asyncio
+async def test_conviction_high_full_risk(settings):
+    """HIGH conviction uses full 1% risk."""
+    sizer = PositionSizer(settings)
+    instrument = get_instrument("XAUUSD")
+    size = await sizer.calculate(
+        account_balance=10000, stop_distance=50,
+        instrument=instrument, conviction="HIGH",
+    )
+    # 1% of 10000 = 100 / 50 = 2
+    assert size == 2.0
+
+
+@pytest.mark.asyncio
+async def test_conviction_medium_reduced_risk(settings):
+    """MEDIUM conviction uses 0.75% risk."""
+    sizer = PositionSizer(settings)
+    instrument = get_instrument("XAUUSD")
+    size = await sizer.calculate(
+        account_balance=10000, stop_distance=50,
+        instrument=instrument, conviction="MEDIUM",
+    )
+    # 0.75% of 10000 = 75 / 50 = 1.5 → rounds to 2
+    assert size == 2.0
+
+
+@pytest.mark.asyncio
+async def test_conviction_low_reduced_risk(settings):
+    """LOW conviction uses 0.5% risk."""
+    sizer = PositionSizer(settings)
+    instrument = get_instrument("XAUUSD")
+    size = await sizer.calculate(
+        account_balance=10000, stop_distance=50,
+        instrument=instrument, conviction="LOW",
+    )
+    # 0.5% of 10000 = 50 / 50 = 1
+    assert size == 1.0
+
+
+@pytest.mark.asyncio
+async def test_conviction_none_uses_default(settings):
+    """None conviction falls through to max_risk_percent (backward compat)."""
+    sizer = PositionSizer(settings)
+    instrument = get_instrument("XAUUSD")
+    size = await sizer.calculate(
+        account_balance=10000, stop_distance=50,
+        instrument=instrument, conviction=None,
+    )
+    assert size == 2.0
+
+
+@pytest.mark.asyncio
+async def test_conviction_disabled(settings):
+    """When conviction_sizing_enabled=False, always use full risk."""
+    settings.conviction_sizing_enabled = False
+    sizer = PositionSizer(settings)
+    instrument = get_instrument("XAUUSD")
+    size = await sizer.calculate(
+        account_balance=10000, stop_distance=50,
+        instrument=instrument, conviction="LOW",
+    )
+    # Should ignore conviction and use full 1%
+    assert size == 2.0
+
+
+@pytest.mark.asyncio
+async def test_conviction_with_larger_balance(settings):
+    """Test conviction scaling with larger balance where difference is visible."""
+    sizer = PositionSizer(settings)
+    instrument = get_instrument("XAUUSD")
+
+    size_high = await sizer.calculate(
+        account_balance=50000, stop_distance=50,
+        instrument=instrument, conviction="HIGH",
+    )
+    size_low = await sizer.calculate(
+        account_balance=50000, stop_distance=50,
+        instrument=instrument, conviction="LOW",
+    )
+
+    # HIGH: 1% of 50000 = 500 / 50 = 10
+    # LOW: 0.5% of 50000 = 250 / 50 = 5
+    assert size_high == 10.0
+    assert size_low == 5.0
+    assert size_high > size_low

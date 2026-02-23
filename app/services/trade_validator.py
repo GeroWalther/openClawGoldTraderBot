@@ -1,11 +1,19 @@
+from __future__ import annotations
+
 from app.config import Settings
 from app.instruments import InstrumentSpec
 from app.models.schemas import TradeSubmitRequest
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.services.session_filter import SessionFilter
+
 
 class TradeValidator:
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings, session_filter: SessionFilter | None = None):
         self.settings = settings
+        self.session_filter = session_filter
 
     async def validate(
         self,
@@ -19,6 +27,12 @@ class TradeValidator:
         if instrument is None:
             from app.instruments import get_instrument
             instrument = get_instrument(None)
+
+        # Session check first — reject immediately if outside session
+        if self.session_filter is not None:
+            active, reason = self.session_filter.is_session_active(instrument)
+            if not active:
+                return False, reason
 
         if request.direction not in ("BUY", "SELL"):
             errors.append(f"Invalid direction: {request.direction}")

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from app.config import Settings
 from app.models.database import Base
+from app.services.atr_calculator import ATRCalculator
 from app.services.ibkr_client import IBKRClient
 
 logger = logging.getLogger(__name__)
@@ -43,9 +44,10 @@ async def lifespan(app: FastAPI):
 
     app.state.ibkr_client = ibkr_client
     app.state.settings = settings
+    app.state.atr_calculator = ATRCalculator(settings)
 
     logger.info(
-        "Trader Bot v3 started (IBKR %s:%s, connected=%s)",
+        "Trader Bot v4 started (IBKR %s:%s, connected=%s)",
         settings.ibkr_host,
         settings.ibkr_port,
         app.state.ibkr_connected,
@@ -57,7 +59,7 @@ async def lifespan(app: FastAPI):
     logger.info("Trader Bot shut down")
 
 
-app = FastAPI(title="Trader Bot", version="3.0.0", lifespan=lifespan)
+app = FastAPI(title="Trader Bot", version="4.0.0", lifespan=lifespan)
 
 from app.api.router import api_router  # noqa: E402
 

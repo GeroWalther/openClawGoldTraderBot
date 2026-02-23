@@ -310,6 +310,93 @@ class IBKRClient:
 
         return results
 
+    async def open_position_with_partial_tp(
+        self,
+        direction: str,
+        size: float,
+        stop_price: float,
+        tp1_price: float,
+        tp2_price: float,
+        tp1_size: float,
+        tp2_size: float,
+        instrument_key: str = "XAUUSD",
+    ) -> dict:
+        """
+        Open a position with partial take-profit: TP1 (at 1R) + TP2 (full TP).
+
+        Falls back to regular bracket if sizes are too small.
+        Known limitation: SL quantity doesn't auto-reduce after TP1 fill.
+        """
+        await self.ensure_connected()
+        instrument = get_instrument(instrument_key)
+
+        # Check if split sizes meet minimum — fall back to regular bracket
+        if tp1_size < instrument.min_size or tp2_size < instrument.min_size:
+            logger.info(
+                "Partial TP sizes too small (%.1f/%.1f, min=%.1f) — falling back to regular bracket",
+                tp1_size, tp2_size, instrument.min_size,
+            )
+            return await self.open_position(
+                direction=direction, size=size,
+                stop_price=stop_price, take_profit_price=tp2_price,
+                instrument_key=instrument_key,
+            )
+
+        contract = self.get_contract(instrument_key)
+        parent_id = self._ib.client.getReqId()
+        reverse = "SELL" if direction == "BUY" else "BUY"
+
+        # Parent: market entry
+        parent = Order(
+            orderId=parent_id,
+            action=direction,
+            orderType="MKT",
+            totalQuantity=size,
+            transmit=False,
+        )
+
+        # TP1: partial take-profit at 1R
+        tp1 = Order(
+            orderId=parent_id + 1,
+            action=reverse,
+            orderType="LMT",
+            totalQuantity=tp1_size,
+            lmtPrice=tp1_price,
+            parentId=parent_id,
+            transmit=False,
+        )
+
+        # TP2: remaining take-profit at full TP
+        tp2 = Order(
+            orderId=parent_id + 2,
+            action=reverse,
+            orderType="LMT",
+            totalQuantity=tp2_size,
+            lmtPrice=tp2_price,
+            parentId=parent_id,
+            transmit=False,
+        )
+
+        # SL: full size stop-loss
+        # TODO: SL quantity doesn't auto-reduce after TP1 fill
+        sl = Order(
+            orderId=parent_id + 3,
+            action=reverse,
+            orderType="STP",
+            totalQuantity=size,
+            auxPrice=stop_price,
+            parentId=parent_id,
+            transmit=True,
+        )
+
+        parent_trade = self._ib.placeOrder(contract, parent)
+        self._ib.placeOrder(contract, tp1)
+        self._ib.placeOrder(contract, tp2)
+        self._ib.placeOrder(contract, sl)
+
+        await self._wait_for_fill(parent_trade)
+        return self._trade_to_dict(parent_trade)
+
     async def close_position(
         self, direction: str, size: float, instrument_key: str = "XAUUSD"
     ) -> dict:

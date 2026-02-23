@@ -75,7 +75,7 @@ curl -s -X POST "$TRADING_BOT_URL/api/v1/positions/modify" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $TRADING_BOT_API_KEY" \
   -d '{
-    "instrument": "[XAUUSD, MES, IBUS500, EURUSD, EURJPY, or BTC]",
+    "instrument": "[XAUUSD, MES, IBUS500, EURUSD, EURJPY, CADJPY, USDJPY, or BTC]",
     "direction": "[BUY or SELL]",
     "new_stop_loss": [new SL price or omit],
     "new_take_profit": [new TP price or omit],
@@ -96,6 +96,85 @@ curl -s -X POST "$TRADING_BOT_URL/api/v1/positions/close" \
   }' | jq '.'
 ```
 
+## Performance Analytics
+
+```bash
+# Full performance dashboard
+curl -s "$TRADING_BOT_URL/api/v1/analytics?from_date=2024-01-01&to_date=2024-12-31" \
+  -H "X-API-Key: $TRADING_BOT_API_KEY" | jq '.'
+
+# Filter by instrument
+curl -s "$TRADING_BOT_URL/api/v1/analytics?instrument=XAUUSD" \
+  -H "X-API-Key: $TRADING_BOT_API_KEY" | jq '.'
+```
+
+Shows: win rate, avg win/loss, expectancy, profit factor, max drawdown, per-instrument breakdown, daily/weekly/monthly P&L.
+
+## Cooldown Status
+
+```bash
+curl -s "$TRADING_BOT_URL/api/v1/analytics/cooldown" \
+  -H "X-API-Key: $TRADING_BOT_API_KEY" | jq '.'
+```
+
+Shows: can_trade (bool), cooldown status, consecutive losses, daily trade count, daily P&L vs limit.
+
+## Backtest a Strategy
+
+```bash
+curl -s -X POST "$TRADING_BOT_URL/api/v1/backtest" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $TRADING_BOT_API_KEY" \
+  -d '{
+    "instrument": "XAUUSD",
+    "strategy": "sma_crossover",
+    "period": "1y",
+    "initial_balance": 10000
+  }' | jq '.'
+```
+
+Available strategies: `sma_crossover`, `rsi_reversal`, `breakout`, `krabbe_scored`
+Available periods: `6mo`, `1y`, `2y`, `5y`
+
+**`krabbe_scored`** — Multi-factor strategy replicating Krabbe's 12-factor scoring system (D1 trend, 4H momentum, 1H entry, chart patterns, TF alignment, S/R proximity, TV technicals, macro fundamentals ×3 incl. yield curve, news, calendar). Covers ~70-80% of live scoring factors historically. Missing: live TradingView ratings, real-time news, community sentiment.
+
+## Analysis Journal
+
+Record and review AI analysis entries for forward-testing accuracy.
+
+```bash
+# List recent journal entries
+curl -s "$TRADING_BOT_URL/api/v1/journal?instrument=XAUUSD" \
+  -H "X-API-Key: $TRADING_BOT_API_KEY" | jq '.'
+
+# Get journal accuracy stats
+curl -s "$TRADING_BOT_URL/api/v1/journal/stats" \
+  -H "X-API-Key: $TRADING_BOT_API_KEY" | jq '.'
+
+# Update journal entry outcome after trade closes
+curl -s -X PATCH "$TRADING_BOT_URL/api/v1/journal/[ID]?outcome=WIN&outcome_notes=Hit TP" \
+  -H "X-API-Key: $TRADING_BOT_API_KEY" | jq '.'
+
+# Link journal entry to executed trade
+curl -s -X PATCH "$TRADING_BOT_URL/api/v1/journal/[ID]?linked_trade_id=[TRADE_ID]" \
+  -H "X-API-Key: $TRADING_BOT_API_KEY" | jq '.'
+```
+
+### Journal Stats Display
+```
+📓 Journal Accuracy
+   Total Analyses: [total_analyses]
+   Outcomes Recorded: [total_with_outcome]
+   Overall Win Rate: [overall_win_rate]%
+
+   Per Conviction:
+   HIGH:   [wins]/[total] = [win_rate]%
+   MEDIUM: [wins]/[total] = [win_rate]%
+   LOW:    [wins]/[total] = [win_rate]%
+
+   Avg Score — Winners: [avg_score_winners] | Losers: [avg_score_losers]
+```
+
 ## Rules
 
 - ALWAYS show the FULL dashboard with ALL fields (SL, TP, P&L per position) before any action
@@ -104,3 +183,14 @@ curl -s -X POST "$TRADING_BOT_URL/api/v1/positions/close" \
 - When modifying, show old and new values clearly
 - If no open positions exist, say so clearly
 - If the bot is unreachable, notify the user and do not retry
+
+### Performance Display (when analytics requested)
+```
+📈 Performance — [from_date] to [to_date]
+   Win Rate: [win_rate]% ([winning]/[total] trades)
+   Avg Win: $[avg_win]  |  Avg Loss: $[avg_loss]
+   Expectancy: $[expectancy]/trade
+   Profit Factor: [profit_factor]
+   Max Drawdown: [max_drawdown]%
+   Total P&L: $[total_pnl]
+```

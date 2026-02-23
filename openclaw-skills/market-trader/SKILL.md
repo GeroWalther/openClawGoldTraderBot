@@ -21,6 +21,8 @@ requires:
 | IBUS500 | S&P 500 CFD | 1 | units | Points (e.g. 20 = 20 pts) |
 | EURUSD | EUR/USD | 20000 | units | Pips as decimal (e.g. 0.0050 = 50 pips) |
 | EURJPY | EUR/JPY | 20000 | units | Pips as decimal (e.g. 0.50 = 50 pips) |
+| CADJPY | CAD/JPY | 20000 | units | Pips as decimal (e.g. 0.50 = 50 pips) |
+| USDJPY | USD/JPY | 20000 | units | Pips as decimal (e.g. 0.50 = 50 pips) |
 | BTC | Micro Bitcoin Futures | 1 | contracts | USD (e.g. 2000 = $2,000) |
 
 ## Open a Trade
@@ -30,13 +32,14 @@ curl -s -X POST "$TRADING_BOT_URL/api/v1/trades/submit" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $TRADING_BOT_API_KEY" \
   -d '{
-    "instrument": "[XAUUSD, MES, IBUS500, EURUSD, EURJPY, or BTC]",
+    "instrument": "[XAUUSD, MES, IBUS500, EURUSD, EURJPY, CADJPY, USDJPY, or BTC]",
     "direction": "[BUY or SELL]",
     "stop_distance": [number — see table above for units],
     "limit_distance": [number — same unit as stop_distance],
     "size": [position size or omit for auto-sizing],
     "source": "openclaw",
-    "reasoning": "[analysis summary]"
+    "reasoning": "[analysis summary]",
+    "conviction": "[HIGH, MEDIUM, or LOW — from analysis score]"
   }' | jq '.'
 ```
 
@@ -47,7 +50,7 @@ curl -s -X POST "$TRADING_BOT_URL/api/v1/positions/close" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $TRADING_BOT_API_KEY" \
   -d '{
-    "instrument": "[XAUUSD, MES, IBUS500, EURUSD, EURJPY, or BTC]",
+    "instrument": "[XAUUSD, MES, IBUS500, EURUSD, EURJPY, CADJPY, USDJPY, or BTC]",
     "direction": "[BUY or SELL — direction of the position to close]",
     "size": [size to close, or omit to close full position],
     "reasoning": "[reason for closing]"
@@ -61,7 +64,7 @@ curl -s -X POST "$TRADING_BOT_URL/api/v1/positions/modify" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $TRADING_BOT_API_KEY" \
   -d '{
-    "instrument": "[XAUUSD, MES, IBUS500, EURUSD, EURJPY, or BTC]",
+    "instrument": "[XAUUSD, MES, IBUS500, EURUSD, EURJPY, CADJPY, USDJPY, or BTC]",
     "direction": "[BUY or SELL — direction of the position]",
     "new_stop_loss": [new SL price or omit to keep current],
     "new_take_profit": [new TP price or omit to keep current],
@@ -110,3 +113,26 @@ curl -s "$TRADING_BOT_URL/health" | jq '.'
 - Omit size when closing to close the full position
 - Report the response (executed, rejected, failed, closed)
 - If bot is unreachable, notify user, do not retry
+
+## ATR Auto-Defaults
+
+If `stop_distance` and `limit_distance` are omitted, the bot calculates ATR-based stops automatically:
+- SL = ATR(14) × 1.5
+- TP = ATR(14) × 2.0
+- Clamped to instrument min/max bounds
+
+You can override by specifying explicit distances.
+
+## Partial Take-Profit
+
+When enabled (default), the bot splits the TP into two orders:
+- **TP1**: 50% of position at 1R (1× risk distance)
+- **TP2**: Remaining 50% at full TP target
+- Falls back to single TP if position size is too small to split
+
+## Session & Cooldown Enforcement
+
+The bot automatically enforces:
+- **Session filter**: Rejects trades outside active trading hours
+- **Cooldown**: After 2 consecutive losses, trading paused for 2h (3 losses → 4h)
+- **Daily limits**: Max 5 trades/day, max 3% daily loss

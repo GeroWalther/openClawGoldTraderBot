@@ -9,7 +9,7 @@ async def test_health_returns_ok(client):
     assert data["status"] == "ok"
     assert data["service"] == "trader-bot"
     assert "instruments" in data
-    assert len(data["instruments"]) == 6
+    assert len(data["instruments"]) == 8
     keys = [i["key"] for i in data["instruments"]]
     assert "XAUUSD" in keys
     assert "MES" in keys

@@ -1,7 +1,10 @@
 import pytest
+from datetime import datetime, timezone
+from unittest.mock import MagicMock
 
 from app.instruments import get_instrument
 from app.models.schemas import TradeSubmitRequest
+from app.services.session_filter import SessionFilter
 from app.services.trade_validator import TradeValidator
 
 
@@ -129,4 +132,49 @@ async def test_defaults_to_xauusd_when_no_instrument(settings):
         direction="BUY", stop_distance=50, limit_distance=100
     )
     valid, msg = await validator.validate(request, current_price=2900.0)
+    assert valid is True
+
+
+# --- Session filter integration tests ---
+
+@pytest.mark.asyncio
+async def test_session_filter_rejects_outside_hours(settings):
+    """Validator rejects trade when session filter says outside hours."""
+    mock_sf = MagicMock()
+    mock_sf.is_session_active.return_value = (False, "XAUUSD outside active sessions")
+
+    validator = TradeValidator(settings, session_filter=mock_sf)
+    instrument = get_instrument("XAUUSD")
+    request = TradeSubmitRequest(
+        direction="BUY", stop_distance=50, limit_distance=100
+    )
+    valid, msg = await validator.validate(request, current_price=2900.0, instrument=instrument)
+    assert valid is False
+    assert "outside active sessions" in msg
+
+
+@pytest.mark.asyncio
+async def test_session_filter_allows_during_hours(settings):
+    """Validator passes when session filter says session is active."""
+    mock_sf = MagicMock()
+    mock_sf.is_session_active.return_value = (True, "XAUUSD in London session")
+
+    validator = TradeValidator(settings, session_filter=mock_sf)
+    instrument = get_instrument("XAUUSD")
+    request = TradeSubmitRequest(
+        direction="BUY", stop_distance=50, limit_distance=100
+    )
+    valid, msg = await validator.validate(request, current_price=2900.0, instrument=instrument)
+    assert valid is True
+
+
+@pytest.mark.asyncio
+async def test_no_session_filter_backward_compat(settings):
+    """Without session filter, validator works as before."""
+    validator = TradeValidator(settings, session_filter=None)
+    instrument = get_instrument("XAUUSD")
+    request = TradeSubmitRequest(
+        direction="BUY", stop_distance=50, limit_distance=100
+    )
+    valid, msg = await validator.validate(request, current_price=2900.0, instrument=instrument)
     assert valid is True
