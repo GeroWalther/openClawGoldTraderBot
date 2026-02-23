@@ -70,9 +70,9 @@ async def test_forex_small_balance_returns_min(settings):
 async def test_btc_futures_sizing(settings):
     sizer = PositionSizer(settings)
     instrument = get_instrument("BTC")
-    # 3% of 100000 = 3000. 3000 / (2000 * 5) = 0.3 → rounds to 1 (min)
+    # 3% of 100000 = 3000. 3000 / (2000 * 0.1) = 15 → capped at max=10
     size = await sizer.calculate(account_balance=100000, stop_distance=2000, instrument=instrument)
-    assert size == 1.0
+    assert size == 10.0
 
 
 @pytest.mark.asyncio

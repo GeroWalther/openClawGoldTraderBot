@@ -122,7 +122,7 @@ def test_instrument_spec_fields():
         assert spec.max_stop_distance > spec.min_stop_distance
         assert spec.default_sl_distance > 0
         assert spec.default_tp_distance > 0
-        assert spec.multiplier >= 1
+        assert spec.multiplier > 0
         assert spec.display_name
         assert spec.yahoo_symbol
         assert spec.size_unit

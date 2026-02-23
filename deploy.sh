@@ -56,11 +56,11 @@ ssh "$VPS_HOST" "cd $VPS_PATH && docker compose up -d ib-gateway"
 echo "Waiting for IB Gateway to connect (this may trigger 2FA on your phone)..."
 sleep 15
 
-# Restart trading bot on VPS
-ssh "$VPS_HOST" "cd $VPS_PATH && source .venv/bin/activate && pkill -f 'uvicorn app.main:app' || true && sleep 1 && nohup uvicorn app.main:app --host 127.0.0.1 --port 8001 > /var/log/gold-trader.log 2>&1 &"
+# Restart trading bot via systemd
+ssh "$VPS_HOST" "systemctl restart gold-trader"
 
 echo "Deployed. Checking health..."
-sleep 3
-ssh "$VPS_HOST" "curl -sf http://localhost:8001/health" && echo "" && echo "Bot is running." || echo "Warning: Bot not responding yet (may still be starting)."
+sleep 5
+ssh "$VPS_HOST" "systemctl is-active gold-trader && journalctl -u gold-trader --no-pager -n 3" && echo "" && echo "Bot is running." || echo "Warning: Bot not responding yet (may still be starting)."
 echo ""
 echo "Check IB Gateway logs: ssh $VPS_HOST 'docker logs ib-gateway --tail 50'"
