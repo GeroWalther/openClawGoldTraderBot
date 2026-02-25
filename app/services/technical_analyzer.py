@@ -15,9 +15,12 @@ import pandas as pd
 import yfinance as yf
 
 from app.instruments import INSTRUMENTS, InstrumentSpec
+from app.services.calendar import CalendarService
 from app.services.indicators import compute_indicators
 from app.services.macro_data import MacroDataService, VIX_LEVELS
-from app.services.scoring_engine import ScoringEngine
+from app.services.news import NewsService
+from app.services.patterns import detect_patterns
+from app.services.scoring_engine import FACTOR_WEIGHTS, ScoringEngine
 
 logger = logging.getLogger(__name__)
 
@@ -166,6 +169,8 @@ class TechnicalAnalyzer:
         self._cache_ttl = 300  # 5 minutes
         self._macro_service = MacroDataService()
         self._scoring_engine = ScoringEngine()
+        self._calendar_service = CalendarService()
+        self._news_service = NewsService()
 
     async def analyze(self, instrument_key: str) -> dict:
         """Full multi-timeframe analysis for a single instrument."""
@@ -347,15 +352,80 @@ class TechnicalAnalyzer:
                         macro_row = macro_series.iloc[idx[0]]
 
                 score_result = self._scoring_engine.score_bar(d1_row, macro_row, key)
+                from app.services.scoring_engine import MAX_SCORE
                 scoring = {
                     "total_score": score_result["total_score"],
-                    "max_score": 28,
+                    "max_score": MAX_SCORE,
                     "direction": score_result["direction"],
                     "conviction": score_result["conviction"],
                     "factors": score_result["factors"],
                 }
             except Exception as e:
                 warnings.append(f"Scoring failed: {e}")
+
+        # Live overlay: calendar, news, chart patterns
+        calendar_data = None
+        news_data = None
+        pattern_data = None
+
+        try:
+            calendar_coro = self._calendar_service.get_calendar_risk(key)
+            news_coro = self._news_service.get_news_sentiment(key)
+            calendar_data, news_data = await asyncio.gather(
+                calendar_coro, news_coro, return_exceptions=True,
+            )
+            if isinstance(calendar_data, Exception):
+                warnings.append(f"Calendar fetch failed: {calendar_data}")
+                calendar_data = None
+            if isinstance(news_data, Exception):
+                warnings.append(f"News fetch failed: {news_data}")
+                news_data = None
+        except Exception as e:
+            warnings.append(f"Calendar/news fetch failed: {e}")
+
+        if not d1_df.empty and len(d1_df) >= 20:
+            try:
+                pattern_data = detect_patterns(d1_df)
+            except Exception as e:
+                warnings.append(f"Pattern detection failed: {e}")
+
+        # Overlay live values into scoring factors
+        if scoring and "factors" in scoring:
+            factors = scoring["factors"]
+
+            if calendar_data and "score" in calendar_data:
+                factors["calendar_risk"] = float(calendar_data["score"])
+
+            if news_data and "score" in news_data:
+                factors["news_sentiment"] = float(news_data["score"])
+
+            if pattern_data and "enhanced_chart_score" in pattern_data:
+                original = factors.get("chart_pattern", 0.0)
+                enhanced = pattern_data["enhanced_chart_score"]
+                factors["chart_pattern"] = round((original + enhanced) / 2, 2)
+
+            # Recompute total score from updated factors
+            total_score = sum(
+                factors.get(f, 0.0) * FACTOR_WEIGHTS[f] for f in FACTOR_WEIGHTS
+            )
+            total_score = round(total_score, 2)
+            scoring["total_score"] = total_score
+
+            # Recompute direction and conviction
+            if total_score >= 10:
+                scoring["direction"] = "BUY"
+            elif total_score <= -10:
+                scoring["direction"] = "SELL"
+            else:
+                scoring["direction"] = None
+
+            abs_score = abs(total_score)
+            if abs_score >= 15:
+                scoring["conviction"] = "HIGH"
+            elif abs_score >= 10:
+                scoring["conviction"] = "MEDIUM"
+            else:
+                scoring["conviction"] = None
 
         # Session info
         session = _session_info(instrument)
@@ -366,10 +436,23 @@ class TechnicalAnalyzer:
         total = scoring.get("total_score", 0)
         d1_trend = d1_block.get("trend", "?") if d1_block else "?"
         rsi_val = d1_block.get("rsi", "?") if d1_block else "?"
+
+        # Calendar/news context for summary
+        cal_ctx = ""
+        if calendar_data and calendar_data.get("score", 0) <= -2:
+            events = calendar_data.get("events", [])
+            if events:
+                cal_ctx = f" CAUTION: {events[0]['title']} in {events[0]['hours_away']}h."
+        news_ctx = ""
+        if news_data and abs(news_data.get("score", 0)) >= 1:
+            sentiment = "bullish" if news_data["score"] > 0 else "bearish"
+            news_ctx = f" News: {sentiment} ({news_data.get('net_sentiment', 0):+d} net)."
+
         summary = (
             f"{conviction or 'LOW'} conviction {direction or 'NO TRADE'}. "
             f"D1 trend {d1_trend}. RSI {rsi_val}. "
             f"Score {total}/{scoring.get('max_score', 28)}."
+            f"{cal_ctx}{news_ctx}"
         )
 
         result = {
@@ -384,6 +467,13 @@ class TechnicalAnalyzer:
             "session": session,
             "summary": summary,
         }
+
+        if calendar_data:
+            result["calendar"] = calendar_data
+        if news_data:
+            result["news"] = news_data
+        if pattern_data:
+            result["patterns"] = pattern_data
 
         if d1_block:
             result["technicals"]["d1"] = d1_block

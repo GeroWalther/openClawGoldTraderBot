@@ -39,9 +39,9 @@ Overall Regime: [Risk-On / Risk-Off / Mixed based on VIX + DXY trends]
 
 ━━━ INSTRUMENT SCORES ━━━
 
-| Instrument | Price | Day% | D1 Trend | RSI | Score | Signal |
-|------------|-------|------|----------|-----|-------|--------|
-[For each instrument in the response, fill from price.current, price.change_pct, technicals.d1.trend, technicals.d1.rsi, scoring.total_score/28, scoring.direction]
+| Instrument | Price | Day% | D1 Trend | RSI | Cal | News | Score | Signal |
+|------------|-------|------|----------|-----|-----|------|-------|--------|
+[For each instrument in the response, fill from price.current, price.change_pct, technicals.d1.trend, technicals.d1.rsi, calendar.score, news.score, scoring.total_score/26, scoring.direction]
 
 Disqualified: [list instruments filtered by rules below]
 ```
@@ -52,6 +52,7 @@ Disqualified: [list instruments filtered by rules below]
 - `scoring.direction == null` (score between -9 and +9) → insufficient edge
 - RSI > 75 and direction is BUY → overbought
 - RSI < 25 and direction is SELL → oversold
+- `calendar.score <= -2` → high-impact event imminent (flag as ⚠, still rank but warn)
 
 ---
 

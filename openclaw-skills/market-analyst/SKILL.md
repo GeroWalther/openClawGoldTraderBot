@@ -73,7 +73,26 @@ KEY LEVELS:
 ━━━ MACRO ━━━
 [Format each entry in macro: name, value, trend, correlation]
 
-━━━ SCORING (weighted, max 28) ━━━
+━━━ CALENDAR ━━━
+Risk Score: [calendar.score] (-2=imminent event, +2=clear)
+[If calendar.events exists:]
+Upcoming High-Impact Events:
+[For each event: title, country, hours_away]
+[If calendar.score <= -2:] ⚠ HIGH-IMPACT EVENT IMMINENT — consider waiting
+
+━━━ NEWS SENTIMENT ━━━
+Score: [news.score] (-2=bearish, +2=bullish)
+Net: [news.net_sentiment] ([news.bullish_count] bullish / [news.bearish_count] bearish)
+[For each headline in news.headlines: title, sentiment]
+
+━━━ CHART PATTERNS ━━━
+[If patterns.candlestick_patterns exists:]
+Candlesticks: [list pattern names and types]
+Trend Structure: [patterns.trend_structure.trend] (strength [patterns.trend_structure.strength])
+Trendline: [patterns.trendline.direction] (R²=[patterns.trendline.r_squared])
+Enhanced Score: [patterns.enhanced_chart_score]
+
+━━━ SCORING (weighted, max 26) ━━━
 D1 Trend (×2):           [factors.d1_trend × 2]
 4H Momentum (×1.5):     [factors.4h_momentum × 1.5]
 1H Entry (×1):           [factors.1h_entry]
@@ -110,6 +129,7 @@ Risk: 1% of account
 - **Session closed**: NO TRADE
 - **RSI > 75 (D1) + BUY**: NO TRADE (overbought)
 - **RSI < 25 (D1) + SELL**: NO TRADE (oversold)
+- **calendar.score <= -2**: WARN — high-impact event imminent, consider waiting or tightening stops
 
 ---
 

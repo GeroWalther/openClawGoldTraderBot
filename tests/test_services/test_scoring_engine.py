@@ -200,8 +200,8 @@ class TestScoringEngine:
         assert engine._score_tf_alignment(row) == -2.0
 
     def test_max_score_value(self):
-        """Max theoretical score = 2 * sum(weights) = 2 * 14 = 28."""
-        assert MAX_SCORE == 28.0
+        """Max theoretical score = 2 * sum(weights) = 2 * 13 = 26."""
+        assert MAX_SCORE == 26.0
 
     def test_fundamental_3_positive_yield_curve(self, engine):
         """Positive yield curve change with positive correlation should give positive score."""

@@ -14,23 +14,25 @@ from app.services.macro_data import INSTRUMENT_MACRO_MAP
 
 logger = logging.getLogger(__name__)
 
-# Factor weights matching SKILL.md
+# Factor weights — tuned to avoid triple-counting SMA/RSI/MACD signals.
+# tf_alignment and tv_technicals overlap heavily with d1_trend and 4h_momentum,
+# so they're weighted at 0.5 to keep them as tie-breakers, not primary drivers.
 FACTOR_WEIGHTS = {
-    "d1_trend": 2.0,
-    "4h_momentum": 1.5,
-    "1h_entry": 1.0,
-    "chart_pattern": 1.5,
-    "tf_alignment": 1.0,
-    "sr_proximity": 1.0,
-    "tv_technicals": 1.0,
-    "fundamental_1": 1.0,
-    "fundamental_2": 1.0,
-    "fundamental_3": 1.0,
-    "news_sentiment": 1.0,
-    "calendar_risk": 1.0,
+    "d1_trend": 2.0,        # Primary trend — SMA alignment + price position
+    "4h_momentum": 1.5,     # Momentum — MACD + RSI
+    "1h_entry": 1.0,        # Entry timing — RSI mean-reversion
+    "chart_pattern": 1.5,   # Breakout + Bollinger + candlestick/multi-bar patterns
+    "tf_alignment": 0.5,    # Reduced: overlaps with d1_trend (same SMAs)
+    "sr_proximity": 1.0,    # Support/resistance distance
+    "tv_technicals": 0.5,   # Reduced: overlaps with d1_trend + 4h_momentum
+    "fundamental_1": 1.0,   # DXY / VIX direction
+    "fundamental_2": 1.0,   # Yields / silver / SP500
+    "fundamental_3": 1.0,   # Yield curve spread
+    "news_sentiment": 1.0,  # RSS headline sentiment
+    "calendar_risk": 1.0,   # Economic calendar risk filter (can only subtract)
 }
 
-MAX_SCORE = sum(2 * w for w in FACTOR_WEIGHTS.values())  # 24
+MAX_SCORE = sum(2 * w for w in FACTOR_WEIGHTS.values())  # 26
 
 
 class ScoringEngine:
