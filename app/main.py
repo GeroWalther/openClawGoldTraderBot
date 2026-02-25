@@ -8,6 +8,7 @@ from app.config import Settings
 from app.models.database import Base
 from app.services.atr_calculator import ATRCalculator
 from app.services.ibkr_client import IBKRClient
+from app.services.technical_analyzer import TechnicalAnalyzer
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,7 @@ async def lifespan(app: FastAPI):
     app.state.ibkr_client = ibkr_client
     app.state.settings = settings
     app.state.atr_calculator = ATRCalculator(settings)
+    app.state.technical_analyzer = TechnicalAnalyzer()
 
     logger.info(
         "Trader Bot v4 started (IBKR %s:%s, connected=%s)",

@@ -11,6 +11,7 @@ from app.services.trade_executor import TradeExecutor
 from app.services.trade_validator import TradeValidator
 from app.services.analytics import TradeAnalytics
 from app.services.journal import JournalService
+from app.services.technical_analyzer import TechnicalAnalyzer
 
 
 def get_settings(request: Request) -> Settings:
@@ -66,3 +67,7 @@ def get_risk_manager(
 
 def get_journal_service() -> JournalService:
     return JournalService()
+
+
+def get_technical_analyzer(request: Request) -> TechnicalAnalyzer:
+    return request.app.state.technical_analyzer

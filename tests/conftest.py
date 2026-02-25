@@ -189,6 +189,9 @@ async def test_app(settings, mock_ibkr_client, mock_atr_calculator):
     app.state.ibkr_connected = True
     app.state.atr_calculator = mock_atr_calculator
 
+    from app.services.technical_analyzer import TechnicalAnalyzer
+    app.state.technical_analyzer = TechnicalAnalyzer()
+
     engine = create_async_engine(settings.database_url)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
