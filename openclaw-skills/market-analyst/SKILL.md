@@ -123,9 +123,9 @@ Risk: 1% of account
 
 ### Decision Rules
 
-- **Score >= +10**: BUY signal (HIGH confidence if >= +15)
-- **Score <= -10**: SELL signal (HIGH confidence if <= -15)
-- **Score -9 to +9**: NO TRADE — insufficient edge
+- **Score >= +7**: BUY signal (HIGH confidence if >= +12)
+- **Score <= -7**: SELL signal (HIGH confidence if <= -12)
+- **Score -6 to +6**: NO TRADE — insufficient edge
 - **Session closed**: NO TRADE
 - **RSI > 75 (D1) + BUY**: NO TRADE (overbought)
 - **RSI < 25 (D1) + SELL**: NO TRADE (oversold)
