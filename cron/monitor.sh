@@ -36,6 +36,9 @@ fi
 echo "$json" > "$JOURNAL_DIR/monitors/${TIMESTAMP}.json"
 echo "$json" > "$JOURNAL_DIR/latest_monitor.json"
 
+# Track which instruments have open positions (for runner state cleanup)
+OPEN_INSTRUMENTS=""
+
 # Process each position
 echo "$json" | python3 -c "
 import sys, json
@@ -43,6 +46,14 @@ import sys, json
 d = json.load(sys.stdin)
 positions = d.get('positions', [])
 pending = d.get('pending_orders', [])
+recent_trades = d.get('recent_trades', [])
+
+# Build lookup: instrument+direction -> trade info (for runner detection)
+trade_lookup = {}
+for t in recent_trades:
+    key = (t.get('epic', ''), t.get('direction', ''))
+    if key not in trade_lookup:
+        trade_lookup[key] = t
 
 # Output position data for bash processing
 for p in positions:
@@ -54,6 +65,25 @@ for p in positions:
     pnl = p.get('unrealized_pnl', p.get('pnl', 0))
     sl = p.get('stop_loss', 0) or 0
     tp = p.get('take_profit', 0) or 0
+
+    # Check if this is a runner position:
+    # 1. No TP order (TP1 already filled, no TP2)
+    # 2. Matching trade has strategy == 'm5_scalp'
+    matching_trade = trade_lookup.get((inst, direction))
+    is_runner = False
+    stop_distance = 0
+    if matching_trade:
+        strategy = matching_trade.get('strategy', '')
+        trade_tp = matching_trade.get('take_profit')
+        stop_distance = matching_trade.get('stop_distance', 0) or 0
+        # Runner: m5_scalp with no TP2 in DB, and no TP order on position
+        if strategy == 'm5_scalp' and (trade_tp is None or trade_tp == 0) and (tp == 0):
+            is_runner = True
+
+    if is_runner:
+        # Output runner line with stop_distance as extra field
+        print(f'{inst}|{direction}|{size}|{entry}|{current}|{pnl}|{sl}|{tp}|0.0|runner_trail|{stop_distance}')
+        continue
 
     # Calculate % to TP and % to SL
     pct_to_tp = 0
@@ -83,7 +113,7 @@ for p in positions:
     elif pct_to_sl >= 70:
         action = 'warn_near_sl'
 
-    print(f'{inst}|{direction}|{size}|{entry}|{current}|{pnl}|{sl}|{tp}|{pct_to_tp:.1f}|{action}')
+    print(f'{inst}|{direction}|{size}|{entry}|{current}|{pnl}|{sl}|{tp}|{pct_to_tp:.1f}|{action}|0')
 
 # Also output pending orders for age check
 for o in pending:
@@ -91,10 +121,15 @@ for o in pending:
     odir = o.get('direction', o.get('side', ''))
     osource = o.get('source', '')
     ocreated = o.get('created_at', '')
-    print(f'PENDING|{oinst}|{odir}|{osource}|{ocreated}|||||0.0|pending')
-" 2>/dev/null | while IFS='|' read -r inst direction size entry current pnl sl tp pct_to_tp action; do
+    print(f'PENDING|{oinst}|{odir}|{osource}|{ocreated}|||||0.0|pending|0')
+" 2>/dev/null | while IFS='|' read -r inst direction size entry current pnl sl tp pct_to_tp action stop_dist; do
     if [ -z "$inst" ]; then
         continue
+    fi
+
+    # Track open instrument+direction for runner state cleanup
+    if [ "$inst" != "PENDING" ]; then
+        OPEN_INSTRUMENTS="${OPEN_INSTRUMENTS}${inst}_${direction} "
     fi
 
     # Handle pending orders — check for expiration
@@ -149,7 +184,123 @@ print(json.dumps({'instrument': '$p_inst', 'direction': '$p_dir'}))
     log "MONITOR $inst: dir=$direction pnl=$pnl pct_to_tp=${pct_to_tp}% action=$action"
 
     # Act on signals
-    if [ "$action" = "trail_sl" ]; then
+    if [ "$action" = "runner_trail" ]; then
+        # Runner position: trail SL at 1R behind peak price
+        state_file="$JOURNAL_DIR/monitors/runner_${inst}_${direction}.json"
+
+        if [ ! -f "$state_file" ]; then
+            # First detection: move SL to breakeven + resize SL quantity
+            log "MONITOR $inst: Runner first detection — SL to BE + resize to $size"
+            runner_payload=$(python3 -c "
+import json
+print(json.dumps({
+    'instrument': '$inst',
+    'direction': '$direction',
+    'new_stop_loss': float('$entry'),
+    'new_sl_quantity': abs(float('$size')),
+    'reasoning': 'Runner: TP1 filled, SL to breakeven + resize'
+}))
+" 2>/dev/null || echo "")
+            if [ -n "$runner_payload" ]; then
+                runner_result=$(api_post "/api/v1/positions/modify" "$runner_payload" 2>&1) || true
+                runner_status=$(echo "$runner_result" | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','UNKNOWN'))" 2>/dev/null || echo "UNKNOWN")
+                log "MONITOR $inst: Runner init result=$runner_status"
+                if [ "$runner_status" = "modified" ]; then
+                    # Create state file
+                    python3 -c "
+import json
+state = {
+    'instrument': '$inst',
+    'direction': '$direction',
+    'entry_price': float('$entry'),
+    'r_distance': float('$stop_dist'),
+    'peak_price': float('$current'),
+    'sl_adjusted': True
+}
+with open('$state_file', 'w') as f:
+    json.dump(state, f, indent=2)
+" 2>/dev/null
+                    send_telegram "🏃 Runner active for *$inst* $direction — SL moved to breakeven, qty resized to $size"
+                fi
+            fi
+        else
+            # Subsequent run: update peak + trail SL
+            trail_result=$(python3 -c "
+import json, sys
+
+with open('$state_file') as f:
+    state = json.load(f)
+
+direction = state['direction']
+r_distance = state['r_distance']
+peak_price = state['peak_price']
+entry_price = state['entry_price']
+current = float('$current')
+current_sl = float('$sl') if float('$sl') != 0 else entry_price
+
+# Update peak
+if direction == 'BUY':
+    peak_price = max(peak_price, current)
+else:
+    peak_price = min(peak_price, current)
+
+# Calculate trailing SL
+if direction == 'BUY':
+    new_sl = max(entry_price, peak_price - r_distance)
+    should_move = new_sl > current_sl
+else:
+    new_sl = min(entry_price, peak_price + r_distance)
+    should_move = new_sl < current_sl
+
+# Calculate profit in R-multiples
+if r_distance > 0:
+    if direction == 'BUY':
+        profit_r = (new_sl - entry_price) / r_distance
+    else:
+        profit_r = (entry_price - new_sl) / r_distance
+else:
+    profit_r = 0
+
+# Update state file
+state['peak_price'] = peak_price
+with open('$state_file', 'w') as f:
+    json.dump(state, f, indent=2)
+
+if should_move:
+    print(f'TRAIL|{new_sl:.2f}|{peak_price:.2f}|{profit_r:.1f}')
+else:
+    print(f'HOLD|{current_sl:.2f}|{peak_price:.2f}|{profit_r:.1f}')
+" 2>/dev/null || echo "ERROR")
+
+            trail_action=$(echo "$trail_result" | cut -d'|' -f1)
+            trail_new_sl=$(echo "$trail_result" | cut -d'|' -f2)
+            trail_peak=$(echo "$trail_result" | cut -d'|' -f3)
+            trail_profit_r=$(echo "$trail_result" | cut -d'|' -f4)
+
+            if [ "$trail_action" = "TRAIL" ]; then
+                log "MONITOR $inst: Runner trailing SL to $trail_new_sl (peak=$trail_peak, locking ${trail_profit_r}R)"
+                trail_payload=$(python3 -c "
+import json
+print(json.dumps({
+    'instrument': '$inst',
+    'direction': '$direction',
+    'new_stop_loss': float('$trail_new_sl'),
+    'reasoning': 'Runner trail: peak=$trail_peak, locking ${trail_profit_r}R'
+}))
+" 2>/dev/null || echo "")
+                if [ -n "$trail_payload" ]; then
+                    modify_result=$(api_post "/api/v1/positions/modify" "$trail_payload" 2>&1) || true
+                    modify_status=$(echo "$modify_result" | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','UNKNOWN'))" 2>/dev/null || echo "UNKNOWN")
+                    log "MONITOR $inst: Runner trail result=$modify_status"
+                    if [ "$modify_status" = "modified" ]; then
+                        send_telegram "🏃 Runner *$inst*: SL trailed to $trail_new_sl (peak $trail_peak, locking ${trail_profit_r}R)"
+                    fi
+                fi
+            else
+                log "MONITOR $inst: Runner holding (SL=$trail_new_sl, peak=$trail_peak, ${trail_profit_r}R)"
+            fi
+        fi
+    elif [ "$action" = "trail_sl" ]; then
         # Trail SL to lock in ~50% of current profit
         trail_level=$(python3 -c "
 entry = float('$entry')
@@ -223,6 +374,18 @@ print(json.dumps({
     elif [ "$action" = "warn_near_sl" ]; then
         log "MONITOR $inst: >70% toward SL — sending alert"
         send_telegram "⚠️ *$inst* $direction position near SL — PnL: $pnl, ${pct_to_tp}% to TP"
+    fi
+done
+
+# Cleanup stale runner state files for positions that no longer exist
+for state_file in "$JOURNAL_DIR"/monitors/runner_*.json; do
+    [ -f "$state_file" ] || continue
+    # Extract instrument_direction from filename: runner_BTC_BUY.json -> BTC_BUY
+    basename=$(basename "$state_file" .json)
+    inst_dir="${basename#runner_}"
+    if ! echo "$OPEN_INSTRUMENTS" | grep -q "$inst_dir"; then
+        log "MONITOR: Cleaning up stale runner state: $basename"
+        rm -f "$state_file"
     fi
 done
 

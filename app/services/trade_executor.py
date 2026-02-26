@@ -255,10 +255,16 @@ class TradeExecutor:
             else:
                 # Market order path (existing behavior)
                 if self.settings.partial_tp_enabled and self._can_split(size, instrument):
-                    result = await self._execute_partial_tp(
-                        request.direction, size, stop_price, tp_price,
-                        stop_distance, instrument,
-                    )
+                    if request.strategy == "m5_scalp":
+                        result = await self._execute_runner(
+                            request.direction, size, stop_price,
+                            stop_distance, instrument,
+                        )
+                    else:
+                        result = await self._execute_partial_tp(
+                            request.direction, size, stop_price, tp_price,
+                            stop_distance, instrument,
+                        )
                 else:
                     result = await self.ibkr.open_position(
                         direction=request.direction,
@@ -288,6 +294,8 @@ class TradeExecutor:
             db_entry_price = request.entry_price
         else:
             db_entry_price = fill_price
+        # Runner trades (m5_scalp) have no fixed TP2 — monitor trails the SL
+        db_take_profit = None if (request.strategy == "m5_scalp" and not is_pending) else tp_price
         trade = Trade(
             deal_id=deal_id,
             direction=request.direction,
@@ -296,7 +304,7 @@ class TradeExecutor:
             stop_distance=stop_distance,
             limit_distance=limit_distance,
             stop_loss=stop_price,
-            take_profit=tp_price,
+            take_profit=db_take_profit,
             entry_price=db_entry_price,
             status=status,
             source=request.source,
@@ -378,6 +386,37 @@ class TradeExecutor:
             tp2_price=tp_price,
             tp1_size=tp1_size,
             tp2_size=tp2_size,
+            instrument_key=instrument.key,
+        )
+
+    async def _execute_runner(
+        self, direction, size, stop_price, stop_distance, instrument,
+    ) -> dict:
+        """Execute with runner: TP1 at 1R, no TP2 — monitor trails the SL."""
+        tp1_size_raw = size * (self.settings.partial_tp_percent / 100.0)
+        runner_size_raw = size - tp1_size_raw
+
+        if instrument.sec_type == "CASH":
+            tp1_size = max(round(tp1_size_raw / 1000) * 1000, instrument.min_size)
+            runner_size = max(round(runner_size_raw / 1000) * 1000, instrument.min_size)
+        else:
+            tp1_size = max(round(tp1_size_raw), int(instrument.min_size))
+            runner_size = max(round(runner_size_raw), int(instrument.min_size))
+
+        # TP1 at 1R distance
+        r_distance = stop_distance * self.settings.partial_tp_r_multiple
+        if direction == "BUY":
+            tp1_price = stop_price + stop_distance + r_distance  # entry + 1R
+        else:
+            tp1_price = stop_price - stop_distance - r_distance  # entry - 1R
+
+        return await self.ibkr.open_position_with_runner(
+            direction=direction,
+            size=size,
+            stop_price=stop_price,
+            tp1_price=tp1_price,
+            tp1_size=tp1_size,
+            runner_size=runner_size,
             instrument_key=instrument.key,
         )
 

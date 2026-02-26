@@ -141,17 +141,18 @@ class Backtester:
         # Generate M5 scalp signals
         signals = self._m5_scalp_signals(m5_df, h1_df)
 
-        # Simulate with M5 ATR multipliers: SL 1.0×, TP 2.0×, partial TP at 1R
+        # Simulate with M5 ATR multipliers: SL 1.0×, runner mode (trail at 1R behind peak)
         trades, equity_curve = self._simulate(
             m5_df, signals, instrument,
             initial_balance=initial_balance,
             risk_percent=risk_percent,
             atr_sl_mult=1.0,   # Tighter SL for scalps
-            atr_tp_mult=2.0,   # Let winners run to 2R
+            atr_tp_mult=2.0,   # Fallback if runner=False
             session_filter=session_filter,
-            partial_tp=True,   # Close half at 1R, let rest run to 2R
+            partial_tp=True,   # Close half at 1R
             max_trades=max_trades,
             fx_map=fx_map,
+            runner=True,       # Trail SL at 1R behind peak instead of fixed TP2
         )
 
         return self._compile_results(
@@ -477,6 +478,7 @@ class Backtester:
         partial_tp: bool,
         max_trades: int | None = None,
         fx_map: dict[object, float] | None = None,
+        runner: bool = False,
     ) -> tuple[list[BacktestTrade], list[dict]]:
         balance = initial_balance
         trades: list[BacktestTrade] = []
@@ -578,20 +580,20 @@ class Backtester:
             partial_filled = False
             partial_pnl = 0.0
 
+            # Runner state: track peak price for trailing SL
+            peak_price = entry_price
+
             for j in range(idx + 1, len(df)):
                 bar = df.iloc[j]
 
                 if direction == "BUY":
-                    # Check SL
+                    # Check SL (or trailing SL)
                     if bar["low"] <= sl_price:
-                        if partial_tp and partial_filled:
-                            # Remaining half stopped out
-                            exit_price = sl_price
-                            exit_reason = "sl"
-                            exit_idx = j
-                            break
                         exit_price = sl_price
-                        exit_reason = "sl"
+                        if partial_tp and partial_filled and runner:
+                            exit_reason = "trailing_sl"
+                        else:
+                            exit_reason = "sl"
                         exit_idx = j
                         break
                     # Check partial TP (at 1R)
@@ -600,16 +602,30 @@ class Backtester:
                         if bar["high"] >= tp1_price:
                             partial_pnl = (tp1_price - entry_price) * (size * 0.5) * instrument.multiplier
                             partial_filled = True
-                    # Check full TP
-                    if bar["high"] >= tp_price:
-                        exit_price = tp_price
-                        exit_reason = "tp"
-                        exit_idx = j
-                        break
+                            if runner:
+                                # Move SL to breakeven, start trailing
+                                sl_price = entry_price
+                                peak_price = tp1_price
+                    # Runner mode: trail SL at 1R behind peak
+                    if runner and partial_tp and partial_filled:
+                        peak_price = max(peak_price, bar["high"])
+                        trailing_sl = max(entry_price, peak_price - sl_dist)
+                        if trailing_sl > sl_price:
+                            sl_price = trailing_sl
+                    elif not runner:
+                        # Check fixed TP2
+                        if bar["high"] >= tp_price:
+                            exit_price = tp_price
+                            exit_reason = "tp"
+                            exit_idx = j
+                            break
                 else:  # SELL
                     if bar["high"] >= sl_price:
                         exit_price = sl_price
-                        exit_reason = "sl"
+                        if partial_tp and partial_filled and runner:
+                            exit_reason = "trailing_sl"
+                        else:
+                            exit_reason = "sl"
                         exit_idx = j
                         break
                     if partial_tp and not partial_filled:
@@ -617,11 +633,20 @@ class Backtester:
                         if bar["low"] <= tp1_price:
                             partial_pnl = (entry_price - tp1_price) * (size * 0.5) * instrument.multiplier
                             partial_filled = True
-                    if bar["low"] <= tp_price:
-                        exit_price = tp_price
-                        exit_reason = "tp"
-                        exit_idx = j
-                        break
+                            if runner:
+                                sl_price = entry_price
+                                peak_price = tp1_price
+                    if runner and partial_tp and partial_filled:
+                        peak_price = min(peak_price, bar["low"])
+                        trailing_sl = min(entry_price, peak_price + sl_dist)
+                        if trailing_sl < sl_price:
+                            sl_price = trailing_sl
+                    elif not runner:
+                        if bar["low"] <= tp_price:
+                            exit_price = tp_price
+                            exit_reason = "tp"
+                            exit_idx = j
+                            break
 
             if exit_price is None:
                 exit_price = df.iloc[exit_idx]["close"]

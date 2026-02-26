@@ -236,8 +236,10 @@ class IBKRClient:
             })
         return result
 
-    async def modify_order(self, order_id: int, new_price: float) -> dict:
-        """Modify an existing order's price (STP → auxPrice, LMT → lmtPrice)."""
+    async def modify_order(
+        self, order_id: int, new_price: float, new_quantity: float | None = None,
+    ) -> dict:
+        """Modify an existing order's price and optionally quantity."""
         await self.ensure_connected()
         for t in self._ib.openTrades():
             if t.order.orderId == order_id:
@@ -248,8 +250,11 @@ class IBKRClient:
                     order.lmtPrice = new_price
                 else:
                     return {"success": False, "error": f"Unsupported order type: {order.orderType}"}
+                if new_quantity is not None:
+                    order.totalQuantity = new_quantity
                 self._ib.placeOrder(t.contract, order)
-                logger.info("Modified order %d to price %.5f", order_id, new_price)
+                logger.info("Modified order %d to price %.5f%s", order_id, new_price,
+                            f" qty={new_quantity}" if new_quantity is not None else "")
                 return {"success": True, "orderId": order_id, "newPrice": new_price}
         return {"success": False, "error": f"Order {order_id} not found"}
 
@@ -259,6 +264,7 @@ class IBKRClient:
         direction: str,
         new_sl: float | None = None,
         new_tp: float | None = None,
+        new_sl_quantity: float | None = None,
     ) -> dict:
         """
         Modify SL and/or TP for an open position identified by instrument + direction.
@@ -295,7 +301,7 @@ class IBKRClient:
         if new_sl is not None:
             if sl_order_id is None:
                 raise RuntimeError(f"No STP (stop-loss) order found for {instrument_key} {direction}")
-            res = await self.modify_order(sl_order_id, new_sl)
+            res = await self.modify_order(sl_order_id, new_sl, new_quantity=new_sl_quantity)
             if not res["success"]:
                 raise RuntimeError(f"Failed to modify SL: {res['error']}")
             results["new_sl"] = new_sl
@@ -392,6 +398,79 @@ class IBKRClient:
         parent_trade = self._ib.placeOrder(contract, parent)
         self._ib.placeOrder(contract, tp1)
         self._ib.placeOrder(contract, tp2)
+        self._ib.placeOrder(contract, sl)
+
+        await self._wait_for_fill(parent_trade)
+        return self._trade_to_dict(parent_trade)
+
+    async def open_position_with_runner(
+        self,
+        direction: str,
+        size: float,
+        stop_price: float,
+        tp1_price: float,
+        tp1_size: float,
+        runner_size: float,
+        instrument_key: str = "XAUUSD",
+    ) -> dict:
+        """
+        Open a position with TP1 + runner (no TP2).
+
+        Places 3 orders: parent MKT (full size), TP1 LMT (half), SL STP (full).
+        After TP1 fills, monitor trails the SL for the remaining runner half.
+        Falls back to regular bracket if sizes are too small.
+        """
+        await self.ensure_connected()
+        instrument = get_instrument(instrument_key)
+
+        if tp1_size < instrument.min_size or runner_size < instrument.min_size:
+            logger.info(
+                "Runner sizes too small (%.1f/%.1f, min=%.1f) — falling back to regular bracket",
+                tp1_size, runner_size, instrument.min_size,
+            )
+            return await self.open_position(
+                direction=direction, size=size,
+                stop_price=stop_price, take_profit_price=tp1_price,
+                instrument_key=instrument_key,
+            )
+
+        contract = self.get_contract(instrument_key)
+        parent_id = self._ib.client.getReqId()
+        reverse = "SELL" if direction == "BUY" else "BUY"
+
+        # Parent: market entry
+        parent = Order(
+            orderId=parent_id,
+            action=direction,
+            orderType="MKT",
+            totalQuantity=size,
+            transmit=False,
+        )
+
+        # TP1: partial take-profit at 1R
+        tp1 = Order(
+            orderId=parent_id + 1,
+            action=reverse,
+            orderType="LMT",
+            totalQuantity=tp1_size,
+            lmtPrice=tp1_price,
+            parentId=parent_id,
+            transmit=False,
+        )
+
+        # SL: full size stop-loss (monitor will resize after TP1 fill)
+        sl = Order(
+            orderId=parent_id + 2,
+            action=reverse,
+            orderType="STP",
+            totalQuantity=size,
+            auxPrice=stop_price,
+            parentId=parent_id,
+            transmit=True,
+        )
+
+        parent_trade = self._ib.placeOrder(contract, parent)
+        self._ib.placeOrder(contract, tp1)
         self._ib.placeOrder(contract, sl)
 
         await self._wait_for_fill(parent_trade)

@@ -152,10 +152,10 @@ async def modify_position(
     if x_api_key != settings.api_secret_key:
         raise HTTPException(status_code=401, detail="Invalid API key")
 
-    if request.new_stop_loss is None and request.new_take_profit is None:
+    if request.new_stop_loss is None and request.new_take_profit is None and request.new_sl_quantity is None:
         raise HTTPException(
             status_code=400,
-            detail="At least one of new_stop_loss or new_take_profit must be provided",
+            detail="At least one of new_stop_loss, new_take_profit, or new_sl_quantity must be provided",
         )
 
     instrument = get_instrument(request.instrument)
@@ -166,6 +166,7 @@ async def modify_position(
             direction=request.direction,
             new_sl=request.new_stop_loss,
             new_tp=request.new_take_profit,
+            new_sl_quantity=request.new_sl_quantity,
         )
     except RuntimeError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -306,6 +307,8 @@ async def get_trade_status(
             "stop_loss": t.stop_loss,
             "take_profit": t.take_profit,
             "pnl": t.pnl,
+            "stop_distance": t.stop_distance,
+            "strategy": t.strategy,
             "created_at": t.created_at.isoformat() if t.created_at else None,
         }
         for t in trades

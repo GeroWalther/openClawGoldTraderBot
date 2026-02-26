@@ -84,6 +84,7 @@ class ModifyPositionRequest(BaseModel):
     direction: str = Field(..., pattern="^(BUY|SELL)$")
     new_stop_loss: float | None = None
     new_take_profit: float | None = None
+    new_sl_quantity: float | None = None
     reasoning: str | None = None
 
 
