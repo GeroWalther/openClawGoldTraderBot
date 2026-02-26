@@ -66,6 +66,25 @@ Beispiele wann du claude-cli nutzen sollst:
 
 ---
 
+## Automated Monitoring — Journal Files
+
+Cron-Jobs laufen automatisch und speichern Daten in `/opt/gold-trader/journal/`. Wenn Gero fragt "was ist passiert?", "summary", "show me the scans", "wie lief es heute?":
+
+| Was | Datei | Inhalt |
+|---|---|---|
+| Letzter Intraday-Scan | `journal/intraday/latest_scan.json` | Aktuellste 6-Faktor Intraday-Analyse |
+| Letzter Swing-Scan | `journal/swing/latest_scan.json` | Aktuellste 12-Faktor Swing-Analyse (alle Instrumente) |
+| Positions-Monitor | `journal/latest_monitor.json` | Letzte Positionsüberwachung (SL/TP Distanz) |
+| Tages-Summary | `journal/latest_summary.json` | End-of-Day Zusammenfassung (Balance, P&L, Trades) |
+| Intraday-Historie | `journal/intraday/scans.csv` | Alle Intraday-Scans als CSV |
+| Swing-Historie | `journal/swing/scans.csv` | Alle Swing-Scans als CSV |
+| Monitor-Historie | `journal/monitors/monitors.csv` | Alle Position-Checks als CSV |
+| Summaries-Historie | `journal/summaries/summaries.csv` | Alle Tages-Summaries als CSV |
+
+Benutze den **claude-cli** Skill um diese Dateien zu lesen. Beispiel: `cat /opt/gold-trader/journal/latest_summary.json`
+
+---
+
 ## Regeln
 
 ### Allgemein

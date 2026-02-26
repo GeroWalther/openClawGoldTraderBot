@@ -79,6 +79,16 @@ class TradeExecutor:
         if current_price <= 0:
             return self._reject(request, instrument.key, f"Cannot get current {instrument.display_name} price from IBKR")
 
+        # Spread protection — reject if spread is too wide relative to stop
+        if spread is not None and spread > 0 and request.stop_distance is not None and request.stop_distance > 0:
+            spread_ratio = spread / request.stop_distance
+            if spread_ratio > self.settings.max_spread_to_sl_ratio:
+                return self._reject(
+                    request, instrument.key,
+                    f"Spread too wide: {spread:.2f} = {spread_ratio:.0%} of SL distance {request.stop_distance} "
+                    f"(max {self.settings.max_spread_to_sl_ratio:.0%})",
+                )
+
         # 2a. Validate entry_price direction for pending orders
         if is_pending:
             entry_price = request.entry_price
@@ -146,10 +156,41 @@ class TradeExecutor:
                 message=message,
             )
 
-        # 4. ATR-based SL/TP defaults if user didn't specify distances
+        # 4. Convert absolute stop_level/limit_level to distances
         stop_distance = request.stop_distance
         limit_distance = request.limit_distance
 
+        if stop_distance is None and request.stop_level is not None:
+            sl_dist = abs(reference_price - request.stop_level)
+            # Validate level is on the correct side
+            if request.direction == "BUY" and request.stop_level >= reference_price:
+                return self._reject(
+                    request, instrument.key,
+                    f"BUY stop_level ({request.stop_level}) must be below reference price ({reference_price})",
+                )
+            if request.direction == "SELL" and request.stop_level <= reference_price:
+                return self._reject(
+                    request, instrument.key,
+                    f"SELL stop_level ({request.stop_level}) must be above reference price ({reference_price})",
+                )
+            stop_distance = round(sl_dist, 2)
+
+        if limit_distance is None and request.limit_level is not None:
+            tp_dist = abs(request.limit_level - reference_price)
+            # Validate level is on the correct side
+            if request.direction == "BUY" and request.limit_level <= reference_price:
+                return self._reject(
+                    request, instrument.key,
+                    f"BUY limit_level ({request.limit_level}) must be above reference price ({reference_price})",
+                )
+            if request.direction == "SELL" and request.limit_level >= reference_price:
+                return self._reject(
+                    request, instrument.key,
+                    f"SELL limit_level ({request.limit_level}) must be below reference price ({reference_price})",
+                )
+            limit_distance = round(tp_dist, 2)
+
+        # ATR-based SL/TP defaults if user didn't specify distances
         if (stop_distance is None or limit_distance is None) and self.atr_calculator is not None:
             atr_result = self.atr_calculator.get_dynamic_sl_tp(instrument)
             if atr_result is not None:

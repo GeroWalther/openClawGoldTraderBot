@@ -2,7 +2,13 @@ import pytest
 import pandas as pd
 import numpy as np
 
-from app.services.scoring_engine import ScoringEngine, FACTOR_WEIGHTS, MAX_SCORE
+from app.services.scoring_engine import (
+    FACTOR_WEIGHTS,
+    HIGH_CONVICTION_THRESHOLD,
+    MAX_SCORE,
+    SIGNAL_THRESHOLD,
+    ScoringEngine,
+)
 
 
 @pytest.fixture
@@ -64,8 +70,13 @@ def _make_macro_row(**overrides):
 
 class TestScoringEngine:
 
+    def test_threshold_constants(self):
+        """Verify threshold constants are set correctly."""
+        assert SIGNAL_THRESHOLD == 7
+        assert HIGH_CONVICTION_THRESHOLD == 12
+
     def test_bullish_setup_generates_buy(self, engine):
-        """Strong bullish indicators should produce BUY signal with score >= 10."""
+        """Strong bullish indicators should produce BUY signal with score >= SIGNAL_THRESHOLD."""
         row = _make_row(
             close=2850.0, sma20=2840.0, sma50=2820.0, sma200=2780.0,
             rsi=62.0, macd=8.0, macd_signal=3.0, macd_hist=5.0,
@@ -96,7 +107,7 @@ class TestScoringEngine:
         assert result["direction"] == "SELL"
 
     def test_neutral_produces_no_trade(self, engine):
-        """Mixed signals should produce no trade (score between -10 and +10)."""
+        """Mixed signals should produce no trade (score between -SIGNAL_THRESHOLD and +SIGNAL_THRESHOLD)."""
         row = _make_row(
             close=2800.0, sma20=2800.0, sma50=2800.0, sma200=2800.0,
             rsi=50.0, macd=0.0, macd_signal=0.0, macd_hist=0.0,
@@ -109,7 +120,7 @@ class TestScoringEngine:
 
         assert result["direction"] is None
         assert result["conviction"] is None
-        assert -10 < result["total_score"] < 10
+        assert -SIGNAL_THRESHOLD < result["total_score"] < SIGNAL_THRESHOLD
 
     def test_all_factors_present(self, engine):
         """All 11 factors should be present in the result."""
@@ -130,7 +141,7 @@ class TestScoringEngine:
             assert -2.0 <= score <= 2.0, f"Factor {name} out of range: {score}"
 
     def test_conviction_thresholds(self, engine):
-        """Verify conviction thresholds: HIGH >= 15, MEDIUM >= 10, None < 10."""
+        """Verify conviction thresholds: HIGH >= 12, MEDIUM >= 7, None < 7."""
         # HIGH conviction (extreme bullish)
         row = _make_row(
             close=2900.0, sma20=2880.0, sma50=2850.0, sma200=2780.0,
@@ -142,9 +153,9 @@ class TestScoringEngine:
         macro = _make_macro_row(**{"DX-Y.NYB_change5": -3.0, "^TNX_change5": -1.0})
         result = engine.score_bar(row, macro, "XAUUSD")
 
-        if result["total_score"] >= 15:
+        if result["total_score"] >= HIGH_CONVICTION_THRESHOLD:
             assert result["conviction"] == "HIGH"
-        elif result["total_score"] >= 10:
+        elif result["total_score"] >= SIGNAL_THRESHOLD:
             assert result["conviction"] == "MEDIUM"
 
     def test_no_macro_data(self, engine):
@@ -200,8 +211,8 @@ class TestScoringEngine:
         assert engine._score_tf_alignment(row) == -2.0
 
     def test_max_score_value(self):
-        """Max theoretical score = 2 * sum(weights) = 2 * 13 = 26."""
-        assert MAX_SCORE == 26.0
+        """Max theoretical score = 2 * sum(weights) = 2 * 12.5 = 25 (tv_technicals removed)."""
+        assert MAX_SCORE == 25.0
 
     def test_fundamental_3_positive_yield_curve(self, engine):
         """Positive yield curve change with positive correlation should give positive score."""

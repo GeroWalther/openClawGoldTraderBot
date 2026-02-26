@@ -30,6 +30,7 @@ class InstrumentSpec:
     future_cycle: str | None = None  # e.g. "HMUZ" for quarterly
     trading_sessions: tuple[TradingSession, ...] = ()
     warn_low_liquidity: bool = False
+    swing_strategy: str = "krabbe_scored"  # "krabbe_scored" or "rsi_reversal"
 
 
 INSTRUMENTS: dict[str, InstrumentSpec] = {
@@ -199,6 +200,7 @@ INSTRUMENTS: dict[str, InstrumentSpec] = {
         future_cycle="FGHJKMNQUVXZ",  # monthly
         trading_sessions=(),  # 24/7 crypto
         warn_low_liquidity=True,  # weekends
+        swing_strategy="rsi_reversal",  # Krabbe macro factors don't suit crypto
     ),
 }
 

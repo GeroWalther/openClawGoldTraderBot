@@ -259,7 +259,7 @@ class TestTechnicalAnalyzer:
         scoring = result.get("scoring", {})
         assert "total_score" in scoring
         assert "max_score" in scoring
-        assert scoring["max_score"] == 26
+        assert scoring["max_score"] == 25
         assert "factors" in scoring
 
     @pytest.mark.asyncio

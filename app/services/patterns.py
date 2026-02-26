@@ -47,6 +47,151 @@ def _get_tolerance(df: pd.DataFrame) -> float:
     return float(df["close"].mean()) * 0.015
 
 
+def compute_sr_levels(
+    df: pd.DataFrame,
+    pivot_range: int = 2,
+    max_levels: int = 3,
+) -> dict:
+    """Compute support/resistance levels from swing pivot clustering.
+
+    Finds swing highs/lows, clusters nearby pivots within ATR tolerance,
+    and ranks by touch count (descending), then recency as tiebreaker.
+
+    Args:
+        df: OHLCV DataFrame with indicators computed (needs atr, high_20, low_20).
+        pivot_range: Window half-size for swing detection (2 for H1, 3 for D1).
+        max_levels: Maximum number of S/R levels to return per side.
+
+    Returns:
+        {"support": [{"level": float, "touches": int}, ...],
+         "resistance": [{"level": float, "touches": int}, ...]}
+        Top `max_levels` each, support below close, resistance above close.
+    """
+    if len(df) < pivot_range * 2 + 1:
+        return _sr_fallback(df)
+
+    highs = df["high"].values
+    lows = df["low"].values
+    current_close = float(df["close"].iloc[-1])
+    tolerance = _get_tolerance(df)
+
+    swing_highs, swing_lows = _find_swing_pivots(highs, lows, pivot_range)
+
+    # Combine all pivots: (index, price)
+    all_pivots = swing_highs + swing_lows
+    if not all_pivots:
+        return _sr_fallback(df)
+
+    # Cluster pivots within tolerance
+    clusters = _cluster_pivots(all_pivots, tolerance)
+
+    # Split into support (below close) and resistance (above close)
+    support = [c for c in clusters if c["level"] < current_close]
+    resistance = [c for c in clusters if c["level"] >= current_close]
+
+    # Sort by touch count desc, recency desc as tiebreaker
+    support.sort(key=lambda c: (c["touches"], c["recency"]), reverse=True)
+    resistance.sort(key=lambda c: (c["touches"], c["recency"]), reverse=True)
+
+    support = support[:max_levels]
+    resistance = resistance[:max_levels]
+
+    # Sort support descending (nearest first), resistance ascending (nearest first)
+    support.sort(key=lambda c: c["level"], reverse=True)
+    resistance.sort(key=lambda c: c["level"])
+
+    # Fallback: if fewer than 1 cluster found per side, include high_20/low_20
+    if len(support) < 1:
+        low_20 = df.get("low_20")
+        if low_20 is not None and not pd.isna(low_20.iloc[-1]):
+            val = float(low_20.iloc[-1])
+            if val < current_close:
+                support.append({"level": round(val, 2), "touches": 1})
+
+    if len(resistance) < 1:
+        high_20 = df.get("high_20")
+        if high_20 is not None and not pd.isna(high_20.iloc[-1]):
+            val = float(high_20.iloc[-1])
+            if val >= current_close:
+                resistance.append({"level": round(val, 2), "touches": 1})
+
+    # Strip recency from output
+    for lvl in support + resistance:
+        lvl.pop("recency", None)
+
+    return {"support": support, "resistance": resistance}
+
+
+def _cluster_pivots(
+    pivots: list[tuple[int, float]],
+    tolerance: float,
+) -> list[dict]:
+    """Cluster nearby pivots within tolerance distance.
+
+    Returns list of {"level": float, "touches": int, "recency": int}.
+    """
+    if not pivots:
+        return []
+
+    # Sort by price
+    sorted_pivots = sorted(pivots, key=lambda p: p[1])
+
+    clusters: list[dict] = []
+    current_cluster_prices: list[float] = [sorted_pivots[0][1]]
+    current_cluster_indices: list[int] = [sorted_pivots[0][0]]
+
+    for i in range(1, len(sorted_pivots)):
+        idx, price = sorted_pivots[i]
+        cluster_avg = sum(current_cluster_prices) / len(current_cluster_prices)
+
+        if abs(price - cluster_avg) <= tolerance:
+            current_cluster_prices.append(price)
+            current_cluster_indices.append(idx)
+        else:
+            # Finalize current cluster
+            clusters.append({
+                "level": round(sum(current_cluster_prices) / len(current_cluster_prices), 2),
+                "touches": len(current_cluster_prices),
+                "recency": max(current_cluster_indices),
+            })
+            current_cluster_prices = [price]
+            current_cluster_indices = [idx]
+
+    # Finalize last cluster
+    clusters.append({
+        "level": round(sum(current_cluster_prices) / len(current_cluster_prices), 2),
+        "touches": len(current_cluster_prices),
+        "recency": max(current_cluster_indices),
+    })
+
+    return clusters
+
+
+def _sr_fallback(df: pd.DataFrame) -> dict:
+    """Fallback S/R using high_20/low_20 when pivot data is insufficient."""
+    support = []
+    resistance = []
+
+    if len(df) < 2:
+        return {"support": support, "resistance": resistance}
+
+    current_close = float(df["close"].iloc[-1])
+    high_20 = df.get("high_20")
+    low_20 = df.get("low_20")
+
+    if low_20 is not None and not pd.isna(low_20.iloc[-1]):
+        val = float(low_20.iloc[-1])
+        if val < current_close:
+            support.append({"level": round(val, 2), "touches": 1})
+
+    if high_20 is not None and not pd.isna(high_20.iloc[-1]):
+        val = float(high_20.iloc[-1])
+        if val >= current_close:
+            resistance.append({"level": round(val, 2), "touches": 1})
+
+    return {"support": support, "resistance": resistance}
+
+
 def _detect_candlestick_patterns(df: pd.DataFrame) -> list[dict]:
     """Detect candlestick patterns from the last 3 bars.
 

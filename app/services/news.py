@@ -1,10 +1,11 @@
 """News sentiment service — fetches Yahoo Finance RSS and scores headlines.
 
-Keyword-based scoring: bullish words vs bearish words.
+Word-boundary keyword matching: bullish vs bearish words.
 Thresholds: net ±3 → ±2 score, net ±1 → ±1 score.
 """
 
 import logging
+import re
 import time
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
@@ -96,18 +97,27 @@ class NewsService:
             title_lower = h["title"].lower()
             sentiment = "neutral"
 
-            # One match per headline to avoid double-counting
-            for word in BULLISH_WORDS:
-                if word in title_lower:
-                    bullish_count += 1
-                    sentiment = "bullish"
-                    break
-            else:
-                for word in BEARISH_WORDS:
-                    if word in title_lower:
-                        bearish_count += 1
-                        sentiment = "bearish"
-                        break
+            # Word-boundary matching to avoid substring false positives
+            # (e.g. "surprising" should not match "rising")
+            # Check both bullish and bearish, pick the stronger match
+            bull_match = any(
+                re.search(r'\b' + re.escape(word) + r'\b', title_lower)
+                for word in BULLISH_WORDS
+            )
+            bear_match = any(
+                re.search(r'\b' + re.escape(word) + r'\b', title_lower)
+                for word in BEARISH_WORDS
+            )
+
+            # If both match, treat as neutral (conflicting signals)
+            if bull_match and bear_match:
+                sentiment = "neutral"
+            elif bear_match:
+                bearish_count += 1
+                sentiment = "bearish"
+            elif bull_match:
+                bullish_count += 1
+                sentiment = "bullish"
 
             scored_headlines.append({
                 "title": h["title"],

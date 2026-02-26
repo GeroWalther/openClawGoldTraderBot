@@ -48,6 +48,14 @@ rsync -avz --delete \
 rsync -avz \
   openclaw-skills/SOUL.md "$VPS_HOST:/root/.openclaw/agents/main/SOUL.md"
 
+# Create journal directory tree on VPS
+echo "Setting up journal directories..."
+ssh "$VPS_HOST" "mkdir -p $VPS_PATH/journal/{intraday/scans,swing/scans,monitors,summaries}"
+
+# Make cron scripts executable and install crontab
+echo "Setting up cron scripts..."
+ssh "$VPS_HOST" "chmod +x $VPS_PATH/cron/*.sh && bash $VPS_PATH/cron/setup_cron.sh"
+
 # Ensure IB Gateway is running via Docker
 echo "Starting IB Gateway..."
 ssh "$VPS_HOST" "cd $VPS_PATH && docker compose up -d ib-gateway"

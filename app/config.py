@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     ibkr_client_id: int = 1
 
     # Trading parameters (per-instrument settings live in app/instruments.py)
-    max_risk_percent: float = 3.0
+    max_risk_percent: float = 1.5
 
     # Session filter
     session_filter_enabled: bool = True
@@ -35,11 +35,18 @@ class Settings(BaseSettings):
     max_daily_loss_percent: float = 3.0
     max_daily_trades: int = 5
 
+    # Weekly loss limit (% of account)
+    weekly_loss_limit_enabled: bool = True
+    max_weekly_loss_percent: float = 6.0
+
+    # Spread protection — reject if spread > this % of stop distance
+    max_spread_to_sl_ratio: float = 0.30
+
     # Conviction-based position sizing
     conviction_sizing_enabled: bool = True
-    conviction_high_risk_pct: float = 3.0
-    conviction_medium_risk_pct: float = 2.25
-    conviction_low_risk_pct: float = 1.5
+    conviction_high_risk_pct: float = 1.5
+    conviction_medium_risk_pct: float = 1.0
+    conviction_low_risk_pct: float = 0.75
 
     # Telegram
     telegram_bot_token: str

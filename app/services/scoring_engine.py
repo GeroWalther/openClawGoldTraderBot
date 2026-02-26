@@ -14,17 +14,20 @@ from app.services.macro_data import INSTRUMENT_MACRO_MAP
 
 logger = logging.getLogger(__name__)
 
+# Swing trading thresholds (shared with technical_analyzer re-apply block)
+SIGNAL_THRESHOLD = 7
+HIGH_CONVICTION_THRESHOLD = 12
+
 # Factor weights — tuned to avoid triple-counting SMA/RSI/MACD signals.
 # tf_alignment and tv_technicals overlap heavily with d1_trend and 4h_momentum,
 # so they're weighted at 0.5 to keep them as tie-breakers, not primary drivers.
 FACTOR_WEIGHTS = {
     "d1_trend": 2.0,        # Primary trend — SMA alignment + price position
     "4h_momentum": 1.5,     # Momentum — MACD + RSI
-    "1h_entry": 1.0,        # Entry timing — RSI mean-reversion
+    "1h_entry": 1.0,        # Entry timing — RSI mean-reversion (daily approx)
     "chart_pattern": 1.5,   # Breakout + Bollinger + candlestick/multi-bar patterns
-    "tf_alignment": 0.5,    # Reduced: overlaps with d1_trend (same SMAs)
+    "tf_alignment": 0.5,    # Tie-breaker: overlaps with d1_trend
     "sr_proximity": 1.0,    # Support/resistance distance
-    "tv_technicals": 0.5,   # Reduced: overlaps with d1_trend + 4h_momentum
     "fundamental_1": 1.0,   # DXY / VIX direction
     "fundamental_2": 1.0,   # Yields / silver / SP500
     "fundamental_3": 1.0,   # Yield curve spread
@@ -32,7 +35,7 @@ FACTOR_WEIGHTS = {
     "calendar_risk": 1.0,   # Economic calendar risk filter (can only subtract)
 }
 
-MAX_SCORE = sum(2 * w for w in FACTOR_WEIGHTS.values())  # 26
+MAX_SCORE = sum(2 * w for w in FACTOR_WEIGHTS.values())  # 25 (tv_technicals removed)
 
 
 class ScoringEngine:
@@ -76,10 +79,7 @@ class ScoringEngine:
         # Factor 6: S/R Proximity — distance to 20-day high/low as % of ATR (weight x1)
         factors["sr_proximity"] = self._score_sr_proximity(row)
 
-        # Factor 7: TV Technicals — approximated from indicator consensus (weight x1)
-        factors["tv_technicals"] = self._score_tv_technicals(row)
-
-        # Factor 8: Fundamental 1 — DXY/VIX 5-day change direction (weight x1)
+        # Factor 7: Fundamental 1 — DXY/VIX 5-day change direction (weight x1)
         factors["fundamental_1"] = self._score_fundamental_1(macro_row, instrument_key)
 
         # Factor 9: Fundamental 2 — Yields/silver/SP500 (weight x1)
@@ -101,17 +101,17 @@ class ScoringEngine:
         total_score = round(total_score, 2)
 
         # Direction and conviction
-        if total_score >= 10:
+        if total_score >= SIGNAL_THRESHOLD:
             direction = "BUY"
-        elif total_score <= -10:
+        elif total_score <= -SIGNAL_THRESHOLD:
             direction = "SELL"
         else:
             direction = None
 
         abs_score = abs(total_score)
-        if abs_score >= 15:
+        if abs_score >= HIGH_CONVICTION_THRESHOLD:
             conviction = "HIGH"
-        elif abs_score >= 10:
+        elif abs_score >= SIGNAL_THRESHOLD:
             conviction = "MEDIUM"
         else:
             conviction = None

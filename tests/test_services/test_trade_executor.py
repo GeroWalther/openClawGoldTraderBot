@@ -179,10 +179,11 @@ async def test_executor_atr_provides_defaults(mock_logger, settings, db_session,
         atr_calculator=mock_atr_calculator,
     )
 
-    # No stop/limit distances — ATR should provide defaults
+    # No stop/limit distances — ATR should provide limit_distance default
+    # stop_level is required by validator; conversion gives stop_distance=45.0
     request = TradeSubmitRequest(
         direction="BUY", stop_distance=None, limit_distance=None, size=1,
-        stop_level=1.0,  # Need stop_level to pass validation
+        stop_level=2856.0,  # 2901 - 45 = 2856 → stop_distance=45.0
     )
     response = await executor.submit_trade(request)
 

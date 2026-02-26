@@ -11,16 +11,17 @@ logger = logging.getLogger(__name__)
 
 
 class RiskManager:
-    """Cooldown and daily loss limit enforcement."""
+    """Cooldown, daily/weekly loss limit enforcement."""
 
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings, ibkr_client=None):
         self.settings = settings
+        self.ibkr_client = ibkr_client  # For unrealized PnL check
 
     async def can_trade(
         self, db_session: AsyncSession, account_balance: float
     ) -> tuple[bool, str]:
         """
-        Combined check: cooldown + daily trade count + daily P&L loss limit.
+        Combined check: cooldown + daily trade count + daily P&L loss limit + weekly limit.
 
         Returns (can_trade, reason).
         """
@@ -34,8 +35,13 @@ class RiskManager:
         if not ok:
             return False, reason
 
-        # Check daily P&L loss limit
+        # Check daily P&L loss limit (includes unrealized)
         ok, reason = await self._check_daily_loss_limit(db_session, account_balance)
+        if not ok:
+            return False, reason
+
+        # Check weekly P&L loss limit
+        ok, reason = await self._check_weekly_loss_limit(db_session, account_balance)
         if not ok:
             return False, reason
 
@@ -175,16 +181,42 @@ class RiskManager:
     async def _check_daily_loss_limit(
         self, db_session: AsyncSession, account_balance: float
     ) -> tuple[bool, str]:
-        """Check if daily P&L loss limit is breached."""
+        """Check if daily P&L loss limit is breached (closed + unrealized)."""
         if not self.settings.daily_loss_limit_enabled:
             return True, "Daily limits disabled"
 
         daily_pnl = await self._get_daily_pnl(db_session)
+
+        # Include unrealized PnL from open positions
+        unrealized = await self._get_unrealized_pnl()
+        total_daily_pnl = daily_pnl + unrealized
         limit = account_balance * (self.settings.max_daily_loss_percent / 100)
 
-        if daily_pnl <= -limit:
-            return False, f"Daily loss limit reached: ${daily_pnl:.2f} (limit: -${limit:.2f})"
-        return True, f"Daily P&L: ${daily_pnl:.2f} (limit: -${limit:.2f})"
+        if total_daily_pnl <= -limit:
+            return False, (
+                f"Daily loss limit reached: ${total_daily_pnl:.2f} "
+                f"(closed: ${daily_pnl:.2f}, unrealized: ${unrealized:.2f}, limit: -${limit:.2f})"
+            )
+        return True, f"Daily P&L: ${total_daily_pnl:.2f} (limit: -${limit:.2f})"
+
+    async def _check_weekly_loss_limit(
+        self, db_session: AsyncSession, account_balance: float
+    ) -> tuple[bool, str]:
+        """Check if weekly P&L loss limit is breached."""
+        if not getattr(self.settings, "weekly_loss_limit_enabled", False):
+            return True, "Weekly limits disabled"
+
+        weekly_pnl = await self._get_weekly_pnl(db_session)
+        unrealized = await self._get_unrealized_pnl()
+        total_weekly_pnl = weekly_pnl + unrealized
+        limit = account_balance * (getattr(self.settings, "max_weekly_loss_percent", 6.0) / 100)
+
+        if total_weekly_pnl <= -limit:
+            return False, (
+                f"Weekly loss limit reached: ${total_weekly_pnl:.2f} "
+                f"(closed: ${weekly_pnl:.2f}, unrealized: ${unrealized:.2f}, limit: -${limit:.2f})"
+            )
+        return True, f"Weekly P&L: ${total_weekly_pnl:.2f} (limit: -${limit:.2f})"
 
     async def _get_daily_trade_count(self, db_session: AsyncSession) -> int:
         """Count today's executed trades."""
@@ -206,3 +238,34 @@ class RiskManager:
             .where(Trade.closed_at >= today_start)
         )
         return float(result.scalar_one())
+
+    async def _get_weekly_pnl(self, db_session: AsyncSession) -> float:
+        """Sum P&L of this week's (Mon-Sun) closed trades."""
+        now = datetime.now(timezone.utc)
+        # Monday 00:00 UTC of current week
+        week_start = (now - timedelta(days=now.weekday())).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        result = await db_session.execute(
+            select(func.coalesce(func.sum(Trade.pnl), 0.0))
+            .where(Trade.status == TradeStatus.CLOSED)
+            .where(Trade.pnl.isnot(None))
+            .where(Trade.closed_at >= week_start)
+        )
+        return float(result.scalar_one())
+
+    async def _get_unrealized_pnl(self) -> float:
+        """Get total unrealized PnL from IBKR open positions."""
+        if self.ibkr_client is None:
+            return 0.0
+        try:
+            status = await self.ibkr_client.get_positions_status()
+            positions = status.get("positions", [])
+            total = sum(
+                float(p.get("unrealized_pnl", p.get("pnl", 0)) or 0)
+                for p in positions
+            )
+            return total
+        except Exception as e:
+            logger.warning("Failed to get unrealized PnL: %s", e)
+            return 0.0
