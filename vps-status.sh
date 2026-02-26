@@ -91,10 +91,12 @@ if trades:
         inst = t.get('epic', t.get('instrument', ''))
         direction = t.get('direction', '')
         size = t.get('size', 0)
-        entry = t.get('entry_price', 0)
-        pnl = t.get('pnl', 0) or 0
+        entry = t.get('entry_price') or 0
+        pnl = t.get('pnl') or 0
+        size = size or 0
         status = t.get('status', '')
-        print(f'  {date:<20} {inst:<10} {direction:<5} {size:>6} {entry:>10.2f} \${pnl:>+9.2f} {status:<10}')
+        entry_str = f'{entry:>10.2f}' if entry else '         -'
+        print(f'  {date:<20} {inst:<10} {direction:<5} {size:>6} {entry_str} \${pnl:>+9.2f} {status:<10}')
 else:
     print('  No recent trades.')
 "
