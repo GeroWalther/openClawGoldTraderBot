@@ -50,7 +50,7 @@ rsync -avz \
 
 # Create journal directory tree on VPS
 echo "Setting up journal directories..."
-ssh "$VPS_HOST" "mkdir -p $VPS_PATH/journal/{intraday/scans,swing/scans,monitors,summaries}"
+ssh "$VPS_HOST" "mkdir -p $VPS_PATH/journal/{intraday/scans,swing/scans,scalp/scans,monitors,summaries}"
 
 # Make cron scripts executable and install crontab
 echo "Setting up cron scripts..."

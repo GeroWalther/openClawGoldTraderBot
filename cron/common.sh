@@ -28,6 +28,7 @@ fi
 # --- Ensure journal directories ---
 mkdir -p "$JOURNAL_DIR/intraday/scans"
 mkdir -p "$JOURNAL_DIR/swing/scans"
+mkdir -p "$JOURNAL_DIR/scalp/scans"
 mkdir -p "$JOURNAL_DIR/monitors"
 mkdir -p "$JOURNAL_DIR/summaries"
 
@@ -219,7 +220,7 @@ print('ok')
 
 # Build trade submit payload using S/R levels and signal_type from scan data.
 # Reads per-instrument JSON from stdin.
-# Args: direction instrument conviction source reasoning price timeframe(h1|d1)
+# Args: direction instrument conviction source reasoning price timeframe(h1|d1|m5) [strategy]
 # Output: JSON payload for POST /api/v1/trades/submit
 #
 # Signal-type-aware entry logic:
@@ -234,7 +235,9 @@ build_trade_payload() {
 import sys, json
 
 d = json.load(sys.stdin)
-direction, inst, conviction, source, reasoning, price_str, timeframe = sys.argv[1:8]
+args = sys.argv[1:]
+direction, inst, conviction, source, reasoning, price_str, timeframe = args[:7]
+strategy = args[7] if len(args) > 7 else None
 price = float(price_str)
 
 payload = {
@@ -244,6 +247,8 @@ payload = {
     'source': source,
     'reasoning': reasoning,
 }
+if strategy:
+    payload['strategy'] = strategy
 
 levels = d.get('levels', {})
 support = levels.get('support', [])
@@ -336,12 +341,31 @@ else:
     sd = round(sl_level - ref, 2)
     ld = round(ref - tp_level, 2)
 
-# Only use S/R params if both distances are positive
-if sd > 0 and ld > 0:
+# Per-instrument minimum stop distances (must match app/instruments.py)
+# Scalp timeframe: MARKET order with M5 ATR-based SL/TP (1.0x SL, 2.0x TP)
+if timeframe == 'm5':
+    m5_atr = float(d.get('technicals', {}).get('m5', {}).get('atr', 0) or 0)
+    if m5_atr > 0:
+        sd = round(m5_atr * 1.0, 2)
+        ld = round(m5_atr * 2.0, 2)
+        MIN_STOP_M5 = {'BTC': 200.0, 'XAUUSD': 3.0}
+        min_sd = MIN_STOP_M5.get(inst, 0)
+        if sd >= min_sd:
+            payload['stop_distance'] = sd
+            payload['limit_distance'] = ld
+    payload['order_type'] = 'MARKET'
+    print(json.dumps(payload))
+    sys.exit()
+
+MIN_STOP = {'BTC': 200.0, 'XAUUSD': 5.0, 'IBUS500': 2.0, 'MES': 2.0}
+min_sd = MIN_STOP.get(inst, 0)
+
+# Only use S/R params if distances are positive and stop is wide enough
+if sd > 0 and ld > 0 and sd >= min_sd:
     payload['stop_distance'] = sd
     payload['limit_distance'] = ld
 else:
-    # Distances invalid — drop pending order params, let bot use ATR defaults
+    # Distances invalid or too tight — drop, let bot use ATR defaults (with clamping)
     payload.pop('order_type', None)
     payload.pop('entry_price', None)
 

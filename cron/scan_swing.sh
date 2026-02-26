@@ -105,7 +105,7 @@ if $i < len(items):
                     payload=$(echo "$inst_json" | build_trade_payload \
                         "$direction" "$inst" "$conviction" "cron_swing" \
                         "Auto swing: score $score/$max_score, conviction $conviction" \
-                        "$price" "d1")
+                        "$price" "d1" "swing")
                     if [ -z "$payload" ]; then
                         log "SWING $inst: SKIP trade — failed to build payload"
                     else

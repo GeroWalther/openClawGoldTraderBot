@@ -20,9 +20,10 @@ class TradeAnalytics:
         to_date: datetime | None = None,
         instrument: str | None = None,
         conviction: str | None = None,
+        strategy: str | None = None,
     ) -> dict:
         """Calculate full analytics from closed trades."""
-        trades = await self._fetch_trades(db_session, from_date, to_date, instrument, conviction)
+        trades = await self._fetch_trades(db_session, from_date, to_date, instrument, conviction, strategy)
 
         if not trades:
             return self._empty_result()
@@ -71,6 +72,9 @@ class TradeAnalytics:
         # Per-conviction breakdown
         per_conviction = self._per_conviction_breakdown(trades)
 
+        # Per-strategy breakdown
+        per_strategy = self._per_strategy_breakdown(trades)
+
         return {
             "total_trades": total,
             "winning_trades": win_count,
@@ -89,6 +93,7 @@ class TradeAnalytics:
             "max_loss_streak": max_loss_streak,
             "per_instrument": per_instrument,
             "per_conviction": per_conviction,
+            "per_strategy": per_strategy,
             "daily_pnl": daily_pnl,
             "weekly_pnl": weekly_pnl,
             "monthly_pnl": monthly_pnl,
@@ -101,6 +106,7 @@ class TradeAnalytics:
         to_date: datetime | None,
         instrument: str | None,
         conviction: str | None = None,
+        strategy: str | None = None,
     ) -> list[Trade]:
         query = (
             select(Trade)
@@ -115,6 +121,8 @@ class TradeAnalytics:
             query = query.where(Trade.epic == instrument.upper())
         if conviction:
             query = query.where(Trade.conviction == conviction.upper())
+        if strategy:
+            query = query.where(Trade.strategy == strategy)
         query = query.order_by(Trade.closed_at.asc())
 
         result = await db_session.execute(query)
@@ -229,6 +237,25 @@ class TradeAnalytics:
             }
         return result
 
+    def _per_strategy_breakdown(self, trades: list[Trade]) -> dict[str, dict]:
+        """Group metrics by strategy (intraday, swing, m5_scalp)."""
+        by_strategy: dict[str, list[Trade]] = defaultdict(list)
+        for t in trades:
+            strat = t.strategy or "unknown"
+            by_strategy[strat].append(t)
+
+        result = {}
+        for strat, strat_trades in by_strategy.items():
+            wins = [t for t in strat_trades if t.pnl and t.pnl > 0]
+            total = len(strat_trades)
+            result[strat] = {
+                "total_trades": total,
+                "winning_trades": len(wins),
+                "win_rate": round(len(wins) / total * 100, 2) if total > 0 else 0,
+                "total_pnl": round(sum(t.pnl for t in strat_trades if t.pnl), 2),
+            }
+        return result
+
     def _time_pnl(self, trades: list[Trade], period: str) -> list[dict]:
         """Aggregate P&L by day/week/month."""
         grouped: dict[str, float] = defaultdict(float)
@@ -269,6 +296,7 @@ class TradeAnalytics:
             "max_loss_streak": 0,
             "per_instrument": {},
             "per_conviction": {},
+            "per_strategy": {},
             "daily_pnl": [],
             "weekly_pnl": [],
             "monthly_pnl": [],

@@ -135,6 +135,7 @@ class TradeExecutor:
                 claude_reasoning=request.reasoning,
                 conviction=request.conviction,
                 order_type=order_type,
+                strategy=request.strategy,
             )
             self.db.add(trade)
             await self.db.commit()
@@ -153,6 +154,7 @@ class TradeExecutor:
                 spread_at_entry=spread,
                 order_type=order_type,
                 entry_price=request.entry_price,
+                strategy=request.strategy,
                 message=message,
             )
 
@@ -304,6 +306,7 @@ class TradeExecutor:
             actual_price=db_entry_price,
             spread_at_entry=spread,
             order_type=order_type,
+            strategy=request.strategy,
         )
         self.db.add(trade)
         await self.db.commit()
@@ -328,6 +331,7 @@ class TradeExecutor:
             spread_at_entry=spread,
             order_type=order_type,
             entry_price=db_entry_price,
+            strategy=request.strategy,
             message=message,
         )
 

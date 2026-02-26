@@ -8,7 +8,7 @@ DATE=$(date -u '+%Y-%m-%d')
 CSV_FILE="$JOURNAL_DIR/summaries/summaries.csv"
 
 ensure_csv_header "$CSV_FILE" \
-    "date,account_balance,daily_pnl,trades_closed,wins,losses,open_positions,unrealized_pnl,intraday_signals,swing_signals"
+    "date,account_balance,daily_pnl,trades_closed,wins,losses,open_positions,unrealized_pnl,intraday_signals,swing_signals,scalp_signals"
 
 log "DAILY SUMMARY starting for $DATE"
 
@@ -45,8 +45,8 @@ print(f'{pnl:.2f} {total} {w} {l} {wr:.1f}')
 " 2>/dev/null || echo "0.00 0 0 0 0.0"
 )
 
-# Parse journal — count intraday vs swing signals
-read -r intraday_signals swing_signals total_analyses < <(
+# Parse journal — count intraday vs swing vs scalp signals
+read -r intraday_signals swing_signals scalp_signals total_analyses < <(
     echo "$journal_json" | python3 -c "
 import sys, json
 entries = json.load(sys.stdin)
@@ -54,13 +54,15 @@ if not isinstance(entries, list):
     entries = []
 intraday = sum(1 for e in entries if e.get('source', '') == 'cron_intraday')
 swing = sum(1 for e in entries if e.get('source', '') == 'cron_swing')
-print(f'{intraday} {swing} {len(entries)}')
-" 2>/dev/null || echo "0 0 0"
+scalp = sum(1 for e in entries if e.get('source', '') == 'cron_m5_scalp')
+print(f'{intraday} {swing} {scalp} {len(entries)}')
+" 2>/dev/null || echo "0 0 0 0"
 )
 
 # Count today's scans from CSV files
 intraday_scans=$(grep -c "^${DATE}" "$JOURNAL_DIR/intraday/scans.csv" 2>/dev/null || echo "0")
 swing_scans=$(grep -c "^${DATE}" "$JOURNAL_DIR/swing/scans.csv" 2>/dev/null || echo "0")
+scalp_scans=$(grep -c "^${DATE}" "$JOURNAL_DIR/scalp/scans.csv" 2>/dev/null || echo "0")
 
 # Build summary JSON
 summary_json=$(python3 -c "
@@ -78,9 +80,11 @@ d = {
     'pending_orders': int('$pending_count'),
     'intraday_signals': int('$intraday_signals'),
     'swing_signals': int('$swing_signals'),
+    'scalp_signals': int('$scalp_signals'),
     'total_analyses': int('$total_analyses'),
     'intraday_scans': int('$intraday_scans'),
     'swing_scans': int('$swing_scans'),
+    'scalp_scans': int('$scalp_scans'),
 }
 print(json.dumps(d, indent=2))
 " 2>/dev/null)
@@ -90,7 +94,7 @@ echo "$summary_json" > "$JOURNAL_DIR/summaries/${DATE}.json"
 echo "$summary_json" > "$JOURNAL_DIR/latest_summary.json"
 
 # Append CSV row
-echo "${DATE},${account_balance},${daily_pnl},${trades_closed},${wins},${losses},${open_count},${unrealized_pnl},${intraday_signals},${swing_signals}" >> "$CSV_FILE"
+echo "${DATE},${account_balance},${daily_pnl},${trades_closed},${wins},${losses},${open_count},${unrealized_pnl},${intraday_signals},${swing_signals},${scalp_signals}" >> "$CSV_FILE"
 
 # Build Telegram message
 win_loss_line=""
@@ -120,7 +124,11 @@ ${win_loss_line}${open_line}${pending_line}
 *Scans Today*
 Intraday: ${intraday_scans} scans, ${intraday_signals} signals
 Swing: ${swing_scans} scans, ${swing_signals} signals
+M5 Scalp: ${scalp_scans} scans, ${scalp_signals} signals
 Total Analyses: ${total_analyses}"
 
 log "DAILY SUMMARY: balance=$account_balance pnl=$daily_pnl trades=$trades_closed"
+
+send_telegram "$msg"
+
 log "DAILY SUMMARY done"

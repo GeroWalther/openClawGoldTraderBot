@@ -16,7 +16,7 @@ import yfinance as yf
 
 from app.instruments import INSTRUMENTS, InstrumentSpec
 from app.services.calendar import CalendarService
-from app.services.indicators import compute_indicators
+from app.services.indicators import compute_indicators, compute_scalp_indicators
 from app.services.macro_data import MacroDataService, VIX_LEVELS
 from app.services.news import NewsService
 from app.services.patterns import compute_sr_levels, detect_patterns
@@ -25,6 +25,12 @@ from app.services.intraday_scoring import (
     INTRADAY_HIGH_CONVICTION_THRESHOLD,
     INTRADAY_SIGNAL_THRESHOLD,
     IntradayScoringEngine,
+)
+from app.services.m5_scalp_scoring import (
+    M5_FACTOR_WEIGHTS,
+    M5_HIGH_CONVICTION_THRESHOLD,
+    M5_SIGNAL_THRESHOLD,
+    M5ScalpScoringEngine,
 )
 from app.services.scoring_engine import (
     FACTOR_WEIGHTS,
@@ -182,6 +188,7 @@ class TechnicalAnalyzer:
         self._macro_service = MacroDataService()
         self._scoring_engine = ScoringEngine()
         self._intraday_scoring_engine = IntradayScoringEngine()
+        self._m5_scalp_scoring_engine = M5ScalpScoringEngine()
         self._calendar_service = CalendarService()
         self._news_service = NewsService()
 
@@ -222,6 +229,174 @@ class TechnicalAnalyzer:
         instrument = INSTRUMENTS[key]
         result = await self._run_intraday_analysis(key, instrument)
         self._cache[cache_key] = (result, time.monotonic())
+        return result
+
+    async def analyze_m5_scalp(self, instrument_key: str) -> dict:
+        """M5 scalp analysis using H1 trend gate and M5 entry signals."""
+        key = instrument_key.upper()
+        cache_key = f"{key}_m5scalp"
+        now = time.monotonic()
+
+        cached = self._cache.get(cache_key)
+        if cached:
+            data, ts = cached
+            if now - ts < 60:  # 1-minute cache for M5 scalps
+                return data
+
+        if key not in INSTRUMENTS:
+            return {"error": f"Unknown instrument: {key}", "available": list(INSTRUMENTS)}
+
+        instrument = INSTRUMENTS[key]
+        result = await self._run_m5_scalp_analysis(key, instrument)
+        self._cache[cache_key] = (result, time.monotonic())
+        return result
+
+    async def _run_m5_scalp_analysis(self, key: str, instrument: InstrumentSpec) -> dict:
+        """Execute M5 scalp analysis: fetch H1 + M5 data, score."""
+        warnings = []
+        loop = asyncio.get_event_loop()
+        symbol = instrument.yahoo_symbol
+
+        # Fetch H1 (1 month) and M5 (5 days) concurrently
+        h1_future = loop.run_in_executor(_executor, _fetch_ohlcv, symbol, "1mo", "1h")
+        m5_future = loop.run_in_executor(_executor, _fetch_ohlcv, symbol, "5d", "5m")
+
+        results = await asyncio.gather(h1_future, m5_future, return_exceptions=True)
+
+        h1_df = results[0] if not isinstance(results[0], Exception) else pd.DataFrame()
+        m5_df = results[1] if not isinstance(results[1], Exception) else pd.DataFrame()
+
+        if isinstance(results[0], Exception):
+            warnings.append(f"H1 fetch failed: {results[0]}")
+        if isinstance(results[1], Exception):
+            warnings.append(f"M5 fetch failed: {results[1]}")
+
+        if h1_df.empty:
+            return {"error": f"H1 data unavailable for {key}", "warnings": warnings}
+        if m5_df.empty:
+            return {"error": f"M5 data unavailable for {key}", "warnings": warnings}
+
+        # Compute indicators on H1
+        h1_row = None
+        h1_block = None
+        if len(h1_df) >= 20:
+            try:
+                compute_indicators(h1_df)
+                h1_block = _build_timeframe_block(h1_df, include_sma=True)
+                h1_row = h1_df.iloc[-1]
+            except Exception as e:
+                warnings.append(f"H1 indicators failed: {e}")
+
+        # Compute indicators on M5 (standard + scalp)
+        m5_block = None
+        m5_tail = pd.DataFrame()
+        if len(m5_df) >= 21:
+            try:
+                compute_indicators(m5_df)
+                compute_scalp_indicators(m5_df)
+                m5_block = _build_timeframe_block(m5_df, include_sma=True)
+                m5_tail = m5_df.tail(6)  # Last 6 bars for cross detection
+            except Exception as e:
+                warnings.append(f"M5 indicators failed: {e}")
+
+        if h1_row is None:
+            return {"error": f"H1 indicators unavailable for {key}", "warnings": warnings}
+        if m5_tail.empty:
+            return {"error": f"M5 indicators unavailable for {key}", "warnings": warnings}
+
+        # Current price from M5
+        m5_last = m5_df.iloc[-1]
+        current = float(m5_last["close"])
+        prev_close = float(m5_df["close"].iloc[-2]) if len(m5_df) >= 2 else current
+        change_pct = round((current - prev_close) / prev_close * 100, 2) if prev_close else 0
+        price_info = {
+            "current": round(current, 4 if current < 10 else 2),
+            "previous_close": round(prev_close, 4 if prev_close < 10 else 2),
+            "change_pct": change_pct,
+        }
+
+        # S/R levels from H1 pivot clustering
+        levels = {}
+        try:
+            sr = compute_sr_levels(h1_df, pivot_range=2)
+            levels["resistance"] = [r["level"] for r in sr["resistance"]]
+            levels["support"] = [s["level"] for s in sr["support"]]
+            levels["sr_meta"] = sr
+        except Exception as e:
+            warnings.append(f"S/R computation failed, using fallback: {e}")
+            high_20 = h1_row.get("high_20")
+            low_20 = h1_row.get("low_20")
+            atr = h1_row.get("atr")
+            if not pd.isna(high_20) and not pd.isna(atr):
+                levels["resistance"] = [
+                    round(float(high_20), 2),
+                    round(float(high_20 + atr), 2),
+                ]
+            if not pd.isna(low_20) and not pd.isna(atr):
+                levels["support"] = [
+                    round(float(low_20), 2),
+                    round(float(low_20 - atr), 2),
+                ]
+
+        # Scoring
+        score_result = self._m5_scalp_scoring_engine.score(
+            h1_row, m5_tail, instrument.trading_sessions,
+        )
+        scoring = {
+            "total_score": score_result["total_score"],
+            "max_score": score_result["max_score"],
+            "direction": score_result["direction"],
+            "conviction": score_result["conviction"],
+            "factors": score_result["factors"],
+        }
+
+        # Overlay real S/R proximity score
+        if levels.get("sr_meta") and scoring.get("factors") is not None:
+            sr_score = self._compute_sr_score_from_levels(
+                current, levels["sr_meta"], h1_row.get("atr"),
+            )
+            if sr_score is not None:
+                scoring["factors"]["sr_proximity"] = sr_score
+
+        # Classify signal type
+        scoring["signal_type"] = "scalp"
+
+        # Session info
+        session = _session_info(instrument)
+
+        # Summary
+        direction = scoring.get("direction", "NO TRADE")
+        conviction = scoring.get("conviction")
+        h1_trend = h1_block.get("trend", "?") if h1_block else "?"
+        total = scoring.get("total_score", 0)
+
+        summary = (
+            f"{conviction or 'LOW'} conviction {direction or 'NO TRADE'}. "
+            f"H1 trend {h1_trend}. "
+            f"Score {total}/{scoring.get('max_score', 14)}."
+        )
+
+        result = {
+            "instrument": key,
+            "display_name": instrument.display_name,
+            "mode": "m5_scalp",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "price": price_info,
+            "technicals": {},
+            "levels": levels,
+            "scoring": scoring,
+            "session": session,
+            "summary": summary,
+        }
+
+        if h1_block:
+            result["technicals"]["h1"] = h1_block
+        if m5_block:
+            result["technicals"]["m5"] = m5_block
+
+        if warnings:
+            result["warnings"] = warnings
+
         return result
 
     async def _run_intraday_analysis(self, key: str, instrument: InstrumentSpec) -> dict:

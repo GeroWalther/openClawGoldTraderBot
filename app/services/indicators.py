@@ -59,3 +59,25 @@ def compute_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["bb_bandwidth"] = (df["bb_upper"] - df["bb_lower"]) / df["bb_mid"]
 
     return df
+
+
+def compute_scalp_indicators(df: pd.DataFrame) -> pd.DataFrame:
+    """Compute fast scalp indicators on an M5 OHLCV DataFrame.
+
+    Adds columns: ema9, ema21, rsi7.
+    Should be called after compute_indicators() on M5 data.
+    """
+    close = df["close"]
+
+    # Fast EMAs for crossover detection
+    df["ema9"] = close.ewm(span=9, adjust=False).mean()
+    df["ema21"] = close.ewm(span=21, adjust=False).mean()
+
+    # Fast RSI(7) for momentum
+    delta = close.diff()
+    gain = delta.clip(lower=0).rolling(7).mean()
+    loss = (-delta.clip(upper=0)).rolling(7).mean()
+    rs = gain / loss.replace(0, float("nan"))
+    df["rsi7"] = 100 - (100 / (1 + rs))
+
+    return df

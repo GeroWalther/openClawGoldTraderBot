@@ -8,7 +8,7 @@ CRON_DIR="/opt/gold-trader/cron"
 LOG="/opt/gold-trader/journal/cron.log"
 
 # Ensure journal dirs exist
-mkdir -p /opt/gold-trader/journal/{intraday/scans,swing/scans,monitors,summaries}
+mkdir -p /opt/gold-trader/journal/{intraday/scans,swing/scans,scalp/scans,monitors,summaries}
 
 # Build crontab (preserving any existing non-gold-trader entries)
 EXISTING=$(crontab -l 2>/dev/null | grep -v '/opt/gold-trader/cron/' | grep -v '^#.*gold-trader' || true)
@@ -21,6 +21,9 @@ NEW_CRON=$(cat <<'CRONTAB'
 
 # Swing scan — 08:05, 13:05, 19:05 UTC (staggered +5min to avoid race with intraday)
 5 8,13,19 * * 1-5  /opt/gold-trader/cron/scan_swing.sh >> /opt/gold-trader/journal/cron.log 2>&1
+
+# M5 Scalp — every 30 min at :15/:45 UTC, Mon-Fri (staggered to avoid races)
+15,45 7-21 * * 1-5  /opt/gold-trader/cron/scan_scalp.sh >> /opt/gold-trader/journal/cron.log 2>&1
 
 # Trade monitor — every 30min during market hours (active risk management)
 */30 7-21 * * 1-5  /opt/gold-trader/cron/monitor.sh >> /opt/gold-trader/journal/cron.log 2>&1

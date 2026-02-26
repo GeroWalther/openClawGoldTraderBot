@@ -18,6 +18,7 @@ class TradeSubmitRequest(BaseModel):
     reasoning: str | None = None
     order_type: str | None = Field("MARKET", pattern="^(MARKET|LIMIT|STOP)$")
     entry_price: float | None = None
+    strategy: str | None = None
 
 
 class TradeSubmitResponse(BaseModel):
@@ -33,6 +34,7 @@ class TradeSubmitResponse(BaseModel):
     spread_at_entry: float | None = None
     order_type: str | None = None
     entry_price: float | None = None
+    strategy: str | None = None
     message: str
 
 
@@ -134,6 +136,7 @@ class AnalyticsResponse(BaseModel):
     max_loss_streak: int = 0
     per_instrument: dict[str, dict] = {}
     per_conviction: dict[str, dict] = {}
+    per_strategy: dict[str, dict] = {}
     daily_pnl: list[dict] = []
     weekly_pnl: list[dict] = []
     monthly_pnl: list[dict] = []
@@ -153,8 +156,8 @@ class CooldownStatusResponse(BaseModel):
 
 class BacktestRequest(BaseModel):
     instrument: str = "XAUUSD"
-    strategy: str = Field(..., pattern="^(sma_crossover|rsi_reversal|breakout|krabbe_scored)$")
-    period: str = Field("1y", pattern="^(6mo|1y|2y|5y)$")
+    strategy: str = Field(..., pattern="^(sma_crossover|rsi_reversal|breakout|krabbe_scored|m5_scalp)$")
+    period: str = Field("1y", pattern="^(5d|60d|6mo|1y|2y|5y)$")
     start_date: str | None = None  # "YYYY-MM-DD" — overrides period if set
     end_date: str | None = None    # "YYYY-MM-DD" — overrides period if set
     max_trades: int | None = None  # Stop after N trades

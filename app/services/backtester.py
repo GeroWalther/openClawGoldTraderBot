@@ -6,6 +6,7 @@ import pandas as pd
 import yfinance as yf
 
 from app.instruments import InstrumentSpec, get_instrument
+from app.services.m5_scalp_scoring import M5ScalpScoringEngine
 from app.services.scoring_engine import ScoringEngine
 
 logger = logging.getLogger(__name__)
@@ -53,6 +54,16 @@ class Backtester:
     ) -> dict:
         """Run a backtest and return results."""
         instrument = get_instrument(instrument_key)
+
+        # M5 scalp strategy uses different data and signal generation
+        if strategy == "m5_scalp":
+            return self._run_m5_scalp_backtest(
+                instrument_key, instrument, period,
+                initial_balance, risk_percent,
+                session_filter, max_trades,
+                start_date, end_date,
+            )
+
         df = self._fetch_data(instrument, period, start_date=start_date, end_date=end_date)
         if df is None or len(df) < 60:
             return {"error": f"Insufficient data for {instrument_key} ({period})"}
@@ -92,22 +103,153 @@ class Backtester:
             initial_balance, trades, equity_curve,
         )
 
+    def _run_m5_scalp_backtest(
+        self,
+        instrument_key: str,
+        instrument: InstrumentSpec,
+        period: str,
+        initial_balance: float,
+        risk_percent: float,
+        session_filter: bool,
+        max_trades: int | None,
+        start_date: str | None,
+        end_date: str | None,
+    ) -> dict:
+        """Run M5 scalp backtest: fetch M5 + H1 data, generate signals, simulate."""
+        from app.services.indicators import compute_indicators, compute_scalp_indicators
+
+        # Fetch M5 data
+        m5_df = self._fetch_data(
+            instrument, period, start_date=start_date, end_date=end_date, interval="5m",
+        )
+        if m5_df is None or len(m5_df) < 60:
+            return {"error": f"Insufficient M5 data for {instrument_key} ({period})"}
+
+        # Fetch H1 data (always 1mo for trend context)
+        h1_df = self._fetch_data(instrument, "1mo", interval="1h")
+        if h1_df is None or len(h1_df) < 20:
+            return {"error": f"Insufficient H1 data for {instrument_key}"}
+
+        # Compute indicators
+        compute_indicators(m5_df)
+        compute_scalp_indicators(m5_df)
+        compute_indicators(h1_df)
+
+        # Fetch FX conversion rate
+        fx_map = self._fetch_fx_series(instrument, period, start_date, end_date)
+
+        # Generate M5 scalp signals
+        signals = self._m5_scalp_signals(m5_df, h1_df)
+
+        # Simulate with M5 ATR multipliers: SL 1.0×, TP 2.0×, partial TP at 1R
+        trades, equity_curve = self._simulate(
+            m5_df, signals, instrument,
+            initial_balance=initial_balance,
+            risk_percent=risk_percent,
+            atr_sl_mult=1.0,   # Tighter SL for scalps
+            atr_tp_mult=2.0,   # Let winners run to 2R
+            session_filter=session_filter,
+            partial_tp=True,   # Close half at 1R, let rest run to 2R
+            max_trades=max_trades,
+            fx_map=fx_map,
+        )
+
+        return self._compile_results(
+            instrument_key, "m5_scalp", period,
+            initial_balance, trades, equity_curve,
+        )
+
+    def _m5_scalp_signals(
+        self, m5_df: pd.DataFrame, h1_df: pd.DataFrame,
+    ) -> list[dict]:
+        """Generate M5 scalp signals using M5ScalpScoringEngine."""
+        engine = M5ScalpScoringEngine()
+        signals = []
+        last_signal_idx = -999
+        last_signal_dir = None
+
+        # Pre-compute H1 row lookup: map each M5 bar to nearest H1 bar
+        h1_dates = h1_df.index if "date" not in h1_df.columns else h1_df["date"]
+
+        warmup = 21  # Need EMA21 at minimum
+        for i in range(warmup, len(m5_df)):
+            row = m5_df.iloc[i]
+
+            if pd.isna(row.get("ema9")) or pd.isna(row.get("atr")):
+                continue
+
+            # Find matching H1 row (latest H1 bar at or before this M5 bar)
+            m5_date = m5_df.index[i] if "date" not in m5_df.columns else row.get("date")
+            h1_row = h1_df.iloc[-1]  # Default to latest H1
+            if m5_date is not None:
+                try:
+                    h1_mask = h1_dates <= m5_date
+                    if h1_mask.any():
+                        h1_idx = h1_mask[::-1].idxmax() if hasattr(h1_mask, "idxmax") else -1
+                        if h1_idx >= 0:
+                            h1_row = h1_df.loc[h1_idx] if h1_idx in h1_df.index else h1_df.iloc[-1]
+                except Exception:
+                    pass  # Fallback to latest H1
+
+            # Get last 6 M5 bars for cross detection
+            start_idx = max(0, i - 5)
+            m5_tail = m5_df.iloc[start_idx:i + 1]
+
+            # Pass bar timestamp for session quality scoring
+            bar_date = row.get("date")
+            bar_time = None
+            if bar_date is not None and hasattr(bar_date, "hour"):
+                bar_time = bar_date
+                if bar_time.tzinfo is None:
+                    from datetime import timezone as tz
+                    bar_time = bar_time.replace(tzinfo=tz.utc)
+
+            result = engine.score(h1_row, m5_tail, trading_sessions=(), bar_time=bar_time)
+
+            direction = result["direction"]
+            if direction is None:
+                continue
+
+            # Debounce: skip same-direction signals within 12 bars (1 hour)
+            if direction == last_signal_dir and (i - last_signal_idx) < 12:
+                continue
+
+            conviction = result["conviction"] or "MEDIUM"
+
+            signals.append({
+                "index": i,
+                "direction": direction,
+                "conviction": conviction,
+                "price": row["close"],
+                "atr": row["atr"],
+                "score": result["total_score"],
+            })
+
+            last_signal_idx = i
+            last_signal_dir = direction
+
+        return signals
+
     def _fetch_data(
         self, instrument: InstrumentSpec, period: str,
         start_date: str | None = None, end_date: str | None = None,
+        interval: str = "1d",
     ) -> pd.DataFrame | None:
         try:
             ticker = yf.Ticker(instrument.yahoo_symbol)
             if start_date and end_date:
-                df = ticker.history(start=start_date, end=end_date, interval="1d")
+                df = ticker.history(start=start_date, end=end_date, interval=interval)
             elif start_date:
-                df = ticker.history(start=start_date, interval="1d")
+                df = ticker.history(start=start_date, interval=interval)
             else:
-                df = ticker.history(period=period, interval="1d")
+                df = ticker.history(period=period, interval=interval)
             if df is None or df.empty:
                 return None
             df = df.reset_index()
             df.columns = [c.lower() for c in df.columns]
+            # Normalize: yfinance uses "datetime" for intraday, "date" for daily
+            if "datetime" in df.columns and "date" not in df.columns:
+                df = df.rename(columns={"datetime": "date"})
             return df
         except Exception as e:
             logger.warning("Backtest data fetch failed for %s: %s", instrument.key, e)

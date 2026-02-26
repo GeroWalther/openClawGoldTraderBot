@@ -40,6 +40,24 @@ async def analyze_instrument(
     return result
 
 
+@router.get("/{instrument}/m5scalp")
+async def analyze_instrument_m5_scalp(
+    instrument: str,
+    x_api_key: str = Header(...),
+    settings: Settings = Depends(get_settings),
+    analyzer: TechnicalAnalyzer = Depends(get_technical_analyzer),
+):
+    """M5 scalp analysis using H1 trend gate and M5 entry signals."""
+    if x_api_key != settings.api_secret_key:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
+    result = await analyzer.analyze_m5_scalp(instrument)
+    if "error" in result and "available" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+
+    return result
+
+
 @router.get("/{instrument}/intraday")
 async def analyze_instrument_intraday(
     instrument: str,

@@ -40,6 +40,7 @@ class Trade(Base):
     actual_price = Column(Float, nullable=True)
     spread_at_entry = Column(Float, nullable=True)
     order_type = Column(String, default="MARKET")  # MARKET, LIMIT, STOP
+    strategy = Column(String, nullable=True)  # intraday, swing, m5_scalp
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
     closed_at = Column(DateTime, nullable=True)

@@ -19,6 +19,7 @@ class TelegramNotifier:
         name = spec.display_name if spec else trade.epic
         unit = spec.size_unit if spec else "units"
 
+        strategy_line = f"\nStrategy: {trade.strategy}" if trade.strategy else ""
         text = (
             f"Trade {trade.status.value.upper()} — {name}\n"
             f"Direction: {trade.direction}\n"
@@ -26,6 +27,7 @@ class TelegramNotifier:
             f"Entry: {trade.entry_price}\n"
             f"SL: {trade.stop_loss} | TP: {trade.take_profit}\n"
             f"Order: {trade.deal_id or 'N/A'}"
+            f"{strategy_line}"
         )
         if trade.claude_reasoning:
             text += f"\n\nReasoning: {trade.claude_reasoning[:200]}"
@@ -38,10 +40,12 @@ class TelegramNotifier:
         spec = INSTRUMENTS.get(trade.epic)
         name = spec.display_name if spec else trade.epic
 
+        strategy_line = f"\nStrategy: {trade.strategy}" if trade.strategy else ""
         text = (
             f"Trade REJECTED — {name}\n"
             f"Direction: {trade.direction}\n"
             f"Reason: {reason}"
+            f"{strategy_line}"
         )
         try:
             await self.bot.send_message(chat_id=self.chat_id, text=text)
@@ -75,6 +79,7 @@ class TelegramNotifier:
         name = spec.display_name if spec else trade.epic
         unit = spec.size_unit if spec else "units"
 
+        strategy_line = f"\nStrategy: {trade.strategy}" if trade.strategy else ""
         text = (
             f"PENDING {trade.order_type} ORDER — {name}\n"
             f"Direction: {trade.direction}\n"
@@ -83,6 +88,7 @@ class TelegramNotifier:
             f"SL: {trade.stop_loss} | TP: {trade.take_profit}\n"
             f"Order: {trade.deal_id or 'N/A'}\n"
             f"Status: Waiting for price to reach {trade.entry_price}"
+            f"{strategy_line}"
         )
         if trade.claude_reasoning:
             text += f"\n\nReasoning: {trade.claude_reasoning[:200]}"

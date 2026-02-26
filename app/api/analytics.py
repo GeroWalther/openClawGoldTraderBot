@@ -19,6 +19,7 @@ async def get_analytics(
     to_date: str | None = None,
     instrument: str | None = None,
     conviction: str | None = None,
+    strategy: str | None = None,
     x_api_key: str = Header(...),
     settings: Settings = Depends(get_settings),
     db_session=Depends(get_db_session),
@@ -30,7 +31,7 @@ async def get_analytics(
     from_dt = datetime.fromisoformat(from_date) if from_date else None
     to_dt = datetime.fromisoformat(to_date) if to_date else None
 
-    result = await analytics.calculate(db_session, from_dt, to_dt, instrument, conviction)
+    result = await analytics.calculate(db_session, from_dt, to_dt, instrument, conviction, strategy)
     return AnalyticsResponse(**result)
 
 
