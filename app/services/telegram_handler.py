@@ -140,25 +140,58 @@ class TelegramCommandHandler:
         except Exception:
             pass
 
-        # Last 5 closed trades
+        # Today's P&L summary
+        today_start = datetime.now(timezone.utc).replace(
+            hour=0, minute=0, second=0, microsecond=0,
+        )
         async with self.session_factory() as session:
             result = await session.execute(
-                select(Trade)
-                .where(Trade.status == TradeStatus.CLOSED)
-                .order_by(Trade.closed_at.desc())
-                .limit(5)
+                select(Trade).where(
+                    and_(
+                        Trade.status == TradeStatus.CLOSED,
+                        Trade.closed_at >= today_start,
+                    )
+                ).order_by(Trade.closed_at.desc())
             )
-            recent = result.scalars().all()
+            today_trades = result.scalars().all()
 
-        if recent:
+        if today_trades:
+            wins = [t for t in today_trades if t.pnl is not None and t.pnl > 0]
+            losses = [t for t in today_trades if t.pnl is not None and t.pnl <= 0]
+            total_pnl = sum(t.pnl for t in today_trades if t.pnl is not None)
+
             lines.append("")
-            lines.append("RECENT CLOSES")
+            lines.append("TODAY'S P&L")
             lines.append("─" * 24)
-            for t in recent:
+            lines.append(f"Trades: {len(today_trades)} ({len(wins)}W / {len(losses)}L)")
+            lines.append(f"Total P&L: ${total_pnl:+.2f}")
+            lines.append("")
+            for t in today_trades:
                 spec = INSTRUMENTS.get(t.epic)
                 name = spec.display_name if spec else t.epic
                 pnl_str = f"${t.pnl:+.2f}" if t.pnl is not None else "N/A"
-                lines.append(f"{t.direction} {name} — {pnl_str}")
+                strategy_str = f" [{t.strategy}]" if t.strategy else ""
+                lines.append(f"  {t.direction} {name} — {pnl_str}{strategy_str}")
+        else:
+            # Show last 5 closed trades if nothing today
+            async with self.session_factory() as session:
+                result = await session.execute(
+                    select(Trade)
+                    .where(Trade.status == TradeStatus.CLOSED)
+                    .order_by(Trade.closed_at.desc())
+                    .limit(5)
+                )
+                recent = result.scalars().all()
+
+            if recent:
+                lines.append("")
+                lines.append("RECENT CLOSES (no trades today)")
+                lines.append("─" * 24)
+                for t in recent:
+                    spec = INSTRUMENTS.get(t.epic)
+                    name = spec.display_name if spec else t.epic
+                    pnl_str = f"${t.pnl:+.2f}" if t.pnl is not None else "N/A"
+                    lines.append(f"  {t.direction} {name} — {pnl_str}")
 
         await update.message.reply_text("\n".join(lines))
 
