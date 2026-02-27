@@ -71,8 +71,10 @@ async def test_cooldown_resets_on_win(risk_manager, db_session):
 
 
 @pytest.mark.asyncio
-async def test_daily_trade_count_limit(risk_manager, db_session):
-    # Create 5 executed trades today
+async def test_daily_trade_count_limit(settings, db_session):
+    # Set a low limit for testing
+    settings.max_daily_trades = 5
+    rm = RiskManager(settings)
     for _ in range(5):
         trade = Trade(
             direction="BUY", epic="XAUUSD", size=1.0,
@@ -81,7 +83,7 @@ async def test_daily_trade_count_limit(risk_manager, db_session):
         db_session.add(trade)
     await db_session.commit()
 
-    ok, reason = await risk_manager.can_trade(db_session, account_balance=10000.0)
+    ok, reason = await rm.can_trade(db_session, account_balance=10000.0)
     assert ok is False
     assert "Daily trade limit" in reason
 

@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     # Daily loss limits
     daily_loss_limit_enabled: bool = True
     max_daily_loss_percent: float = 3.0
-    max_daily_trades: int = 5
+    max_daily_trades: int = 9999
 
     # Weekly loss limit (% of account)
     weekly_loss_limit_enabled: bool = True
