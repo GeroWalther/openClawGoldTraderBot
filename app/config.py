@@ -56,6 +56,7 @@ class Settings(BaseSettings):
     # Telegram
     telegram_bot_token: str
     telegram_chat_id: str
+    telegram_webhook_secret: str = ""  # secret_token for webhook verification
 
     # App
     api_secret_key: str
