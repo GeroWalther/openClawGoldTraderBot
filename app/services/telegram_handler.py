@@ -1,17 +1,17 @@
 """Telegram command handler for /status and /pnl.
 
-Uses python-telegram-bot v20+ Application with polling mode.
+Uses webhook mode via a FastAPI route — avoids polling conflicts with OpenClaw.
 Only responds to the configured chat_id for security.
 """
 
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import async_sessionmaker
-from telegram import Update
+from telegram import Bot, Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 from app.config import Settings
@@ -36,10 +36,17 @@ class TelegramCommandHandler:
         self._app: Application | None = None
 
     async def start(self):
-        """Build and start the Telegram bot polling."""
+        """Build Application (no updater/polling).
+
+        Webhook URL must be registered once on the VPS via:
+            curl -F "url=https://IP/webhook/telegram" \
+                 -F "certificate=@/etc/ssl/certs/telegram-webhook.pem" \
+                 "https://api.telegram.org/bot$TOKEN/setWebhook"
+        """
         self._app = (
             Application.builder()
             .token(self.settings.telegram_bot_token)
+            .updater(None)  # No polling — we process updates via FastAPI route
             .build()
         )
         self._app.add_handler(CommandHandler("status", self._handle_status))
@@ -48,16 +55,21 @@ class TelegramCommandHandler:
 
         await self._app.initialize()
         await self._app.start()
-        await self._app.updater.start_polling(drop_pending_updates=True)
-        logger.info("TelegramCommandHandler polling started")
+        logger.info("TelegramCommandHandler started (webhook mode)")
 
     async def stop(self):
-        """Stop the Telegram bot polling."""
+        """Stop the Application (does NOT delete webhook — it persists across restarts)."""
         if self._app:
-            await self._app.updater.stop()
             await self._app.stop()
             await self._app.shutdown()
             logger.info("TelegramCommandHandler stopped")
+
+    async def process_update(self, data: dict):
+        """Process a raw Telegram update dict (called from FastAPI webhook route)."""
+        if self._app is None:
+            return
+        update = Update.de_json(data, self._app.bot)
+        await self._app.process_update(update)
 
     def _authorized(self, update: Update) -> bool:
         return str(update.effective_chat.id) == self._allowed_chat_id

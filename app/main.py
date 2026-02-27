@@ -64,7 +64,7 @@ async def lifespan(app: FastAPI):
         )
         monitor_task = asyncio.create_task(monitor.run_forever())
 
-    # Telegram command handler (/status, /pnl)
+    # Telegram command handler (/status, /pnl) — webhook mode
     telegram_handler = TelegramCommandHandler(
         ibkr_client=ibkr_client,
         session_factory=app.state.async_session,
@@ -72,6 +72,7 @@ async def lifespan(app: FastAPI):
     )
     try:
         await telegram_handler.start()
+        app.state.telegram_handler = telegram_handler
     except Exception:
         logger.exception("Failed to start Telegram command handler")
         telegram_handler = None
