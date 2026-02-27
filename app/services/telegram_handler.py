@@ -89,6 +89,7 @@ class TelegramCommandHandler:
 
         if positions:
             lines.append("OPEN POSITIONS")
+            lines.append("─" * 16)
             for pos in positions:
                 spec = INSTRUMENTS.get(pos["instrument"])
                 name = spec.display_name if spec else pos["instrument"]
@@ -122,6 +123,7 @@ class TelegramCommandHandler:
         if pending:
             lines.append("")
             lines.append("PENDING ORDERS")
+            lines.append("─" * 16)
             for order in pending:
                 spec = INSTRUMENTS.get(order["instrument"])
                 name = spec.display_name if spec else order["instrument"]
@@ -160,6 +162,7 @@ class TelegramCommandHandler:
 
             lines.append("")
             lines.append("TODAY'S P&L")
+            lines.append("─" * 16)
             lines.append(f"Trades: {len(today_trades)} ({len(wins)}W / {len(losses)}L)")
             lines.append(f"Total P&L: ${total_pnl:+.2f}")
             lines.append("")
@@ -183,6 +186,7 @@ class TelegramCommandHandler:
             if recent:
                 lines.append("")
                 lines.append("RECENT CLOSES (no trades today)")
+                lines.append("─" * 16)
                 for t in recent:
                     spec = INSTRUMENTS.get(t.epic)
                     name = spec.display_name if spec else t.epic
@@ -221,7 +225,7 @@ class TelegramCommandHandler:
 
         lines = [
             "TODAY'S P&L",
-            "─" * 24,
+            "─" * 16,
             f"Trades: {len(today_trades)} ({len(wins)}W / {len(losses)}L)",
             f"Total P&L: ${total_pnl:+.2f}",
             "",
