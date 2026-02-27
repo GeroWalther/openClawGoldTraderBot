@@ -188,9 +188,17 @@ print(json.dumps({'instrument': '$p_inst', 'direction': '$p_dir'}))
         # Runner position: trail SL at 1R behind peak price
         state_file="$JOURNAL_DIR/monitors/runner_${inst}_${direction}.json"
 
+        # Fetch current M5 ATR for trail distance (1 ATR behind peak)
+        runner_atr=$(api_get "/api/v1/technicals/${inst}/m5scalp" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+atr = d.get('technicals', {}).get('m5', {}).get('atr', 0) or 0
+print(f'{float(atr):.2f}')
+" 2>/dev/null || echo "0")
+
         if [ ! -f "$state_file" ]; then
             # First detection: move SL to breakeven + resize SL quantity
-            log "MONITOR $inst: Runner first detection — SL to BE + resize to $size"
+            log "MONITOR $inst: Runner first detection — SL to BE + resize to $size (ATR=$runner_atr)"
             runner_payload=$(python3 -c "
 import json
 print(json.dumps({
@@ -206,25 +214,28 @@ print(json.dumps({
                 runner_status=$(echo "$runner_result" | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','UNKNOWN'))" 2>/dev/null || echo "UNKNOWN")
                 log "MONITOR $inst: Runner init result=$runner_status"
                 if [ "$runner_status" = "modified" ]; then
-                    # Create state file
+                    # Create state file with current ATR as trail distance
                     python3 -c "
 import json
+atr = float('$runner_atr')
+# Use current M5 ATR for trailing, fall back to stop_distance if ATR unavailable
+trail_dist = atr if atr > 0 else float('$stop_dist')
 state = {
     'instrument': '$inst',
     'direction': '$direction',
     'entry_price': float('$entry'),
-    'r_distance': float('$stop_dist'),
+    'r_distance': trail_dist,
     'peak_price': float('$current'),
     'sl_adjusted': True
 }
 with open('$state_file', 'w') as f:
     json.dump(state, f, indent=2)
 " 2>/dev/null
-                    send_telegram "🏃 Runner active for *$inst* $direction — SL moved to breakeven, qty resized to $size"
+                    send_telegram "🏃 Runner active for *$inst* $direction — SL moved to breakeven, trail=1 ATR ($runner_atr)"
                 fi
             fi
         else
-            # Subsequent run: update peak + trail SL
+            # Subsequent run: update ATR + peak + trail SL (never move SL back)
             trail_result=$(python3 -c "
 import json, sys
 
@@ -232,11 +243,14 @@ with open('$state_file') as f:
     state = json.load(f)
 
 direction = state['direction']
-r_distance = state['r_distance']
 peak_price = state['peak_price']
 entry_price = state['entry_price']
 current = float('$current')
 current_sl = float('$sl') if float('$sl') != 0 else entry_price
+
+# Use current M5 ATR for trail distance (adapts to volatility)
+atr = float('$runner_atr')
+r_distance = atr if atr > 0 else state['r_distance']
 
 # Update peak
 if direction == 'BUY':
@@ -244,7 +258,7 @@ if direction == 'BUY':
 else:
     peak_price = min(peak_price, current)
 
-# Calculate trailing SL
+# Calculate trailing SL (1 ATR behind peak, never move back)
 if direction == 'BUY':
     new_sl = max(entry_price, peak_price - r_distance)
     should_move = new_sl > current_sl
@@ -252,40 +266,43 @@ else:
     new_sl = min(entry_price, peak_price + r_distance)
     should_move = new_sl < current_sl
 
-# Calculate profit in R-multiples
-if r_distance > 0:
+# Calculate profit in R-multiples (using original stop_distance for R calc)
+orig_r = state['r_distance']
+if orig_r > 0:
     if direction == 'BUY':
-        profit_r = (new_sl - entry_price) / r_distance
+        profit_r = (new_sl - entry_price) / orig_r
     else:
-        profit_r = (entry_price - new_sl) / r_distance
+        profit_r = (entry_price - new_sl) / orig_r
 else:
     profit_r = 0
 
-# Update state file
+# Update state file with current ATR and peak
 state['peak_price'] = peak_price
+state['r_distance'] = r_distance
 with open('$state_file', 'w') as f:
     json.dump(state, f, indent=2)
 
 if should_move:
-    print(f'TRAIL|{new_sl:.2f}|{peak_price:.2f}|{profit_r:.1f}')
+    print(f'TRAIL|{new_sl:.2f}|{peak_price:.2f}|{profit_r:.1f}|{r_distance:.0f}')
 else:
-    print(f'HOLD|{current_sl:.2f}|{peak_price:.2f}|{profit_r:.1f}')
+    print(f'HOLD|{current_sl:.2f}|{peak_price:.2f}|{profit_r:.1f}|{r_distance:.0f}')
 " 2>/dev/null || echo "ERROR")
 
             trail_action=$(echo "$trail_result" | cut -d'|' -f1)
             trail_new_sl=$(echo "$trail_result" | cut -d'|' -f2)
             trail_peak=$(echo "$trail_result" | cut -d'|' -f3)
             trail_profit_r=$(echo "$trail_result" | cut -d'|' -f4)
+            trail_atr=$(echo "$trail_result" | cut -d'|' -f5)
 
             if [ "$trail_action" = "TRAIL" ]; then
-                log "MONITOR $inst: Runner trailing SL to $trail_new_sl (peak=$trail_peak, locking ${trail_profit_r}R)"
+                log "MONITOR $inst: Runner trailing SL to $trail_new_sl (peak=$trail_peak, ATR=$trail_atr, locking ${trail_profit_r}R)"
                 trail_payload=$(python3 -c "
 import json
 print(json.dumps({
     'instrument': '$inst',
     'direction': '$direction',
     'new_stop_loss': float('$trail_new_sl'),
-    'reasoning': 'Runner trail: peak=$trail_peak, locking ${trail_profit_r}R'
+    'reasoning': 'Runner trail: peak=$trail_peak, 1 ATR=$trail_atr, locking ${trail_profit_r}R'
 }))
 " 2>/dev/null || echo "")
                 if [ -n "$trail_payload" ]; then
@@ -293,11 +310,11 @@ print(json.dumps({
                     modify_status=$(echo "$modify_result" | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','UNKNOWN'))" 2>/dev/null || echo "UNKNOWN")
                     log "MONITOR $inst: Runner trail result=$modify_status"
                     if [ "$modify_status" = "modified" ]; then
-                        send_telegram "🏃 Runner *$inst*: SL trailed to $trail_new_sl (peak $trail_peak, locking ${trail_profit_r}R)"
+                        send_telegram "🏃 Runner *$inst*: SL trailed to $trail_new_sl (peak $trail_peak, 1ATR=$trail_atr, ${trail_profit_r}R locked)"
                     fi
                 fi
             else
-                log "MONITOR $inst: Runner holding (SL=$trail_new_sl, peak=$trail_peak, ${trail_profit_r}R)"
+                log "MONITOR $inst: Runner holding (SL=$trail_new_sl, peak=$trail_peak, ATR=$trail_atr, ${trail_profit_r}R)"
             fi
         fi
     elif [ "$action" = "trail_sl" ]; then
