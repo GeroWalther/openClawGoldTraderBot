@@ -1,5 +1,5 @@
 #!/bin/bash
-# M5 Scalp scanner — runs every 30 min (:15/:45) 07-21 UTC, Mon-Fri.
+# M5 Scalp scanner — runs every 5 min, 07-21 UTC, Mon-Fri.
 # Scans XAUUSD and BTC using the 4-factor M5 scalp scoring engine.
 
 source "$(dirname "$0")/common.sh"
