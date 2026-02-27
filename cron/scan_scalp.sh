@@ -18,7 +18,10 @@ log "M5 SCALP SCAN starting"
 
 signals_found=0
 
-for inst in "${INSTRUMENTS[@]}"; do
+# M5 scalp: BTC only (XAUUSD scalps not profitable in backtest)
+SCALP_INSTRUMENTS=("BTC")
+
+for inst in "${SCALP_INSTRUMENTS[@]}"; do
     json=$(api_get "/api/v1/technicals/${inst}/m5scalp")
     if [ -z "$json" ]; then
         log "M5_SCALP: Failed to fetch $inst"
