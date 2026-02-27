@@ -360,8 +360,8 @@ if timeframe == 'm5':
 MIN_STOP = {'BTC': 200.0, 'XAUUSD': 5.0, 'IBUS500': 2.0, 'MES': 2.0}
 min_sd = MIN_STOP.get(inst, 0)
 
-# Only use S/R params if distances are positive and stop is wide enough
-if sd > 0 and ld > 0 and sd >= min_sd:
+# Only use S/R params if distances are positive, stop is wide enough, and R:R >= 1:1
+if sd > 0 and ld > 0 and sd >= min_sd and ld >= sd:
     payload['stop_distance'] = sd
     payload['limit_distance'] = ld
 else:
