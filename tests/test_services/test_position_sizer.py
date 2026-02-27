@@ -71,9 +71,9 @@ async def test_forex_small_balance_returns_min(settings):
 async def test_btc_futures_sizing(settings):
     sizer = PositionSizer(settings)
     instrument = get_instrument("BTC")
-    # 3% of 100000 = 3000. 3000 / (2000 * 0.1) = 15 → capped at max=10
+    # 3% of 100000 = 3000. 3000 / (2000 * 0.1) = 15 (uncapped)
     size = await sizer.calculate(account_balance=100000, stop_distance=2000, instrument=instrument)
-    assert size == 10.0
+    assert size == 15.0
 
 
 @pytest.mark.asyncio
@@ -96,41 +96,41 @@ async def test_defaults_to_xauusd(settings):
 
 @pytest.mark.asyncio
 async def test_conviction_high_full_risk(settings):
-    """HIGH conviction uses 1.5% risk."""
+    """HIGH conviction uses 3.0% risk."""
     sizer = PositionSizer(settings)
     instrument = get_instrument("XAUUSD")
     size = await sizer.calculate(
         account_balance=10000, stop_distance=50,
         instrument=instrument, conviction="HIGH",
     )
-    # 1.5% of 10000 = 150 / 50 = 3
-    assert size == 3.0
+    # 3.0% of 10000 = 300 / 50 = 6
+    assert size == 6.0
 
 
 @pytest.mark.asyncio
 async def test_conviction_medium_reduced_risk(settings):
-    """MEDIUM conviction uses 1.0% risk."""
+    """MEDIUM conviction uses 2.25% risk."""
     sizer = PositionSizer(settings)
     instrument = get_instrument("XAUUSD")
     size = await sizer.calculate(
         account_balance=10000, stop_distance=50,
         instrument=instrument, conviction="MEDIUM",
     )
-    # 1.0% of 10000 = 100 / 50 = 2
-    assert size == 2.0
+    # 2.25% of 10000 = 225 / 50 = 4.5 → rounds to 4 (banker's rounding)
+    assert size == 4.0
 
 
 @pytest.mark.asyncio
 async def test_conviction_low_reduced_risk(settings):
-    """LOW conviction uses 0.75% risk."""
+    """LOW conviction uses 1.5% risk."""
     sizer = PositionSizer(settings)
     instrument = get_instrument("XAUUSD")
     size = await sizer.calculate(
         account_balance=10000, stop_distance=50,
         instrument=instrument, conviction="LOW",
     )
-    # 0.75% of 10000 = 75 / 50 = 1.5 → rounds to 2
-    assert size == 2.0
+    # 1.5% of 10000 = 150 / 50 = 3
+    assert size == 3.0
 
 
 @pytest.mark.asyncio
@@ -142,6 +142,7 @@ async def test_conviction_none_uses_default(settings):
         account_balance=10000, stop_distance=50,
         instrument=instrument, conviction=None,
     )
+    # 3.0% of 10000 = 300 / 50 = 6
     assert size == 6.0
 
 
@@ -166,15 +167,15 @@ async def test_conviction_with_larger_balance(settings):
     instrument = get_instrument("XAUUSD")
 
     size_high = await sizer.calculate(
-        account_balance=50000, stop_distance=50,
+        account_balance=50000, stop_distance=100,
         instrument=instrument, conviction="HIGH",
     )
     size_low = await sizer.calculate(
-        account_balance=50000, stop_distance=50,
+        account_balance=50000, stop_distance=100,
         instrument=instrument, conviction="LOW",
     )
 
-    # HIGH: 1.5% of 50000 = 750 / 50 = 15 → capped at 10
-    # LOW: 0.75% of 50000 = 375 / 50 = 7.5 → rounds to 8
+    # HIGH: 3.0% of 50000 = 1500 / 100 = 15 → capped at 10
+    # LOW: 1.5% of 50000 = 750 / 100 = 7.5 → rounds to 8
     assert size_high == 10.0
     assert size_low == 8.0

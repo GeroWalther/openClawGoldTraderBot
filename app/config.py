@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     ibkr_client_id: int = 1
 
     # Trading parameters (per-instrument settings live in app/instruments.py)
-    max_risk_percent: float = 1.5
+    max_risk_percent: float = 3.0
 
     # Session filter
     session_filter_enabled: bool = True
@@ -30,6 +30,11 @@ class Settings(BaseSettings):
     cooldown_after_losses: int = 2
     cooldown_hours_base: int = 2
 
+    # M5 scalp cooldown (separate from main cooldown — shorter, minute-based)
+    scalp_cooldown_enabled: bool = True
+    scalp_cooldown_after_losses: int = 2       # trigger after N consecutive scalp losses
+    scalp_cooldown_minutes_base: int = 10      # 2 M5 bars, matches backtest
+
     # Daily loss limits
     daily_loss_limit_enabled: bool = True
     max_daily_loss_percent: float = 3.0
@@ -42,11 +47,11 @@ class Settings(BaseSettings):
     # Spread protection — reject if spread > this % of stop distance
     max_spread_to_sl_ratio: float = 0.30
 
-    # Conviction-based position sizing
+    # Conviction-based position sizing (matches backtest: HIGH=100%, MED=75%, LOW=50% of base)
     conviction_sizing_enabled: bool = True
-    conviction_high_risk_pct: float = 1.5
-    conviction_medium_risk_pct: float = 1.0
-    conviction_low_risk_pct: float = 0.75
+    conviction_high_risk_pct: float = 3.0
+    conviction_medium_risk_pct: float = 2.25
+    conviction_low_risk_pct: float = 1.5
 
     # Telegram
     telegram_bot_token: str

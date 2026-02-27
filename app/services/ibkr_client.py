@@ -412,11 +412,14 @@ class IBKRClient:
         tp1_size: float,
         runner_size: float,
         instrument_key: str = "XAUUSD",
+        stop_distance: float = 0,
+        r_distance: float = 0,
     ) -> dict:
         """
         Open a position with TP1 + runner (no TP2).
 
         Places 3 orders: parent MKT (full size), TP1 LMT (half), SL STP (full).
+        After fill, adjusts TP1 and SL from actual fill price (not stale reference).
         After TP1 fills, monitor trails the SL for the remaining runner half.
         Falls back to regular bracket if sizes are too small.
         """
@@ -474,6 +477,39 @@ class IBKRClient:
         self._ib.placeOrder(contract, sl)
 
         await self._wait_for_fill(parent_trade)
+
+        # Post-fill: recalculate TP1 and SL from actual fill price
+        if parent_trade.fills and stop_distance > 0:
+            total_qty = sum(f.execution.shares for f in parent_trade.fills)
+            fill_price = (
+                sum(f.execution.price * f.execution.shares for f in parent_trade.fills)
+                / total_qty
+            ) if total_qty > 0 else None
+
+            if fill_price is not None:
+                if direction == "BUY":
+                    new_sl = fill_price - stop_distance
+                    new_tp1 = fill_price + r_distance
+                else:
+                    new_sl = fill_price + stop_distance
+                    new_tp1 = fill_price - r_distance
+
+                # Round to tick size
+                tick = getattr(instrument, "tick_size", 0.01)
+                new_sl = round(new_sl / tick) * tick
+                new_tp1 = round(new_tp1 / tick) * tick
+
+                logger.info(
+                    "Post-fill adjust: fill=%.2f SL %.2f→%.2f TP1 %.2f→%.2f",
+                    fill_price, stop_price, new_sl, tp1_price, new_tp1,
+                )
+
+                # Modify child orders in-place
+                tp1.lmtPrice = new_tp1
+                self._ib.placeOrder(contract, tp1)
+                sl.auxPrice = new_sl
+                self._ib.placeOrder(contract, sl)
+
         return self._trade_to_dict(parent_trade)
 
     async def open_pending_position(

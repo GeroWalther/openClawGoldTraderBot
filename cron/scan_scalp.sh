@@ -18,6 +18,48 @@ log "M5 SCALP SCAN starting"
 
 signals_found=0
 
+# --- Same-direction debounce (defense-in-depth, matches backtest 12-bar debounce) ---
+DEBOUNCE_DIR="$JOURNAL_DIR/scalp"
+DEBOUNCE_FILE="$DEBOUNCE_DIR/last_trade.json"
+DEBOUNCE_MINUTES=60  # skip same direction within 60 min
+
+check_debounce() {
+    local inst="$1"
+    local direction="$2"
+    if [ ! -f "$DEBOUNCE_FILE" ]; then
+        return 0  # no previous trade — allow
+    fi
+    python3 -c "
+import sys, json, os, time
+try:
+    with open('$DEBOUNCE_FILE') as f:
+        d = json.load(f)
+    if d.get('instrument') != '$inst':
+        sys.exit(0)
+    if d.get('direction') != '$direction':
+        sys.exit(0)
+    age_min = (time.time() - d.get('timestamp', 0)) / 60
+    if age_min < $DEBOUNCE_MINUTES:
+        print(f'debounce:{age_min:.0f}min_ago')
+        sys.exit(1)
+except Exception:
+    pass
+sys.exit(0)
+" 2>/dev/null
+    return $?
+}
+
+write_debounce() {
+    local inst="$1"
+    local direction="$2"
+    python3 -c "
+import json, time
+d = {'instrument': '$inst', 'direction': '$direction', 'timestamp': time.time()}
+with open('$DEBOUNCE_FILE', 'w') as f:
+    json.dump(d, f)
+" 2>/dev/null || true
+}
+
 # M5 scalp: BTC only (XAUUSD scalps not profitable in backtest)
 SCALP_INSTRUMENTS=("BTC")
 
@@ -73,6 +115,13 @@ for inst in "${SCALP_INSTRUMENTS[@]}"; do
                     continue
                 fi
 
+                # Same-direction debounce (defense-in-depth)
+                if ! check_debounce "$inst" "$direction"; then
+                    debounce_info=$(check_debounce "$inst" "$direction" 2>&1 || true)
+                    log "M5_SCALP $inst: SKIP trade — same-direction debounce ($debounce_info)"
+                    continue
+                fi
+
                 corr_check=$(check_correlation "$inst" "$direction")
                 if [ "$corr_check" != "ok" ]; then
                     corr_reason=$(echo "$corr_check" | cut -d: -f1)
@@ -93,6 +142,8 @@ for inst in "${SCALP_INSTRUMENTS[@]}"; do
                             trade_status=$(echo "$trade_result" | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','UNKNOWN'))" 2>/dev/null || echo "UNKNOWN")
                             trade_msg=$(echo "$trade_result" | python3 -c "import sys,json; print(json.load(sys.stdin).get('message',''))" 2>/dev/null || echo "")
                             log "M5_SCALP $inst: Trade result=$trade_status — $trade_msg"
+                            # Record debounce state after submission
+                            write_debounce "$inst" "$direction"
                         else
                             log "M5_SCALP $inst: Trade FAILED — no response from bot"
                         fi

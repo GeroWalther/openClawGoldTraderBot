@@ -63,7 +63,7 @@ class TradeExecutor:
         if self.risk_manager is not None:
             account_info = await self.ibkr.get_account_info()
             balance = account_info.get("NetLiquidation", 10000.0)
-            can_trade, reason = await self.risk_manager.can_trade(self.db, balance)
+            can_trade, reason = await self.risk_manager.can_trade(self.db, balance, strategy=request.strategy)
             if not can_trade:
                 return self._reject(request, instrument.key, reason)
 
@@ -294,6 +294,14 @@ class TradeExecutor:
             db_entry_price = request.entry_price
         else:
             db_entry_price = fill_price
+
+        # For m5_scalp market fills, recalculate SL from actual fill price
+        if request.strategy == "m5_scalp" and not is_pending and fill_price and status == TradeStatus.EXECUTED:
+            if request.direction == "BUY":
+                stop_price = fill_price - stop_distance
+            else:
+                stop_price = fill_price + stop_distance
+
         # Runner trades (m5_scalp) have no fixed TP2 — monitor trails the SL
         db_take_profit = None if (request.strategy == "m5_scalp" and not is_pending) else tp_price
         trade = Trade(
@@ -418,6 +426,8 @@ class TradeExecutor:
             tp1_size=tp1_size,
             runner_size=runner_size,
             instrument_key=instrument.key,
+            stop_distance=stop_distance,
+            r_distance=r_distance,
         )
 
     async def _execute_pending_partial_tp(

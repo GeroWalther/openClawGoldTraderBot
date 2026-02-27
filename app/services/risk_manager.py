@@ -18,13 +18,20 @@ class RiskManager:
         self.ibkr_client = ibkr_client  # For unrealized PnL check
 
     async def can_trade(
-        self, db_session: AsyncSession, account_balance: float
+        self, db_session: AsyncSession, account_balance: float,
+        strategy: str | None = None,
     ) -> tuple[bool, str]:
         """
         Combined check: cooldown + daily trade count + daily P&L loss limit + weekly limit.
 
         Returns (can_trade, reason).
         """
+        # Strategy-specific scalp cooldown (separate from main cooldown)
+        if strategy == "m5_scalp":
+            ok, reason = await self._check_scalp_cooldown(db_session)
+            if not ok:
+                return False, reason
+
         # Check cooldown
         ok, reason = await self.check_cooldown(db_session)
         if not ok:
@@ -253,6 +260,78 @@ class RiskManager:
             .where(Trade.closed_at >= week_start)
         )
         return float(result.scalar_one())
+
+    async def _check_scalp_cooldown(
+        self, db_session: AsyncSession
+    ) -> tuple[bool, str]:
+        """
+        M5 scalp-specific cooldown: exponential backoff after consecutive scalp losses.
+
+        Mirrors backtest formula: cooldown_bars = 2 * 2^(n-2), with base=10 min.
+        """
+        if not self.settings.scalp_cooldown_enabled:
+            return True, "Scalp cooldown disabled"
+
+        consecutive = await self._count_consecutive_scalp_losses(db_session)
+
+        if consecutive < self.settings.scalp_cooldown_after_losses:
+            return True, f"No scalp cooldown ({consecutive} consecutive scalp losses)"
+
+        # Exponential cooldown: base_minutes * 2^(excess)
+        excess = consecutive - self.settings.scalp_cooldown_after_losses
+        cooldown_minutes = self.settings.scalp_cooldown_minutes_base * (2 ** excess)
+
+        # Find last scalp loss time
+        last_time = await self._last_scalp_loss_time(db_session)
+        if last_time is None:
+            return True, "No scalp cooldown (no recent scalp losses)"
+
+        if last_time.tzinfo is None:
+            last_time = last_time.replace(tzinfo=timezone.utc)
+
+        cooldown_end = last_time + timedelta(minutes=cooldown_minutes)
+        now = datetime.now(timezone.utc)
+
+        if now < cooldown_end:
+            remaining = (cooldown_end - now).total_seconds() / 60
+            return False, (
+                f"Scalp cooldown active: {consecutive} consecutive scalp losses. "
+                f"Wait {remaining:.0f} min ({cooldown_minutes} min cooldown)"
+            )
+
+        return True, f"Scalp cooldown expired ({consecutive} consecutive scalp losses, {cooldown_minutes} min elapsed)"
+
+    async def _count_consecutive_scalp_losses(self, db_session: AsyncSession) -> int:
+        """Count consecutive losses from most recent closed m5_scalp trades."""
+        result = await db_session.execute(
+            select(Trade)
+            .where(Trade.strategy == "m5_scalp")
+            .where(Trade.status == TradeStatus.CLOSED)
+            .where(Trade.pnl.isnot(None))
+            .order_by(Trade.closed_at.desc())
+            .limit(20)
+        )
+        trades = result.scalars().all()
+
+        count = 0
+        for trade in trades:
+            if trade.pnl is not None and trade.pnl < 0:
+                count += 1
+            else:
+                break
+        return count
+
+    async def _last_scalp_loss_time(self, db_session: AsyncSession) -> datetime | None:
+        """Get the closed_at time of the most recent losing m5_scalp trade."""
+        result = await db_session.execute(
+            select(Trade.closed_at)
+            .where(Trade.strategy == "m5_scalp")
+            .where(Trade.status == TradeStatus.CLOSED)
+            .where(Trade.pnl < 0)
+            .order_by(Trade.closed_at.desc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
 
     async def _get_unrealized_pnl(self) -> float:
         """Get total unrealized PnL from IBKR open positions."""
