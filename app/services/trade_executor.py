@@ -331,6 +331,25 @@ class TradeExecutor:
         # 9. Notify via Telegram
         if is_pending:
             await self.notifier.send_pending_order_update(trade)
+        elif request.strategy == "m5_scalp" and status == TradeStatus.EXECUTED and stop_distance:
+            # Show TP1 + runner info instead of "TP: None"
+            r_distance = stop_distance * self.settings.partial_tp_r_multiple
+            if request.direction == "BUY":
+                tp1_price = db_entry_price + r_distance
+            else:
+                tp1_price = db_entry_price - r_distance
+            tp1_size_raw = size * (self.settings.partial_tp_percent / 100.0)
+            runner_size_raw = size - tp1_size_raw
+            instrument = get_instrument(request.instrument)
+            if instrument.sec_type == "CASH":
+                tp1_size = max(round(tp1_size_raw / 1000) * 1000, instrument.min_size)
+                runner_size = max(round(runner_size_raw / 1000) * 1000, instrument.min_size)
+            else:
+                tp1_size = max(round(tp1_size_raw), int(instrument.min_size))
+                runner_size = max(round(runner_size_raw), int(instrument.min_size))
+            await self.notifier.send_runner_trade_update(
+                trade, tp1_price=tp1_price, tp1_size=tp1_size, runner_size=runner_size,
+            )
         else:
             await self.notifier.send_trade_update(trade)
 

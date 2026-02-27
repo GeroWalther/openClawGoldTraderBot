@@ -36,6 +36,87 @@ class TelegramNotifier:
         except Exception:
             logger.exception("Failed to send Telegram trade update")
 
+    async def send_runner_trade_update(
+        self,
+        trade: Trade,
+        tp1_price: float,
+        tp1_size: float,
+        runner_size: float,
+    ):
+        """Notification for m5_scalp runner trades showing TP1 + runner info."""
+        spec = INSTRUMENTS.get(trade.epic)
+        name = spec.display_name if spec else trade.epic
+        unit = spec.size_unit if spec else "units"
+
+        strategy_line = f"\nStrategy: {trade.strategy}" if trade.strategy else ""
+        text = (
+            f"Trade {trade.status.value.upper()} — {name}\n"
+            f"Direction: {trade.direction}\n"
+            f"Size: {int(trade.size)} {unit}\n"
+            f"Entry: {trade.entry_price}\n"
+            f"SL: {trade.stop_loss}\n"
+            f"TP1: {tp1_price} ({int(tp1_size)} {unit} — 50%)\n"
+            f"Runner: {int(runner_size)} {unit} (trailing SL)\n"
+            f"Order: {trade.deal_id or 'N/A'}"
+            f"{strategy_line}"
+        )
+        if trade.claude_reasoning:
+            text += f"\n\nReasoning: {trade.claude_reasoning[:200]}"
+        try:
+            await self.bot.send_message(chat_id=self.chat_id, text=text)
+        except Exception:
+            logger.exception("Failed to send Telegram runner trade update")
+
+    async def send_close_update(
+        self,
+        trade: Trade,
+        close_price: float,
+        pnl: float,
+        duration_str: str,
+    ):
+        """Notification when a trade is closed (SL/TP hit or manual)."""
+        spec = INSTRUMENTS.get(trade.epic)
+        name = spec.display_name if spec else trade.epic
+
+        pnl_emoji = "+" if pnl >= 0 else ""
+        text = (
+            f"Trade CLOSED — {name}\n"
+            f"Direction: {trade.direction}\n"
+            f"Entry: {trade.entry_price} → Exit: {close_price}\n"
+            f"P&L: {pnl_emoji}${pnl:.2f}\n"
+            f"Duration: {duration_str}"
+        )
+        if trade.strategy:
+            text += f"\nStrategy: {trade.strategy}"
+        try:
+            await self.bot.send_message(chat_id=self.chat_id, text=text)
+        except Exception:
+            logger.exception("Failed to send Telegram close update")
+
+    async def send_tp1_hit_update(
+        self,
+        trade: Trade,
+        tp1_price: float,
+        remaining_size: float,
+    ):
+        """Notification when TP1 is hit on a runner trade."""
+        spec = INSTRUMENTS.get(trade.epic)
+        name = spec.display_name if spec else trade.epic
+        unit = spec.size_unit if spec else "units"
+
+        text = (
+            f"TP1 HIT — {name}\n"
+            f"Direction: {trade.direction}\n"
+            f"TP1 Price: {tp1_price}\n"
+            f"Runner remaining: {int(remaining_size)} {unit} (trailing SL)"
+        )
+        if trade.strategy:
+            text += f"\nStrategy: {trade.strategy}"
+        try:
+            await self.bot.send_message(chat_id=self.chat_id, text=text)
+        except Exception:
+            logger.exception("Failed to send Telegram TP1 hit update")
+
     async def send_rejection(self, trade: Trade, reason: str):
         spec = INSTRUMENTS.get(trade.epic)
         name = spec.display_name if spec else trade.epic

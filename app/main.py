@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -9,6 +10,9 @@ from app.models.database import Base
 from app.services.atr_calculator import ATRCalculator
 from app.services.ibkr_client import IBKRClient
 from app.services.technical_analyzer import TechnicalAnalyzer
+from app.services.telegram_notifier import TelegramNotifier
+from app.services.trade_monitor import TradeCloseMonitor
+from app.services.telegram_handler import TelegramCommandHandler
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +52,30 @@ async def lifespan(app: FastAPI):
     app.state.atr_calculator = ATRCalculator(settings)
     app.state.technical_analyzer = TechnicalAnalyzer()
 
+    # Trade close monitor (background task)
+    monitor_task = None
+    if app.state.ibkr_connected:
+        notifier = TelegramNotifier(settings)
+        monitor = TradeCloseMonitor(
+            ibkr_client=ibkr_client,
+            session_factory=app.state.async_session,
+            notifier=notifier,
+            settings=settings,
+        )
+        monitor_task = asyncio.create_task(monitor.run_forever())
+
+    # Telegram command handler (/status, /pnl)
+    telegram_handler = TelegramCommandHandler(
+        ibkr_client=ibkr_client,
+        session_factory=app.state.async_session,
+        settings=settings,
+    )
+    try:
+        await telegram_handler.start()
+    except Exception:
+        logger.exception("Failed to start Telegram command handler")
+        telegram_handler = None
+
     logger.info(
         "Trader Bot v4 started (IBKR %s:%s, connected=%s)",
         settings.ibkr_host,
@@ -55,6 +83,16 @@ async def lifespan(app: FastAPI):
         app.state.ibkr_connected,
     )
     yield
+
+    # Shutdown
+    if telegram_handler:
+        await telegram_handler.stop()
+    if monitor_task:
+        monitor_task.cancel()
+        try:
+            await monitor_task
+        except asyncio.CancelledError:
+            pass
 
     await ibkr_client.disconnect()
     await engine.dispose()
