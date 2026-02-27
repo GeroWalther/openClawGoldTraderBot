@@ -5,13 +5,13 @@ from unittest.mock import AsyncMock, patch, MagicMock
 import httpx
 import pytest
 
-from app.services.news import NewsService, INSTRUMENT_RSS_SYMBOLS
+from app.services.news import NewsService, INSTRUMENT_NEWS_QUERIES
 
 
 RSS_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
 <channel>
-<title>Yahoo Finance</title>
+<title>Google News</title>
 {items}
 </channel>
 </rss>"""
@@ -149,7 +149,7 @@ class TestNewsService:
 
             result = await service.get_news_sentiment("XAUUSD")
 
-        # XAUUSD has 2 symbols (GC=F, GLD) but same headline should be counted once
+        # XAUUSD has 2 queries but same headline should be counted once
         assert result["bullish_count"] == 1
 
     @pytest.mark.asyncio
@@ -190,13 +190,13 @@ class TestNewsService:
         assert result["bullish_count"] == 0
 
 
-class TestInstrumentRssSymbols:
+class TestInstrumentNewsQueries:
     def test_all_instruments_mapped(self):
-        """All instruments should have RSS symbol mappings."""
+        """All instruments should have news query mappings."""
         from app.instruments import INSTRUMENTS
         for key in INSTRUMENTS:
-            assert key in INSTRUMENT_RSS_SYMBOLS, f"Missing RSS mapping for {key}"
+            assert key in INSTRUMENT_NEWS_QUERIES, f"Missing news query mapping for {key}"
 
-    def test_xauusd_symbols(self):
-        assert "GC=F" in INSTRUMENT_RSS_SYMBOLS["XAUUSD"]
-        assert "GLD" in INSTRUMENT_RSS_SYMBOLS["XAUUSD"]
+    def test_xauusd_queries(self):
+        assert "gold price" in INSTRUMENT_NEWS_QUERIES["XAUUSD"]
+        assert "gold futures" in INSTRUMENT_NEWS_QUERIES["XAUUSD"]

@@ -1,4 +1,4 @@
-"""News sentiment service — fetches Yahoo Finance RSS and scores headlines.
+"""News sentiment service — fetches Google News RSS and scores headlines.
 
 Word-boundary keyword matching: bullish vs bearish words.
 Thresholds: net ±3 → ±2 score, net ±1 → ±1 score.
@@ -14,18 +14,21 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-YAHOO_RSS_URL = "https://feeds.finance.yahoo.com/rss/2.0/headline?s={symbol}&region=US&lang=en-US"
+GOOGLE_NEWS_RSS_URL = (
+    "https://news.google.com/rss/search?"
+    "q={query}+when:1d&hl=en-US&gl=US&ceid=US:en"
+)
 
-# Map instrument keys to Yahoo Finance symbols for RSS
-INSTRUMENT_RSS_SYMBOLS: dict[str, list[str]] = {
-    "XAUUSD": ["GC=F", "GLD"],
-    "MES": ["ES=F", "SPY"],
-    "IBUS500": ["^GSPC", "SPY"],
-    "EURUSD": ["EURUSD=X", "FXE"],
-    "EURJPY": ["EURJPY=X"],
-    "CADJPY": ["CADJPY=X"],
-    "USDJPY": ["JPY=X", "FXY"],
-    "BTC": ["BTC-USD", "MSTR"],
+# Map instrument keys to Google News search queries
+INSTRUMENT_NEWS_QUERIES: dict[str, list[str]] = {
+    "XAUUSD": ["gold price", "gold futures"],
+    "MES": ["S&P 500", "stock market today"],
+    "IBUS500": ["S&P 500", "stock market today"],
+    "EURUSD": ["EUR USD forex", "euro dollar"],
+    "EURJPY": ["EUR JPY forex"],
+    "CADJPY": ["CAD JPY forex"],
+    "USDJPY": ["USD JPY forex", "dollar yen"],
+    "BTC": ["bitcoin price", "bitcoin BTC"],
 }
 
 BULLISH_WORDS = {
@@ -48,7 +51,7 @@ BEARISH_WORDS = {
 
 
 class NewsService:
-    """Fetches Yahoo Finance RSS headlines and scores sentiment."""
+    """Fetches Google News RSS headlines and scores sentiment."""
 
     def __init__(self):
         self._cache: dict[str, tuple[dict, float]] = {}
@@ -69,24 +72,24 @@ class NewsService:
             if now - ts < self._cache_ttl:
                 return data
 
-        symbols = INSTRUMENT_RSS_SYMBOLS.get(key, [])
-        if not symbols:
+        queries = INSTRUMENT_NEWS_QUERIES.get(key, [])
+        if not queries:
             return {"score": 0, "headlines": [], "bullish_count": 0, "bearish_count": 0}
 
         all_headlines: list[dict] = []
         seen_titles: set[str] = set()
 
-        for symbol in symbols:
+        for query in queries:
             try:
-                headlines = await self._fetch_rss(symbol)
+                headlines = await self._fetch_rss(query)
                 for h in headlines:
-                    # Deduplicate across symbol feeds
+                    # Deduplicate across query feeds
                     title_lower = h["title"].lower()
                     if title_lower not in seen_titles:
                         seen_titles.add(title_lower)
                         all_headlines.append(h)
             except Exception as e:
-                logger.warning("RSS fetch failed for %s: %s", symbol, e)
+                logger.warning("News fetch failed for %s: %s", query, e)
 
         # Score headlines
         bullish_count = 0
@@ -149,9 +152,9 @@ class NewsService:
         self._cache[key] = (result, now)
         return result
 
-    async def _fetch_rss(self, symbol: str) -> list[dict]:
-        """Fetch and parse Yahoo RSS feed for a symbol."""
-        url = YAHOO_RSS_URL.format(symbol=symbol)
+    async def _fetch_rss(self, query: str) -> list[dict]:
+        """Fetch and parse Google News RSS feed for a search query."""
+        url = GOOGLE_NEWS_RSS_URL.format(query=query)
 
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.get(url)
@@ -169,6 +172,6 @@ class NewsService:
                         "published": pub_el.text.strip() if pub_el is not None and pub_el.text else "",
                     })
         except ET.ParseError as e:
-            logger.warning("RSS XML parse error for %s: %s", symbol, e)
+            logger.warning("RSS XML parse error for %s: %s", query, e)
 
         return headlines
