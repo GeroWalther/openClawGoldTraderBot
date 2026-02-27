@@ -1,5 +1,5 @@
 #!/bin/bash
-# Trade monitor — runs every 2h during market hours.
+# Trade monitor — runs every 5min during market hours.
 # Checks open positions and pending orders, alerts on important levels.
 
 source "$(dirname "$0")/common.sh"

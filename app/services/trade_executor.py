@@ -119,6 +119,22 @@ class TradeExecutor:
         reference_price = request.entry_price if is_pending else current_price
         expected_price = reference_price
 
+        # 2b. Pre-fill ATR/default SL/TP so validator sees actual values
+        need_sd = request.stop_distance is None and request.stop_level is None
+        need_ld = request.limit_distance is None and request.limit_level is None
+        if need_sd or need_ld:
+            atr_sl, atr_tp = None, None
+            if self.atr_calculator is not None:
+                atr_result = self.atr_calculator.get_dynamic_sl_tp(instrument)
+                if atr_result is not None:
+                    atr_sl, atr_tp = atr_result
+            updates = {}
+            if need_sd:
+                updates["stop_distance"] = atr_sl or instrument.default_sl_distance
+            if need_ld:
+                updates["limit_distance"] = atr_tp or instrument.default_tp_distance
+            request = request.model_copy(update=updates)
+
         # 3. Validate (now includes session check)
         valid, message = await self.validator.validate(
             request, current_price, instrument,

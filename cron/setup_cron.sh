@@ -25,8 +25,8 @@ NEW_CRON=$(cat <<'CRONTAB'
 # M5 Scalp — every 30 min at :15/:45 UTC, Mon-Fri (staggered to avoid races)
 15,45 7-21 * * 1-5  /opt/gold-trader/cron/scan_scalp.sh >> /opt/gold-trader/journal/cron.log 2>&1
 
-# Trade monitor — every 30min during market hours (active risk management)
-*/30 7-21 * * 1-5  /opt/gold-trader/cron/monitor.sh >> /opt/gold-trader/journal/cron.log 2>&1
+# Trade monitor — every 5min during market hours (active risk management)
+*/5 7-21 * * 1-5  /opt/gold-trader/cron/monitor.sh >> /opt/gold-trader/journal/cron.log 2>&1
 
 # Daily summary — 21:00 UTC (= 22:00 Berlin CET)
 0 21 * * 1-5  /opt/gold-trader/cron/daily_summary.sh >> /opt/gold-trader/journal/cron.log 2>&1
