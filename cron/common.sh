@@ -258,8 +258,7 @@ atr = float(tf_data.get('atr', 0) or 0)
 signal_type = d.get('scoring', {}).get('signal_type', 'mixed')
 
 if not (support and resistance and atr > 0):
-    # No S/R data — plain market order, let bot use ATR defaults
-    print(json.dumps(payload))
+    # No S/R data — cannot compute proper stops, skip trade
     sys.exit()
 
 s1 = float(support[0])
@@ -342,19 +341,20 @@ else:
     ld = round(ref - tp_level, 2)
 
 # Per-instrument minimum stop distances (must match app/instruments.py)
-# Scalp timeframe: MARKET order with M5 ATR-based SL/TP (1.0x SL, 2.0x TP)
+# Scalp timeframe: MARKET order with M5 ATR-based SL/TP
+# Use max(ATR, min_stop) as floor — wider stops proven better in backtest
 if timeframe == 'm5':
     m5_atr = float(d.get('technicals', {}).get('m5', {}).get('atr', 0) or 0)
     if m5_atr > 0:
-        sd = round(m5_atr * 1.0, 2)
-        ld = round(m5_atr * 2.0, 2)
         MIN_STOP_M5 = {'BTC': 200.0, 'XAUUSD': 3.0}
         min_sd = MIN_STOP_M5.get(inst, 0)
-        if sd >= min_sd:
-            payload['stop_distance'] = sd
-            payload['limit_distance'] = ld
-    payload['order_type'] = 'MARKET'
-    print(json.dumps(payload))
+        sd = round(max(m5_atr * 1.0, min_sd), 2)
+        ld = round(max(m5_atr * 2.0, min_sd * 2.0), 2)
+        payload['stop_distance'] = sd
+        payload['limit_distance'] = ld
+        payload['order_type'] = 'MARKET'
+        print(json.dumps(payload))
+    # No M5 ATR data — skip trade
     sys.exit()
 
 MIN_STOP = {'BTC': 200.0, 'XAUUSD': 5.0, 'IBUS500': 2.0, 'MES': 2.0}
@@ -365,9 +365,8 @@ if sd > 0 and ld > 0 and sd >= min_sd and ld >= sd:
     payload['stop_distance'] = sd
     payload['limit_distance'] = ld
 else:
-    # Distances invalid or too tight — drop, let bot use ATR defaults (with clamping)
-    payload.pop('order_type', None)
-    payload.pop('entry_price', None)
+    # Distances invalid or too tight — skip trade
+    sys.exit()
 
 print(json.dumps(payload))
 " "$@" 2>/dev/null || echo ""
