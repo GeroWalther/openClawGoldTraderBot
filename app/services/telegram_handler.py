@@ -184,14 +184,22 @@ class TelegramCommandHandler:
                 recent = result.scalars().all()
 
             if recent:
+                wins = [t for t in recent if t.pnl is not None and t.pnl > 0]
+                losses = [t for t in recent if t.pnl is not None and t.pnl <= 0]
+                total_pnl = sum(t.pnl for t in recent if t.pnl is not None)
+
                 lines.append("")
                 lines.append("RECENT CLOSES (no trades today)")
                 lines.append("─" * 16)
+                lines.append(f"Trades: {len(recent)} ({len(wins)}W / {len(losses)}L)")
+                lines.append(f"Total P&L: ${total_pnl:+.2f}")
+                lines.append("")
                 for t in recent:
                     spec = INSTRUMENTS.get(t.epic)
                     name = spec.display_name if spec else t.epic
                     pnl_str = f"${t.pnl:+.2f}" if t.pnl is not None else "N/A"
-                    lines.append(f"  {t.direction} {name} — {pnl_str}")
+                    strategy_str = f" [{t.strategy}]" if t.strategy else ""
+                    lines.append(f"  {t.direction} {name} — {pnl_str}{strategy_str}")
 
         await update.message.reply_text("\n".join(lines))
 
