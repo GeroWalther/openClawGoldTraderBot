@@ -41,6 +41,7 @@ class IntradayScoringEngine:
         h1_row: pd.Series,
         m15_row: pd.Series | None,
         trading_sessions: tuple = (),
+        bar_time: datetime | None = None,
     ) -> dict:
         """Score using 1H and 15m data.
 
@@ -48,6 +49,7 @@ class IntradayScoringEngine:
             h1_row: Latest 1H bar with computed indicators.
             m15_row: Latest 15m bar with computed indicators (may be None).
             trading_sessions: Instrument's trading sessions for session quality.
+            bar_time: Optional bar timestamp for backtesting (uses current time if None).
 
         Returns:
             dict with total_score, conviction, direction, and per-factor scores.
@@ -59,7 +61,7 @@ class IntradayScoringEngine:
         factors["m15_entry"] = self._score_m15_entry(m15_row)
         factors["sr_proximity"] = self._score_sr_proximity(h1_row)
         factors["volatility"] = self._score_volatility(h1_row)
-        factors["session_quality"] = self._score_session_quality(trading_sessions)
+        factors["session_quality"] = self._score_session_quality(trading_sessions, bar_time)
 
         total_score = sum(
             factors[f] * INTRADAY_FACTOR_WEIGHTS[f] for f in factors
@@ -259,9 +261,9 @@ class IntradayScoringEngine:
 
         return max(-2.0, min(2.0, score))
 
-    def _score_session_quality(self, trading_sessions: tuple = ()) -> float:
+    def _score_session_quality(self, trading_sessions: tuple = (), bar_time: datetime | None = None) -> float:
         """Session quality based on current UTC hour. Range: -2 to +2."""
-        now = datetime.now(timezone.utc)
+        now = bar_time or datetime.now(timezone.utc)
         hour = now.hour
 
         # Check if we're in London+NY overlap (best liquidity)

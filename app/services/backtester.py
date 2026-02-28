@@ -6,6 +6,7 @@ import pandas as pd
 import yfinance as yf
 
 from app.instruments import InstrumentSpec, get_instrument
+from app.services.intraday_scoring import IntradayScoringEngine
 from app.services.m5_scalp_scoring import M5ScalpScoringEngine
 from app.services.scoring_engine import ScoringEngine
 
@@ -61,6 +62,16 @@ class Backtester:
                 instrument_key, instrument, period,
                 initial_balance, risk_percent,
                 session_filter, max_trades,
+                start_date, end_date,
+            )
+
+        # Intraday strategies use H1+M15 data with S/R-based SL/TP
+        if strategy.startswith("intraday_"):
+            return self._run_intraday_backtest(
+                instrument_key, instrument, strategy, period,
+                initial_balance, risk_percent,
+                atr_sl_multiplier, atr_tp_multiplier,
+                session_filter, partial_tp, max_trades,
                 start_date, end_date,
             )
 
@@ -230,6 +241,241 @@ class Backtester:
             last_signal_dir = direction
 
         return signals
+
+    def _run_intraday_backtest(
+        self,
+        instrument_key: str,
+        instrument: InstrumentSpec,
+        strategy: str,
+        period: str,
+        initial_balance: float,
+        risk_percent: float,
+        atr_sl_mult: float,
+        atr_tp_mult: float,
+        session_filter: bool,
+        partial_tp: bool,
+        max_trades: int | None,
+        start_date: str | None,
+        end_date: str | None,
+    ) -> dict:
+        """Run intraday backtest: fetch H1+M15 data, generate signals with S/R SL/TP, simulate."""
+        from app.services.indicators import compute_indicators
+
+        # Fetch H1 data
+        h1_df = self._fetch_data(
+            instrument, period, start_date=start_date, end_date=end_date, interval="1h",
+        )
+        if h1_df is None or len(h1_df) < 60:
+            return {"error": f"Insufficient H1 data for {instrument_key} ({period})"}
+
+        # Fetch M15 data
+        m15_df = self._fetch_data(
+            instrument, period, start_date=start_date, end_date=end_date, interval="15m",
+        )
+        if m15_df is None or len(m15_df) < 60:
+            return {"error": f"Insufficient M15 data for {instrument_key} ({period})"}
+
+        # Compute indicators
+        compute_indicators(h1_df)
+        compute_indicators(m15_df)
+
+        # Fetch FX conversion rate
+        fx_map = self._fetch_fx_series(instrument, period, start_date, end_date)
+
+        # Extract SLTP approach from strategy name
+        sltp_approach = strategy.replace("intraday_", "")
+
+        # Generate signals with per-signal SL/TP
+        signals = self._intraday_signals(h1_df, m15_df, sltp_approach, instrument)
+
+        # Simulate — use ATR multipliers as fallback for pure_atr approach
+        trades, equity_curve = self._simulate(
+            h1_df, signals, instrument,
+            initial_balance=initial_balance,
+            risk_percent=risk_percent,
+            atr_sl_mult=atr_sl_mult,
+            atr_tp_mult=atr_tp_mult,
+            session_filter=session_filter,
+            partial_tp=partial_tp,
+            max_trades=max_trades,
+            fx_map=fx_map,
+        )
+
+        return self._compile_results(
+            instrument_key, strategy, period,
+            initial_balance, trades, equity_curve,
+        )
+
+    def _intraday_signals(
+        self,
+        h1_df: pd.DataFrame,
+        m15_df: pd.DataFrame,
+        sltp_approach: str,
+        instrument: InstrumentSpec,
+    ) -> list[dict]:
+        """Generate intraday signals using IntradayScoringEngine with per-signal SL/TP."""
+        from app.services.patterns import compute_sr_levels
+
+        engine = IntradayScoringEngine()
+        signals = []
+        last_signal_idx = -999
+        last_signal_dir = None
+
+        # Pre-compute M15 row lookup
+        m15_dates = m15_df.index if "date" not in m15_df.columns else m15_df["date"]
+
+        warmup = 50  # Need SMA50 at minimum
+        for i in range(warmup, len(h1_df)):
+            h1_row = h1_df.iloc[i]
+
+            if pd.isna(h1_row.get("sma50")) or pd.isna(h1_row.get("atr")):
+                continue
+
+            atr = float(h1_row["atr"])
+            if atr <= 0:
+                continue
+
+            # Find matching M15 row
+            h1_date = h1_df.iloc[i].get("date") if "date" in h1_df.columns else h1_df.index[i]
+            m15_row = None
+            if h1_date is not None:
+                try:
+                    m15_mask = m15_dates <= h1_date
+                    if m15_mask.any():
+                        m15_idx = m15_mask[::-1].idxmax() if hasattr(m15_mask, "idxmax") else -1
+                        if m15_idx >= 0 and m15_idx in m15_df.index:
+                            m15_row = m15_df.loc[m15_idx]
+                except Exception:
+                    pass
+
+            # Get bar_time for session scoring
+            bar_time = None
+            bar_date = h1_row.get("date")
+            if bar_date is not None and hasattr(bar_date, "hour"):
+                bar_time = bar_date
+                if bar_time.tzinfo is None:
+                    bar_time = bar_time.replace(tzinfo=timezone.utc)
+
+            result = engine.score(
+                h1_row, m15_row,
+                trading_sessions=instrument.trading_sessions,
+                bar_time=bar_time,
+            )
+
+            direction = result["direction"]
+            if direction is None:
+                continue
+
+            # Debounce: skip same-direction signals within 6 H1 bars
+            if direction == last_signal_dir and (i - last_signal_idx) < 6:
+                continue
+
+            conviction = result["conviction"] or "MEDIUM"
+            price = float(h1_row["close"])
+
+            signal = {
+                "index": i,
+                "direction": direction,
+                "conviction": conviction,
+                "price": price,
+                "atr": atr,
+                "score": result["total_score"],
+            }
+
+            # Compute S/R-based SL/TP for approaches 2-4
+            if sltp_approach != "pure_atr":
+                # Compute S/R levels from H1 data up to current bar
+                sr_window = h1_df.iloc[max(0, i - 100):i + 1].copy()
+                if len(sr_window) >= 10:
+                    sr = compute_sr_levels(sr_window, pivot_range=2, max_levels=3)
+                    supports = [s["level"] for s in sr.get("support", [])]
+                    resistances = [r["level"] for r in sr.get("resistance", [])]
+
+                    sl_tp = self._compute_sr_sltp(
+                        price, direction, atr, supports, resistances, sltp_approach,
+                    )
+                    if sl_tp is not None:
+                        signal["sl_dist"] = sl_tp[0]
+                        signal["tp_dist"] = sl_tp[1]
+                    else:
+                        # S/R computation failed — skip this signal for non-pure-atr approaches
+                        continue
+
+            signals.append(signal)
+            last_signal_idx = i
+            last_signal_dir = direction
+
+        return signals
+
+    def _compute_sr_sltp(
+        self,
+        price: float,
+        direction: str,
+        atr: float,
+        supports: list[float],
+        resistances: list[float],
+        approach: str,
+    ) -> tuple[float, float] | None:
+        """Compute SL/TP distances based on S/R levels for a given approach.
+
+        Returns (sl_dist, tp_dist) or None if computation fails.
+        """
+        if not supports or not resistances:
+            if approach == "relaxed_rr":
+                return None  # Need S/R for relaxed R:R
+            # For atr_capped_sr and hybrid, fall back to pure ATR
+            return (atr * 1.5, atr * 3.0)
+
+        if direction == "BUY":
+            # SL below nearest support, TP at nearest resistance
+            s1 = supports[0]  # nearest support (sorted desc = highest first)
+            r1 = resistances[0]  # nearest resistance (sorted asc = lowest first)
+            r2 = resistances[1] if len(resistances) > 1 else r1 + 2 * atr
+
+            raw_sl = price - s1 + 0.25 * atr  # below S1 with buffer
+            raw_tp = r1 - price  # to nearest resistance
+            next_tp = r2 - price  # to next resistance
+        else:  # SELL
+            r1 = resistances[0]
+            s1 = supports[0]
+            s2 = supports[1] if len(supports) > 1 else s1 - 2 * atr
+
+            raw_sl = r1 - price + 0.25 * atr  # above R1 with buffer
+            raw_tp = price - s1  # to nearest support
+            next_tp = price - s2  # to next support
+
+        if approach == "relaxed_rr":
+            # Use S/R-based stops, but accept R:R >= 0.5:1
+            sl_dist = max(raw_sl, atr * 0.5)
+            tp_dist = max(raw_tp, atr * 0.5)
+            # Accept wider range of R:R ratios
+            if tp_dist < sl_dist * 0.5:
+                return None
+            return (sl_dist, tp_dist)
+
+        elif approach == "atr_capped_sr":
+            # Cap SL at 2×ATR, TP at max(next S/R, 1.5×SL)
+            sl_dist = min(raw_sl, 2.0 * atr)
+            sl_dist = max(sl_dist, atr * 0.5)
+            # Use further S/R level or ensure decent R:R
+            tp_dist = max(next_tp, raw_tp, 1.5 * sl_dist)
+            return (sl_dist, tp_dist)
+
+        elif approach == "hybrid":
+            # Near S/R (<1×ATR): use S/R + buffer; far: use pure ATR
+            dist_to_sr = min(abs(raw_sl), abs(raw_tp)) if raw_sl > 0 and raw_tp > 0 else atr * 2
+            if dist_to_sr < 1.0 * atr:
+                # Near S/R — use S/R-based with buffer
+                sl_dist = max(raw_sl, atr * 0.5)
+                tp_dist = max(raw_tp, next_tp)
+                tp_dist = max(tp_dist, sl_dist)  # min 1:1
+            else:
+                # Far from S/R — use pure ATR
+                sl_dist = 1.5 * atr
+                tp_dist = 3.0 * atr
+            return (sl_dist, tp_dist)
+
+        return None
 
     def _fetch_data(
         self, instrument: InstrumentSpec, period: str,
@@ -536,6 +782,12 @@ class Backtester:
             sl_dist = min(sl_dist, instrument.max_stop_distance)
             tp_dist = atr * atr_tp_mult
             tp_dist = max(tp_dist, sl_dist)  # minimum 1:1
+
+            # Per-signal SL/TP overrides (used by intraday strategies)
+            if "sl_dist" in signal and signal["sl_dist"] is not None:
+                sl_dist = max(min(signal["sl_dist"], instrument.max_stop_distance), instrument.min_stop_distance)
+            if "tp_dist" in signal and signal["tp_dist"] is not None:
+                tp_dist = max(signal["tp_dist"], sl_dist * 0.5)
 
             entry_price = signal["price"]
             direction = signal["direction"]

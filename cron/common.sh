@@ -360,7 +360,17 @@ if timeframe == 'm5':
 MIN_STOP = {'BTC': 200.0, 'XAUUSD': 5.0, 'IBUS500': 2.0, 'MES': 2.0}
 min_sd = MIN_STOP.get(inst, 0)
 
-# Only use S/R params if distances are positive, stop is wide enough, and R:R >= 1:1
+# Intraday (H1): Pure ATR stops — bypass S/R logic entirely (best returns in backtest)
+if timeframe == 'h1' and atr > 0:
+    sd = round(max(atr * 1.5, min_sd), 2)
+    ld = round(max(atr * 3.0, min_sd * 2.0), 2)
+    payload['stop_distance'] = sd
+    payload['limit_distance'] = ld
+    payload['order_type'] = 'MARKET'
+    print(json.dumps(payload))
+    sys.exit()
+
+# Swing (D1): use S/R params if distances are positive, stop wide enough, R:R >= 1:1
 if sd > 0 and ld > 0 and sd >= min_sd and ld >= sd:
     payload['stop_distance'] = sd
     payload['limit_distance'] = ld
