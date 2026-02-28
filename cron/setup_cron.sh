@@ -16,20 +16,20 @@ EXISTING=$(crontab -l 2>/dev/null | grep -v '/opt/gold-trader/cron/' | grep -v '
 NEW_CRON=$(cat <<'CRONTAB'
 # --- gold-trader automated monitoring ---
 
-# Intraday scan — every hour 07-21 UTC, Mon-Fri (runs at :00)
-0 7-21 * * 1-5  /opt/gold-trader/cron/scan_intraday.sh >> /opt/gold-trader/journal/cron.log 2>&1
+# Intraday scan — every hour 07-21 UTC, every day (runs at :00)
+0 7-21 * * *  /opt/gold-trader/cron/scan_intraday.sh >> /opt/gold-trader/journal/cron.log 2>&1
 
-# Swing scan — 08:05, 13:05, 19:05 UTC (staggered +5min to avoid race with intraday)
-5 8,13,19 * * 1-5  /opt/gold-trader/cron/scan_swing.sh >> /opt/gold-trader/journal/cron.log 2>&1
+# Swing scan — 08:05, 13:05, 19:05 UTC, every day (staggered +5min to avoid race with intraday)
+5 8,13,19 * * *  /opt/gold-trader/cron/scan_swing.sh >> /opt/gold-trader/journal/cron.log 2>&1
 
-# M5 Scalp — every 5 min, Mon-Fri 07-21 UTC (matches backtest frequency)
-2-59/5 7-21 * * 1-5  /opt/gold-trader/cron/scan_scalp.sh >> /opt/gold-trader/journal/cron.log 2>&1
+# M5 Scalp — every 5 min, 07-21 UTC, every day (matches backtest frequency)
+2-59/5 7-21 * * *  /opt/gold-trader/cron/scan_scalp.sh >> /opt/gold-trader/journal/cron.log 2>&1
 
-# Trade monitor — every 5min during market hours (active risk management)
-*/5 7-21 * * 1-5  /opt/gold-trader/cron/monitor.sh >> /opt/gold-trader/journal/cron.log 2>&1
+# Trade monitor — every 5min during market hours, every day (active risk management)
+*/5 7-21 * * *  /opt/gold-trader/cron/monitor.sh >> /opt/gold-trader/journal/cron.log 2>&1
 
-# Daily summary — 21:00 UTC (= 22:00 Berlin CET)
-0 21 * * 1-5  /opt/gold-trader/cron/daily_summary.sh >> /opt/gold-trader/journal/cron.log 2>&1
+# Daily summary — 21:00 UTC, every day (= 22:00 Berlin CET)
+0 21 * * *  /opt/gold-trader/cron/daily_summary.sh >> /opt/gold-trader/journal/cron.log 2>&1
 
 # --- end gold-trader ---
 CRONTAB
