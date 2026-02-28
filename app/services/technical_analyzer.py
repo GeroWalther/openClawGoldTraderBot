@@ -940,6 +940,12 @@ class TechnicalAnalyzer:
         if pattern_data:
             result["patterns"] = pattern_data
 
+        # Daily strategy signals (breakout, rsi_reversal, sma_crossover)
+        if d1_df is not None and not d1_df.empty and len(d1_df) >= 21:
+            daily_signals = self._compute_daily_signals(d1_df, key)
+            if daily_signals:
+                result["daily_signals"] = daily_signals
+
         if d1_block:
             result["technicals"]["d1"] = d1_block
         if h4_block:
@@ -1082,6 +1088,111 @@ class TechnicalAnalyzer:
             "factors": factors,
             "signal_type": "mean_reversion",
         }
+
+    @staticmethod
+    def _compute_daily_signals(d1_df: pd.DataFrame, instrument_key: str) -> dict:
+        """Compute daily strategy signals from D1 data.
+
+        Returns dict with signal status for each applicable strategy:
+        - breakout (XAUUSD only): close > prev high_20 with ATR confirmation
+        - rsi_reversal (BTC only): RSI extremes + SMA200 filter
+        - sma_crossover (BTC only): SMA20/SMA50 cross with SMA200 alignment
+        """
+        signals = {}
+        row = d1_df.iloc[-1]
+        prev = d1_df.iloc[-2]
+
+        close = row.get("close")
+        atr = row.get("atr")
+
+        if close is None or pd.isna(close) or atr is None or pd.isna(atr) or atr == 0:
+            return signals
+
+        close = float(close)
+        atr = float(atr)
+
+        # --- Breakout (XAUUSD) ---
+        if instrument_key == "XAUUSD":
+            prev_high_20 = prev.get("high_20")
+            prev_low_20 = prev.get("low_20")
+            sig = {"signal": False}
+
+            if prev_high_20 is not None and not pd.isna(prev_high_20):
+                prev_high_20 = float(prev_high_20)
+                delta = close - prev_high_20
+                if delta > atr * 0.5:
+                    sig["signal"] = True
+                    sig["direction"] = "BUY"
+                    sig["conviction"] = "HIGH" if delta > atr else "MEDIUM"
+
+            if not sig["signal"] and prev_low_20 is not None and not pd.isna(prev_low_20):
+                prev_low_20 = float(prev_low_20)
+                delta = prev_low_20 - close
+                if delta > atr * 0.5:
+                    sig["signal"] = True
+                    sig["direction"] = "SELL"
+                    sig["conviction"] = "HIGH" if delta > atr else "MEDIUM"
+
+            signals["breakout"] = sig
+
+        # --- RSI reversal (BTC) ---
+        if instrument_key == "BTC":
+            rsi = row.get("rsi")
+            sma200 = row.get("sma200")
+            sig = {"signal": False}
+
+            if rsi is not None and not pd.isna(rsi) and sma200 is not None and not pd.isna(sma200):
+                rsi = float(rsi)
+                sma200_val = float(sma200)
+                if rsi < 30 and close > sma200_val:
+                    sig["signal"] = True
+                    sig["direction"] = "BUY"
+                    sig["conviction"] = "HIGH" if rsi < 25 else "MEDIUM"
+                elif rsi > 70 and close < sma200_val:
+                    sig["signal"] = True
+                    sig["direction"] = "SELL"
+                    sig["conviction"] = "HIGH" if rsi > 75 else "MEDIUM"
+
+            signals["rsi_reversal"] = sig
+
+        # --- SMA crossover (BTC) ---
+        if instrument_key == "BTC":
+            sma20 = row.get("sma20")
+            sma50 = row.get("sma50")
+            sma200 = row.get("sma200")
+            prev_sma20 = prev.get("sma20")
+            prev_sma50 = prev.get("sma50")
+            sig = {"signal": False}
+
+            if (
+                sma20 is not None and not pd.isna(sma20)
+                and sma50 is not None and not pd.isna(sma50)
+                and prev_sma20 is not None and not pd.isna(prev_sma20)
+                and prev_sma50 is not None and not pd.isna(prev_sma50)
+            ):
+                sma20 = float(sma20)
+                sma50 = float(sma50)
+                prev_sma20 = float(prev_sma20)
+                prev_sma50 = float(prev_sma50)
+
+                if prev_sma20 <= prev_sma50 and sma20 > sma50:
+                    sig["signal"] = True
+                    sig["direction"] = "BUY"
+                    sig["conviction"] = "HIGH" if (
+                        sma200 is not None and not pd.isna(sma200)
+                        and close > float(sma200)
+                    ) else "MEDIUM"
+                elif prev_sma20 >= prev_sma50 and sma20 < sma50:
+                    sig["signal"] = True
+                    sig["direction"] = "SELL"
+                    sig["conviction"] = "HIGH" if (
+                        sma200 is not None and not pd.isna(sma200)
+                        and close < float(sma200)
+                    ) else "MEDIUM"
+
+            signals["sma_crossover"] = sig
+
+        return signals
 
     @staticmethod
     def _classify_signal_type(factors: dict, mode: str = "intraday") -> str:

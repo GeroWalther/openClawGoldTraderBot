@@ -18,7 +18,15 @@ log "INTRADAY SCAN starting"
 
 signals_found=0
 
+DOW=$(date -u '+%u')  # 1=Mon ... 7=Sun
+
 for inst in "${INSTRUMENTS[@]}"; do
+    # Skip XAUUSD on weekends (market closed)
+    if [ "$inst" = "XAUUSD" ] && [ "$DOW" -ge 6 ]; then
+        log "INTRADAY $inst: SKIP — weekend (day=$DOW)"
+        continue
+    fi
+
     json=$(api_get "/api/v1/technicals/${inst}/intraday")
     if [ -z "$json" ]; then
         log "INTRADAY: Failed to fetch $inst"

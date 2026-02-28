@@ -8,16 +8,25 @@ CRON_DIR="/opt/gold-trader/cron"
 LOG="/opt/gold-trader/journal/cron.log"
 
 # Ensure journal dirs exist
-mkdir -p /opt/gold-trader/journal/{intraday/scans,swing/scans,scalp/scans,monitors,summaries}
+mkdir -p /opt/gold-trader/journal/{intraday/scans,swing/scans,scalp/scans,daily/scans,monitors,summaries}
 
 # Build crontab (preserving any existing non-gold-trader entries)
-EXISTING=$(crontab -l 2>/dev/null | grep -v '/opt/gold-trader/cron/' | grep -v '^#.*gold-trader' || true)
+# Remove: marker block, cron commands, and orphaned comment lines from previous deploys
+EXISTING=$(crontab -l 2>/dev/null \
+    | sed '/^# --- gold-trader/,/^# --- end gold-trader/d' \
+    | grep -v '/opt/gold-trader/cron/' \
+    | grep -v '^# .*scan\|^# .*Scalp\|^# .*monitor\|^# .*summary\|^# .*strategy' \
+    | sed '/^[[:space:]]*$/d' \
+    || true)
 
 NEW_CRON=$(cat <<'CRONTAB'
 # --- gold-trader automated monitoring ---
 
 # Intraday scan — every hour 07-21 UTC, every day (runs at :00)
 0 7-21 * * *  /opt/gold-trader/cron/scan_intraday.sh >> /opt/gold-trader/journal/cron.log 2>&1
+
+# Daily strategy scan — 08:10 UTC, every day (after swing scan at 08:05)
+10 8 * * *  /opt/gold-trader/cron/scan_daily.sh >> /opt/gold-trader/journal/cron.log 2>&1
 
 # Swing scan — 08:05, 13:05, 19:05 UTC, every day (staggered +5min to avoid race with intraday)
 5 8,13,19 * * *  /opt/gold-trader/cron/scan_swing.sh >> /opt/gold-trader/journal/cron.log 2>&1

@@ -29,6 +29,7 @@ fi
 mkdir -p "$JOURNAL_DIR/intraday/scans"
 mkdir -p "$JOURNAL_DIR/swing/scans"
 mkdir -p "$JOURNAL_DIR/scalp/scans"
+mkdir -p "$JOURNAL_DIR/daily/scans"
 mkdir -p "$JOURNAL_DIR/monitors"
 mkdir -p "$JOURNAL_DIR/summaries"
 
@@ -341,17 +342,14 @@ else:
     ld = round(ref - tp_level, 2)
 
 # Per-instrument minimum stop distances (must match app/instruments.py)
-# Scalp timeframe: MARKET order with M5 ATR-based SL/TP
-# Use max(ATR, min_stop) as floor — wider stops proven better in backtest
+# Scalp (M5): SL only — runner mode handles TP (TP1 at 1R, then monitor trails SL)
 if timeframe == 'm5':
     m5_atr = float(d.get('technicals', {}).get('m5', {}).get('atr', 0) or 0)
     if m5_atr > 0:
         MIN_STOP_M5 = {'BTC': 200.0, 'XAUUSD': 3.0}
         min_sd = MIN_STOP_M5.get(inst, 0)
         sd = round(max(m5_atr * 1.0, min_sd), 2)
-        ld = round(max(m5_atr * 2.0, min_sd * 2.0), 2)
         payload['stop_distance'] = sd
-        payload['limit_distance'] = ld
         payload['order_type'] = 'MARKET'
         print(json.dumps(payload))
     # No M5 ATR data — skip trade
@@ -359,6 +357,16 @@ if timeframe == 'm5':
 
 MIN_STOP = {'BTC': 200.0, 'XAUUSD': 5.0, 'IBUS500': 2.0, 'MES': 2.0}
 min_sd = MIN_STOP.get(inst, 0)
+
+# Daily strategies (D1): Pure ATR stops — MARKET order (matches backtest config)
+if timeframe == 'd1' and strategy in ('breakout', 'rsi_reversal', 'sma_crossover') and atr > 0:
+    sd = round(max(atr * 1.5, min_sd), 2)
+    ld = round(max(atr * 2.0, min_sd * 2.0), 2)
+    payload['stop_distance'] = sd
+    payload['limit_distance'] = ld
+    payload['order_type'] = 'MARKET'
+    print(json.dumps(payload))
+    sys.exit()
 
 # Intraday (H1): Pure ATR stops — bypass S/R logic entirely (best returns in backtest)
 if timeframe == 'h1' and atr > 0:
