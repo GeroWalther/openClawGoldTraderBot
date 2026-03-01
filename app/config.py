@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     max_weekly_loss_percent: float = 6.0
 
     # Spread protection — reject if spread > this % of stop distance
-    max_spread_to_sl_ratio: float = 0.30
+    max_spread_to_sl_ratio: float = 0.40
 
     # Conviction-based position sizing (matches backtest: HIGH=100%, MED=75%, LOW=50% of base)
     conviction_sizing_enabled: bool = True

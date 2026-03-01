@@ -142,8 +142,10 @@ for inst in "${SCALP_INSTRUMENTS[@]}"; do
                             trade_status=$(echo "$trade_result" | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','UNKNOWN'))" 2>/dev/null || echo "UNKNOWN")
                             trade_msg=$(echo "$trade_result" | python3 -c "import sys,json; print(json.load(sys.stdin).get('message',''))" 2>/dev/null || echo "")
                             log "M5_SCALP $inst: Trade result=$trade_status — $trade_msg"
-                            # Record debounce state after submission
-                            write_debounce "$inst" "$direction"
+                            # Record debounce only on successful trades (not rejections)
+                            if [ "$trade_status" != "rejected" ] && [ "$trade_status" != "UNKNOWN" ]; then
+                                write_debounce "$inst" "$direction"
+                            fi
                         else
                             log "M5_SCALP $inst: Trade FAILED — no response from bot"
                         fi
