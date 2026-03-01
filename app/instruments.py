@@ -30,6 +30,7 @@ class InstrumentSpec:
     future_cycle: str | None = None  # e.g. "HMUZ" for quarterly
     trading_sessions: tuple[TradingSession, ...] = ()
     warn_low_liquidity: bool = False
+    tick_size: float = 0.01  # minimum price increment for this contract
     swing_strategy: str = "krabbe_scored"  # "krabbe_scored" or "rsi_reversal"
 
 
@@ -73,6 +74,7 @@ INSTRUMENTS: dict[str, InstrumentSpec] = {
         size_unit="contracts",
         is_future=True,
         future_cycle="HMUZ",
+        tick_size=0.25,
         trading_sessions=(
             TradingSession("US Market", 13, 20),
         ),
@@ -113,6 +115,7 @@ INSTRUMENTS: dict[str, InstrumentSpec] = {
         yahoo_symbol="EURUSD=X",
         display_name="EUR/USD",
         size_unit="units",
+        tick_size=0.00005,
         trading_sessions=(
             TradingSession("London+NY", 7, 21),
         ),
@@ -133,6 +136,7 @@ INSTRUMENTS: dict[str, InstrumentSpec] = {
         yahoo_symbol="EURJPY=X",
         display_name="EUR/JPY",
         size_unit="units",
+        tick_size=0.005,
         trading_sessions=(
             TradingSession("Tokyo", 0, 9),
             TradingSession("London", 7, 16),
@@ -154,6 +158,7 @@ INSTRUMENTS: dict[str, InstrumentSpec] = {
         yahoo_symbol="CADJPY=X",
         display_name="CAD/JPY",
         size_unit="units",
+        tick_size=0.005,
         trading_sessions=(
             TradingSession("Tokyo", 0, 9),
             TradingSession("London+NY", 7, 21),
@@ -175,6 +180,7 @@ INSTRUMENTS: dict[str, InstrumentSpec] = {
         yahoo_symbol="JPY=X",
         display_name="USD/JPY",
         size_unit="units",
+        tick_size=0.005,
         trading_sessions=(
             TradingSession("Tokyo", 0, 9),
             TradingSession("London+NY", 7, 21),
@@ -197,6 +203,7 @@ INSTRUMENTS: dict[str, InstrumentSpec] = {
         display_name="Micro Bitcoin (MBT)",
         size_unit="contracts",
         is_future=True,
+        tick_size=5.0,
         future_cycle="FGHJKMNQUVXZ",  # monthly
         trading_sessions=(),  # 24/7 crypto
         warn_low_liquidity=True,  # weekends

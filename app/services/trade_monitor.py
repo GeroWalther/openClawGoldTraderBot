@@ -154,7 +154,7 @@ class TradeCloseMonitor:
         self._last_known_sizes.pop(trade.id, None)
 
     async def _handle_tp1_hit(self, trade: Trade, remaining_size: float):
-        """Notify when TP1 fills on a runner trade (size decreased)."""
+        """Notify when TP1 fills on a runner trade and resize SL to runner qty."""
         spec = INSTRUMENTS.get(trade.epic)
 
         # Calculate TP1 price from entry + 1R
@@ -171,5 +171,20 @@ class TradeCloseMonitor:
             "TP1 HIT on trade #%d: %s %s — runner %.0f remaining",
             trade.id, trade.epic, trade.direction, remaining_size,
         )
+
+        # Resize SL to match remaining runner position (prevents over-closing)
+        try:
+            await self.ibkr.modify_sl_tp(
+                instrument_key=trade.epic,
+                direction=trade.direction,
+                new_sl=trade.stop_loss,
+                new_sl_quantity=remaining_size,
+            )
+            logger.info(
+                "SL resized to %.0f for runner trade #%d",
+                remaining_size, trade.id,
+            )
+        except Exception:
+            logger.exception("Failed to resize SL after TP1 hit on trade #%d", trade.id)
 
         await self.notifier.send_tp1_hit_update(trade, tp1_price, remaining_size)

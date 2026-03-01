@@ -23,6 +23,11 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _round_to_tick(price: float, tick_size: float) -> float:
+    """Round a price to the nearest valid tick increment."""
+    return round(round(price / tick_size) * tick_size, 10)
+
+
 class TradeExecutor:
     """Orchestrates: risk check -> price -> validate -> ATR -> size -> execute -> log -> notify."""
 
@@ -51,6 +56,7 @@ class TradeExecutor:
         instrument = get_instrument(request.instrument)
         order_type = (request.order_type or "MARKET").upper()
         is_pending = order_type in ("LIMIT", "STOP")
+        entry_price = request.entry_price  # may be None for MARKET orders
 
         # 0a. Validate entry_price for pending orders
         if is_pending and request.entry_price is None:
@@ -91,7 +97,8 @@ class TradeExecutor:
 
         # 2a. Validate entry_price direction for pending orders
         if is_pending:
-            entry_price = request.entry_price
+            # Round entry_price to tick size for IBKR compliance
+            entry_price = _round_to_tick(request.entry_price, instrument.tick_size)
             if order_type == "LIMIT":
                 if request.direction == "BUY" and entry_price >= current_price:
                     return self._reject(
@@ -115,14 +122,14 @@ class TradeExecutor:
                         f"SELL STOP entry_price ({entry_price}) must be below current price ({current_price})",
                     )
 
-        # For pending orders, SL/TP are calculated from entry_price
-        reference_price = request.entry_price if is_pending else current_price
+        # For pending orders, SL/TP are calculated from entry_price (already tick-rounded)
+        reference_price = entry_price if is_pending else current_price
         expected_price = reference_price
 
         # 3. Validate (now includes session check)
         valid, message = await self.validator.validate(
             request, current_price, instrument,
-            entry_price=request.entry_price if is_pending else None,
+            entry_price=entry_price if is_pending else None,
         )
         if not valid:
             trade = Trade(
@@ -223,6 +230,11 @@ class TradeExecutor:
             stop_price = reference_price + stop_distance
             tp_price = reference_price - limit_distance
 
+        # Round to instrument tick size (e.g. MBT=$5, MES=$0.25)
+        tick = instrument.tick_size
+        stop_price = _round_to_tick(stop_price, tick)
+        tp_price = _round_to_tick(tp_price, tick)
+
         # Sanity check
         if any(math.isnan(v) or math.isinf(v) for v in (stop_price, tp_price, stop_distance)):
             return self._reject(
@@ -236,14 +248,14 @@ class TradeExecutor:
                 # Pending order path
                 if self.settings.partial_tp_enabled and self._can_split(size, instrument):
                     result = await self._execute_pending_partial_tp(
-                        request.direction, size, request.entry_price, order_type,
+                        request.direction, size, entry_price, order_type,
                         stop_price, tp_price, stop_distance, instrument,
                     )
                 else:
                     result = await self.ibkr.open_pending_position(
                         direction=request.direction,
                         size=size,
-                        entry_price=request.entry_price,
+                        entry_price=entry_price,
                         order_type=order_type,
                         stop_price=stop_price,
                         take_profit_price=tp_price,
@@ -291,16 +303,16 @@ class TradeExecutor:
 
         # 8. Log to DB
         if is_pending:
-            db_entry_price = request.entry_price
+            db_entry_price = entry_price
         else:
             db_entry_price = fill_price
 
         # For m5_scalp market fills, recalculate SL from actual fill price
         if request.strategy == "m5_scalp" and not is_pending and fill_price and status == TradeStatus.EXECUTED:
             if request.direction == "BUY":
-                stop_price = fill_price - stop_distance
+                stop_price = _round_to_tick(fill_price - stop_distance, instrument.tick_size)
             else:
-                stop_price = fill_price + stop_distance
+                stop_price = _round_to_tick(fill_price + stop_distance, instrument.tick_size)
 
         # Runner trades (m5_scalp) have no fixed TP2 — monitor trails the SL
         db_take_profit = None if (request.strategy == "m5_scalp" and not is_pending) else tp_price
@@ -399,11 +411,13 @@ class TradeExecutor:
             tp2_size = max(round(tp2_size_raw), int(instrument.min_size))
 
         # TP1 at 1R distance
+        tick = instrument.tick_size
         r_distance = stop_distance * self.settings.partial_tp_r_multiple
         if direction == "BUY":
             tp1_price = stop_price + stop_distance + r_distance  # entry + 1R
         else:
             tp1_price = stop_price - stop_distance - r_distance  # entry - 1R
+        tp1_price = _round_to_tick(tp1_price, tick)
 
         return await self.ibkr.open_position_with_partial_tp(
             direction=direction,
@@ -431,11 +445,13 @@ class TradeExecutor:
             runner_size = max(round(runner_size_raw), int(instrument.min_size))
 
         # TP1 at 1R distance
+        tick = instrument.tick_size
         r_distance = stop_distance * self.settings.partial_tp_r_multiple
         if direction == "BUY":
             tp1_price = stop_price + stop_distance + r_distance  # entry + 1R
         else:
             tp1_price = stop_price - stop_distance - r_distance  # entry - 1R
+        tp1_price = _round_to_tick(tp1_price, tick)
 
         return await self.ibkr.open_position_with_runner(
             direction=direction,
@@ -465,11 +481,13 @@ class TradeExecutor:
             tp2_size = max(round(tp2_size_raw), int(instrument.min_size))
 
         # TP1 at 1R distance from entry_price
+        tick = instrument.tick_size
         r_distance = stop_distance * self.settings.partial_tp_r_multiple
         if direction == "BUY":
             tp1_price = entry_price + r_distance
         else:
             tp1_price = entry_price - r_distance
+        tp1_price = _round_to_tick(tp1_price, tick)
 
         return await self.ibkr.open_pending_position_with_partial_tp(
             direction=direction,

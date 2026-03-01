@@ -158,6 +158,14 @@ class IBKRClient:
             await self._wait_for_fill(trade)
             return self._trade_to_dict(trade)
 
+    def _reserve_order_ids(self, count: int) -> int:
+        """Reserve `count` consecutive order IDs and return the first one."""
+        first_id = self._ib.client.getReqId()
+        # getReqId() only advances by 1 — advance past the remaining IDs
+        for _ in range(count - 1):
+            self._ib.client.getReqId()
+        return first_id
+
     async def _place_bracket_order(
         self,
         contract: Contract,
@@ -167,7 +175,7 @@ class IBKRClient:
         take_profit_price: float,
     ) -> dict:
         """Place a bracket order: market entry + fixed stop-loss + limit take-profit."""
-        parent_id = self._ib.client.getReqId()
+        parent_id = self._reserve_order_ids(3)
         reverse = "SELL" if direction == "BUY" else "BUY"
 
         # Parent: market entry
@@ -349,7 +357,7 @@ class IBKRClient:
             )
 
         contract = self.get_contract(instrument_key)
-        parent_id = self._ib.client.getReqId()
+        parent_id = self._reserve_order_ids(4)
         reverse = "SELL" if direction == "BUY" else "BUY"
 
         # Parent: market entry
@@ -438,7 +446,7 @@ class IBKRClient:
             )
 
         contract = self.get_contract(instrument_key)
-        parent_id = self._ib.client.getReqId()
+        parent_id = self._reserve_order_ids(3)
         reverse = "SELL" if direction == "BUY" else "BUY"
 
         # Parent: market entry
@@ -495,9 +503,9 @@ class IBKRClient:
                     new_tp1 = fill_price - r_distance
 
                 # Round to tick size
-                tick = getattr(instrument, "tick_size", 0.01)
-                new_sl = round(new_sl / tick) * tick
-                new_tp1 = round(new_tp1 / tick) * tick
+                tick = instrument.tick_size
+                new_sl = round(round(new_sl / tick) * tick, 10)
+                new_tp1 = round(round(new_tp1 / tick) * tick, 10)
 
                 logger.info(
                     "Post-fill adjust: fill=%.2f SL %.2f→%.2f TP1 %.2f→%.2f",
@@ -538,7 +546,7 @@ class IBKRClient:
         """
         await self.ensure_connected()
         contract = self.get_contract(instrument_key)
-        parent_id = self._ib.client.getReqId()
+        parent_id = self._reserve_order_ids(3)
         reverse = "SELL" if direction == "BUY" else "BUY"
 
         # Parent: limit or stop entry
@@ -636,7 +644,7 @@ class IBKRClient:
             )
 
         contract = self.get_contract(instrument_key)
-        parent_id = self._ib.client.getReqId()
+        parent_id = self._reserve_order_ids(4)
         reverse = "SELL" if direction == "BUY" else "BUY"
 
         # Parent: limit or stop entry
