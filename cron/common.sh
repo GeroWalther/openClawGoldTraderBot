@@ -346,7 +346,7 @@ else:
 if timeframe == 'm5':
     m5_atr = float(d.get('technicals', {}).get('m5', {}).get('atr', 0) or 0)
     if m5_atr > 0:
-        MIN_STOP_M5 = {'BTC': 220.0, 'XAUUSD': 3.0}
+        MIN_STOP_M5 = {'BTC': 250.0, 'XAUUSD': 3.0}
         min_sd = MIN_STOP_M5.get(inst, 0)
         sd = round(max(m5_atr * 1.0, min_sd), 2)
         payload['stop_distance'] = sd
@@ -355,7 +355,7 @@ if timeframe == 'm5':
     # No M5 ATR data — skip trade
     sys.exit()
 
-MIN_STOP = {'BTC': 200.0, 'XAUUSD': 5.0, 'IBUS500': 2.0, 'MES': 2.0}
+MIN_STOP = {'BTC': 250.0, 'XAUUSD': 5.0, 'IBUS500': 2.0, 'MES': 2.0}
 min_sd = MIN_STOP.get(inst, 0)
 
 # Daily strategies (D1): Pure ATR stops — MARKET order (matches backtest config)

@@ -29,9 +29,12 @@ class IBKRClient:
         # Request delayed data as fallback when live data isn't subscribed
         self._ib.reqMarketDataType(4)  # 4 = delayed-frozen
 
-        # Qualify all instrument contracts
+        # Qualify all IBKR instrument contracts (skip non-IBKR instruments)
         for key, spec in INSTRUMENTS.items():
             raw = build_ibkr_contract(spec)
+            if raw is None:
+                logger.info("Skipping %s — not an IBKR instrument (broker=%s)", key, spec.broker)
+                continue
             try:
                 qualified = await self._ib.qualifyContractsAsync(raw)
                 if qualified and qualified[0] and qualified[0].conId:

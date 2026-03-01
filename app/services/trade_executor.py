@@ -10,6 +10,7 @@ from app.instruments import get_instrument
 from app.models.trade import Trade, TradeStatus
 from app.models.schemas import TradeSubmitRequest, TradeSubmitResponse
 from app.services.ibkr_client import IBKRClient
+from app.services.icmarkets_client import ICMarketsClient
 from app.services.position_sizer import PositionSizer
 from app.services.telegram_notifier import TelegramNotifier
 from app.services.trade_validator import TradeValidator
@@ -34,15 +35,17 @@ class TradeExecutor:
     def __init__(
         self,
         ibkr_client: IBKRClient,
-        validator: TradeValidator,
-        sizer: PositionSizer,
-        db_session: AsyncSession,
-        notifier: TelegramNotifier,
-        settings: Settings,
+        icm_client: ICMarketsClient | None = None,
+        validator: TradeValidator = None,
+        sizer: PositionSizer = None,
+        db_session: AsyncSession = None,
+        notifier: TelegramNotifier = None,
+        settings: Settings = None,
         risk_manager: RiskManager | None = None,
         atr_calculator: ATRCalculator | None = None,
     ):
         self.ibkr = ibkr_client
+        self.icm = icm_client
         self.validator = validator
         self.sizer = sizer
         self.db = db_session
@@ -50,6 +53,12 @@ class TradeExecutor:
         self.settings = settings
         self.risk_manager = risk_manager
         self.atr_calculator = atr_calculator
+
+    def _get_broker(self, instrument):
+        """Return the correct broker client based on instrument spec."""
+        if instrument.broker == "icmarkets" and self.icm is not None:
+            return self.icm
+        return self.ibkr
 
     async def submit_trade(self, request: TradeSubmitRequest) -> TradeSubmitResponse:
         # 0. Resolve instrument and order type
@@ -66,15 +75,16 @@ class TradeExecutor:
             )
 
         # 1. Risk manager check (cooldown + daily limits)
+        broker = self._get_broker(instrument)
         if self.risk_manager is not None:
-            account_info = await self.ibkr.get_account_info()
+            account_info = await broker.get_account_info()
             balance = account_info.get("NetLiquidation", 10000.0)
             can_trade, reason = await self.risk_manager.can_trade(self.db, balance, strategy=request.strategy)
             if not can_trade:
                 return self._reject(request, instrument.key, reason)
 
         # 2. Get current price + record spread
-        price_data = await self.ibkr.get_price(instrument.key)
+        price_data = await broker.get_price(instrument.key)
         bid = price_data["bid"]
         ask = price_data["ask"]
         current_price = bid if request.direction == "SELL" else ask
@@ -83,7 +93,8 @@ class TradeExecutor:
         if current_price <= 0:
             current_price = price_data["last"]
         if current_price <= 0:
-            return self._reject(request, instrument.key, f"Cannot get current {instrument.display_name} price from IBKR")
+            broker_name = "IC Markets" if instrument.broker == "icmarkets" else "IBKR"
+            return self._reject(request, instrument.key, f"Cannot get current {instrument.display_name} price from {broker_name}")
 
         # Spread protection — reject if spread is too wide relative to stop
         if spread is not None and spread > 0 and request.stop_distance is not None and request.stop_distance > 0:
@@ -216,7 +227,7 @@ class TradeExecutor:
         # 5. Conviction-based position sizing
         if request.size is None:
             if self.risk_manager is None:
-                account_info = await self.ibkr.get_account_info()
+                account_info = await broker.get_account_info()
             balance = account_info.get("NetLiquidation", 10000.0)
             size = await self.sizer.calculate(balance, stop_distance, instrument, conviction=request.conviction)
         else:
@@ -252,7 +263,7 @@ class TradeExecutor:
                         stop_price, tp_price, stop_distance, instrument,
                     )
                 else:
-                    result = await self.ibkr.open_pending_position(
+                    result = await broker.open_pending_position(
                         direction=request.direction,
                         size=size,
                         entry_price=entry_price,
@@ -278,7 +289,7 @@ class TradeExecutor:
                             stop_distance, instrument,
                         )
                 else:
-                    result = await self.ibkr.open_position(
+                    result = await broker.open_position(
                         direction=request.direction,
                         size=size,
                         stop_distance=stop_distance,
@@ -335,6 +346,7 @@ class TradeExecutor:
             spread_at_entry=spread,
             order_type=order_type,
             strategy=request.strategy,
+            broker=instrument.broker,
         )
         self.db.add(trade)
         await self.db.commit()
@@ -419,7 +431,8 @@ class TradeExecutor:
             tp1_price = stop_price - stop_distance - r_distance  # entry - 1R
         tp1_price = _round_to_tick(tp1_price, tick)
 
-        return await self.ibkr.open_position_with_partial_tp(
+        broker = self._get_broker(instrument)
+        return await broker.open_position_with_partial_tp(
             direction=direction,
             size=size,
             stop_price=stop_price,
@@ -453,7 +466,8 @@ class TradeExecutor:
             tp1_price = stop_price - stop_distance - r_distance  # entry - 1R
         tp1_price = _round_to_tick(tp1_price, tick)
 
-        return await self.ibkr.open_position_with_runner(
+        broker = self._get_broker(instrument)
+        return await broker.open_position_with_runner(
             direction=direction,
             size=size,
             stop_price=stop_price,
@@ -489,7 +503,8 @@ class TradeExecutor:
             tp1_price = entry_price - r_distance
         tp1_price = _round_to_tick(tp1_price, tick)
 
-        return await self.ibkr.open_pending_position_with_partial_tp(
+        broker = self._get_broker(instrument)
+        return await broker.open_pending_position_with_partial_tp(
             direction=direction,
             size=size,
             entry_price=entry_price,

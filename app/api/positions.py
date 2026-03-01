@@ -5,8 +5,8 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dependencies import get_db_session, get_ibkr_client, get_settings
-from app.instruments import get_instrument
+from app.dependencies import get_db_session, get_ibkr_client, get_icm_client, get_settings
+from app.instruments import get_instrument, INSTRUMENTS
 from app.models.schemas import (
     ClosePositionRequest,
     ClosePositionResponse,
@@ -16,7 +16,16 @@ from app.models.schemas import (
 )
 from app.models.trade import Trade, TradeStatus
 from app.services.ibkr_client import IBKRClient
+from app.services.icmarkets_client import ICMarketsClient
 from app.services.telegram_notifier import TelegramNotifier
+
+
+def _get_broker_for_instrument(instrument_key: str, ibkr_client, icm_client):
+    """Return the correct broker client based on instrument spec."""
+    spec = get_instrument(instrument_key)
+    if spec.broker == "icmarkets" and icm_client is not None:
+        return icm_client
+    return ibkr_client
 
 logger = logging.getLogger(__name__)
 
@@ -28,11 +37,23 @@ async def get_positions(
     x_api_key: str = Header(...),
     instrument: str | None = Query(None, description="Filter by instrument key"),
     ibkr_client: IBKRClient = Depends(get_ibkr_client),
+    icm_client: ICMarketsClient = Depends(get_icm_client),
     settings=Depends(get_settings),
 ):
     if x_api_key != settings.api_secret_key:
         raise HTTPException(status_code=401, detail="Invalid API key")
-    positions = await ibkr_client.get_open_positions(instrument_key=instrument)
+
+    if instrument:
+        broker = _get_broker_for_instrument(instrument, ibkr_client, icm_client)
+        positions = await broker.get_open_positions(instrument_key=instrument)
+    else:
+        # Aggregate from both brokers
+        positions = await ibkr_client.get_open_positions()
+        try:
+            icm_positions = await icm_client.get_open_positions()
+            positions.extend(icm_positions)
+        except Exception:
+            pass
     return {"positions": positions}
 
 
@@ -40,11 +61,17 @@ async def get_positions(
 async def get_account(
     x_api_key: str = Header(...),
     ibkr_client: IBKRClient = Depends(get_ibkr_client),
+    icm_client: ICMarketsClient = Depends(get_icm_client),
     settings=Depends(get_settings),
 ):
     if x_api_key != settings.api_secret_key:
         raise HTTPException(status_code=401, detail="Invalid API key")
     account = await ibkr_client.get_account_info()
+    try:
+        icm_account = await icm_client.get_account_info()
+        account["icm"] = icm_account
+    except Exception:
+        pass
     return {"account": account}
 
 
@@ -53,6 +80,7 @@ async def close_position(
     request: ClosePositionRequest,
     x_api_key: str = Header(...),
     ibkr_client: IBKRClient = Depends(get_ibkr_client),
+    icm_client: ICMarketsClient = Depends(get_icm_client),
     db_session: AsyncSession = Depends(get_db_session),
     settings=Depends(get_settings),
 ):
@@ -60,9 +88,10 @@ async def close_position(
         raise HTTPException(status_code=401, detail="Invalid API key")
 
     instrument = get_instrument(request.instrument)
+    broker = _get_broker_for_instrument(instrument.key, ibkr_client, icm_client)
 
     # Find the open position matching this direction and instrument
-    positions = await ibkr_client.get_open_positions(instrument_key=instrument.key)
+    positions = await broker.get_open_positions(instrument_key=instrument.key)
     matching = [p for p in positions if p["direction"] == request.direction]
 
     if not matching:
@@ -81,7 +110,7 @@ async def close_position(
         )
 
     try:
-        result = await ibkr_client.close_position(
+        result = await broker.close_position(
             request.direction, close_size, instrument_key=instrument.key
         )
         close_price = result.get("fillPrice")
@@ -146,6 +175,7 @@ async def modify_position(
     request: ModifyPositionRequest,
     x_api_key: str = Header(...),
     ibkr_client: IBKRClient = Depends(get_ibkr_client),
+    icm_client: ICMarketsClient = Depends(get_icm_client),
     db_session: AsyncSession = Depends(get_db_session),
     settings=Depends(get_settings),
 ):
@@ -159,9 +189,10 @@ async def modify_position(
         )
 
     instrument = get_instrument(request.instrument)
+    broker = _get_broker_for_instrument(instrument.key, ibkr_client, icm_client)
 
     try:
-        result = await ibkr_client.modify_sl_tp(
+        result = await broker.modify_sl_tp(
             instrument_key=instrument.key,
             direction=request.direction,
             new_sl=request.new_stop_loss,
@@ -219,6 +250,7 @@ async def modify_position(
 async def get_trade_status(
     x_api_key: str = Header(...),
     ibkr_client: IBKRClient = Depends(get_ibkr_client),
+    icm_client: ICMarketsClient = Depends(get_icm_client),
     db_session: AsyncSession = Depends(get_db_session),
     settings=Depends(get_settings),
 ):
@@ -229,6 +261,23 @@ async def get_trade_status(
     open_orders = await ibkr_client.get_open_orders()
     account = await ibkr_client.get_account_info()
     pending_orders_raw = await ibkr_client.get_pending_orders()
+
+    # Aggregate IC Markets positions + orders
+    try:
+        icm_positions = await icm_client.get_open_positions()
+        positions.extend(icm_positions)
+    except Exception:
+        pass
+    try:
+        icm_pending = await icm_client.get_pending_orders()
+        pending_orders_raw.extend(icm_pending)
+    except Exception:
+        pass
+    try:
+        icm_account = await icm_client.get_account_info()
+        account["icm"] = icm_account
+    except Exception:
+        pass
 
     # Build pending orders section with SL/TP from children
     pending_orders = []
@@ -276,7 +325,8 @@ async def get_trade_status(
         # Calculate unrealized P&L using current price
         try:
             spec = get_instrument(instrument_key)
-            price_data = await ibkr_client.get_price(instrument_key)
+            pos_broker = _get_broker_for_instrument(instrument_key, ibkr_client, icm_client)
+            price_data = await pos_broker.get_price(instrument_key)
             current_price = price_data.get("last") or price_data.get("bid") or 0
             if current_price and pos["avg_cost"]:
                 if direction == "BUY":

@@ -42,8 +42,13 @@ class PositionSizer:
         if instrument.sec_type == "CASH":
             # Round to nearest 1000 for forex
             size = max(round(size / 1000) * 1000, instrument.min_size)
+        elif instrument.min_size < 1:
+            # Fractional sizing (e.g. BTC CFD with min_size=0.01)
+            step = instrument.min_size
+            size = max(round(size / step) * step, instrument.min_size)
+            size = round(size, 8)  # Avoid float precision issues
         else:
-            # Whole numbers for futures, commodities, CFDs
+            # Whole numbers for futures, commodities
             size = max(round(size), int(instrument.min_size))
 
         return float(size)

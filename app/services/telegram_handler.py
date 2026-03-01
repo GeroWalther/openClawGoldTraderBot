@@ -18,6 +18,7 @@ from app.config import Settings
 from app.instruments import INSTRUMENTS
 from app.models.trade import Trade, TradeStatus
 from app.services.ibkr_client import IBKRClient
+from app.services.icmarkets_client import ICMarketsClient
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +27,12 @@ class TelegramCommandHandler:
     def __init__(
         self,
         ibkr_client: IBKRClient,
-        session_factory: async_sessionmaker,
-        settings: Settings,
+        icm_client: ICMarketsClient | None = None,
+        session_factory: async_sessionmaker = None,
+        settings: Settings = None,
     ):
         self.ibkr = ibkr_client
+        self.icm = icm_client
         self.session_factory = session_factory
         self.settings = settings
         self._allowed_chat_id = str(settings.telegram_chat_id)
@@ -80,17 +83,36 @@ class TelegramCommandHandler:
 
         lines: list[str] = []
 
-        # Open positions from IBKR
+        # --- IBKR positions ---
         try:
-            positions = await self.ibkr.get_open_positions()
+            ibkr_positions = await self.ibkr.get_open_positions()
         except Exception:
-            positions = []
-            lines.append("(IBKR disconnected — positions unavailable)")
+            ibkr_positions = []
+            lines.append("(IBKR disconnected)")
 
-        if positions:
-            lines.append("OPEN POSITIONS")
+        # --- IC Markets positions ---
+        icm_positions = []
+        if self.icm:
+            try:
+                icm_positions = await self.icm.get_open_positions()
+            except Exception:
+                pass
+
+        # Find matching DB trades for SL/TP info
+        async with self.session_factory() as session:
+            result = await session.execute(
+                select(Trade).where(Trade.status == TradeStatus.EXECUTED)
+            )
+            open_trades = result.scalars().all()
+
+        trade_map = {}
+        for trade in open_trades:
+            trade_map[(trade.epic, trade.direction)] = trade
+
+        if ibkr_positions:
+            lines.append("IBKR POSITIONS")
             lines.append("─" * 16)
-            for pos in positions:
+            for pos in ibkr_positions:
                 spec = INSTRUMENTS.get(pos["instrument"])
                 name = spec.display_name if spec else pos["instrument"]
                 unit = spec.size_unit if spec else "units"
@@ -99,26 +121,47 @@ class TelegramCommandHandler:
                     f"  Size: {abs(pos['size']):.0f} {unit}\n"
                     f"  Avg cost: {pos['avg_cost']:.2f}"
                 )
+                trade = trade_map.get((pos["instrument"], pos["direction"]))
+                if trade:
+                    sl_str = f"{trade.stop_loss:.2f}" if trade.stop_loss else "N/A"
+                    tp_str = f"{trade.take_profit:.2f}" if trade.take_profit else "trailing"
+                    lines.append(f"  SL: {sl_str} | TP: {tp_str}")
 
-            # Find matching DB trades for SL/TP info
-            async with self.session_factory() as session:
-                result = await session.execute(
-                    select(Trade).where(Trade.status == TradeStatus.EXECUTED)
+        if icm_positions:
+            lines.append("")
+            lines.append("IC MARKETS POSITIONS")
+            lines.append("─" * 16)
+            for pos in icm_positions:
+                spec = INSTRUMENTS.get(pos["instrument"])
+                name = spec.display_name if spec else pos["instrument"]
+                unit = spec.size_unit if spec else "units"
+                size_fmt = f"{abs(pos['size']):.4f}" if abs(pos['size']) < 1 else f"{abs(pos['size']):.2f}"
+                lines.append(
+                    f"{pos['direction']} {name}\n"
+                    f"  Size: {size_fmt} {unit}\n"
+                    f"  Avg cost: {pos['avg_cost']:.2f}"
                 )
-                open_trades = result.scalars().all()
+                trade = trade_map.get((pos["instrument"], pos["direction"]))
+                if trade:
+                    sl_str = f"{trade.stop_loss:.2f}" if trade.stop_loss else "N/A"
+                    tp_str = f"{trade.take_profit:.2f}" if trade.take_profit else "trailing"
+                    lines.append(f"  SL: {sl_str} | TP: {tp_str}")
 
-            for trade in open_trades:
-                sl_str = f"{trade.stop_loss:.2f}" if trade.stop_loss else "N/A"
-                tp_str = f"{trade.take_profit:.2f}" if trade.take_profit else "trailing"
-                lines.append(f"  SL: {sl_str} | TP: {tp_str}")
-        else:
+        if not ibkr_positions and not icm_positions:
             lines.append("No open positions")
 
-        # Pending orders
+        # Pending orders (both brokers)
+        pending = []
         try:
             pending = await self.ibkr.get_pending_orders()
         except Exception:
-            pending = []
+            pass
+        if self.icm:
+            try:
+                icm_pending = await self.icm.get_pending_orders()
+                pending.extend(icm_pending)
+            except Exception:
+                pass
 
         if pending:
             lines.append("")
@@ -132,13 +175,22 @@ class TelegramCommandHandler:
                 )
 
         # Account info
+        lines.append("")
+        lines.append("ACCOUNTS")
+        lines.append("─" * 16)
         try:
             account = await self.ibkr.get_account_info()
             nlv = account.get("NetLiquidation", 0)
-            lines.append("")
-            lines.append(f"Account NLV: ${nlv:,.2f}")
+            lines.append(f"IBKR NLV: ${nlv:,.2f}")
         except Exception:
             pass
+        if self.icm:
+            try:
+                icm_account = await self.icm.get_account_info()
+                icm_balance = icm_account.get("NetLiquidation", 0)
+                lines.append(f"IC Markets Equity: ${icm_balance:,.2f}")
+            except Exception:
+                pass
 
         # Today's P&L summary
         today_start = datetime.now(timezone.utc).replace(

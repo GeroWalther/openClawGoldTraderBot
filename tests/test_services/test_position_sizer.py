@@ -68,21 +68,22 @@ async def test_forex_small_balance_returns_min(settings):
 
 
 @pytest.mark.asyncio
-async def test_btc_futures_sizing(settings):
+async def test_btc_cfd_sizing(settings):
     sizer = PositionSizer(settings)
     instrument = get_instrument("BTC")
-    # 3% of 100000 = 3000. 3000 / (2000 * 0.1) = 15 (uncapped)
+    # BTC CFD: multiplier=1, min_size=0.01
+    # 3% of 100000 = 3000. 3000 / (2000 * 1) = 1.5 → rounded to 0.01 step = 1.5
     size = await sizer.calculate(account_balance=100000, stop_distance=2000, instrument=instrument)
-    assert size == 15.0
+    assert size == 1.5
 
 
 @pytest.mark.asyncio
 async def test_btc_min_size(settings):
     sizer = PositionSizer(settings)
     instrument = get_instrument("BTC")
-    # Tiny balance → should return min_size 1
+    # Tiny balance → should return min_size 0.01
     size = await sizer.calculate(account_balance=100, stop_distance=50000, instrument=instrument)
-    assert size == 1.0
+    assert size == 0.01
 
 
 @pytest.mark.asyncio

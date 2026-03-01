@@ -189,6 +189,17 @@ async def test_app(settings, mock_ibkr_client, mock_atr_calculator):
     app.state.ibkr_connected = True
     app.state.atr_calculator = mock_atr_calculator
 
+    # IC Markets mock client
+    mock_icm_client = AsyncMock()
+    mock_icm_client.get_open_positions.return_value = []
+    mock_icm_client.get_pending_orders.return_value = []
+    mock_icm_client.get_account_info.return_value = {
+        "NetLiquidation": 1000.0,
+        "broker": "icmarkets",
+    }
+    app.state.icm_client = mock_icm_client
+    app.state.icm_connected = False
+
     from app.services.technical_analyzer import TechnicalAnalyzer
     app.state.technical_analyzer = TechnicalAnalyzer()
 

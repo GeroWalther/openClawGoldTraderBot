@@ -18,6 +18,7 @@ from app.config import Settings
 from app.instruments import INSTRUMENTS
 from app.models.trade import Trade, TradeStatus
 from app.services.ibkr_client import IBKRClient
+from app.services.icmarkets_client import ICMarketsClient
 from app.services.telegram_notifier import TelegramNotifier
 
 logger = logging.getLogger(__name__)
@@ -27,17 +28,26 @@ class TradeCloseMonitor:
     def __init__(
         self,
         ibkr_client: IBKRClient,
-        session_factory: async_sessionmaker,
-        notifier: TelegramNotifier,
-        settings: Settings,
+        icm_client: ICMarketsClient | None = None,
+        session_factory: async_sessionmaker = None,
+        notifier: TelegramNotifier = None,
+        settings: Settings = None,
         poll_interval: float = 30.0,
     ):
         self.ibkr = ibkr_client
+        self.icm = icm_client
         self.session_factory = session_factory
         self.notifier = notifier
         self.settings = settings
         self.poll_interval = poll_interval
         self._last_known_sizes: dict[int, float] = {}  # trade.id -> last seen position size
+
+    def _get_broker(self, instrument_key: str):
+        """Return the correct broker client for an instrument."""
+        spec = INSTRUMENTS.get(instrument_key)
+        if spec and spec.broker == "icmarkets" and self.icm is not None:
+            return self.icm
+        return self.ibkr
 
     async def run_forever(self):
         """Main loop — runs until cancelled."""
@@ -53,19 +63,26 @@ class TradeCloseMonitor:
             await asyncio.sleep(self.poll_interval)
 
     async def _check_once(self):
-        """Single poll: compare DB trades vs IBKR positions."""
-        # 1. Get open IBKR positions
+        """Single poll: compare DB trades vs broker positions."""
+        # 1. Get open positions from both brokers
+        position_map: dict[tuple[str, str], float] = {}
+
         try:
             ibkr_positions = await self.ibkr.get_open_positions()
+            for pos in ibkr_positions:
+                key = (pos["instrument"], pos["direction"])
+                position_map[key] = position_map.get(key, 0) + abs(pos["size"])
         except Exception:
-            logger.warning("Cannot fetch IBKR positions — skipping cycle")
-            return
+            logger.warning("Cannot fetch IBKR positions — skipping IBKR instruments")
 
-        # Build lookup: (instrument, direction) -> total size
-        position_map: dict[tuple[str, str], float] = {}
-        for pos in ibkr_positions:
-            key = (pos["instrument"], pos["direction"])
-            position_map[key] = position_map.get(key, 0) + abs(pos["size"])
+        if self.icm:
+            try:
+                icm_positions = await self.icm.get_open_positions()
+                for pos in icm_positions:
+                    key = (pos["instrument"], pos["direction"])
+                    position_map[key] = position_map.get(key, 0) + abs(pos["size"])
+            except Exception:
+                logger.warning("Cannot fetch IC Markets positions — skipping ICM instruments")
 
         # 2. Get all EXECUTED trades from DB
         async with self.session_factory() as session:
@@ -100,9 +117,10 @@ class TradeCloseMonitor:
         """Mark trade as CLOSED, calculate P&L, notify."""
         now = datetime.now(timezone.utc)
 
-        # Get approximate close price
+        # Get approximate close price from correct broker
+        broker = self._get_broker(trade.epic)
         try:
-            price_data = await self.ibkr.get_price(trade.epic)
+            price_data = await broker.get_price(trade.epic)
             close_price = price_data.get("last") or price_data.get("bid") or 0.0
         except Exception:
             close_price = 0.0
@@ -173,8 +191,9 @@ class TradeCloseMonitor:
         )
 
         # Resize SL to match remaining runner position (prevents over-closing)
+        broker = self._get_broker(trade.epic)
         try:
-            await self.ibkr.modify_sl_tp(
+            await broker.modify_sl_tp(
                 instrument_key=trade.epic,
                 direction=trade.direction,
                 new_sl=trade.stop_loss,

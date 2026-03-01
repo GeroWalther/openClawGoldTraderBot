@@ -32,6 +32,7 @@ class InstrumentSpec:
     warn_low_liquidity: bool = False
     tick_size: float = 0.01  # minimum price increment for this contract
     swing_strategy: str = "krabbe_scored"  # "krabbe_scored" or "rsi_reversal"
+    broker: str = "ibkr"  # "ibkr" or "icmarkets"
 
 
 INSTRUMENTS: dict[str, InstrumentSpec] = {
@@ -188,26 +189,25 @@ INSTRUMENTS: dict[str, InstrumentSpec] = {
     ),
     "BTC": InstrumentSpec(
         key="BTC",
-        symbol="MBT",
-        sec_type="FUT",
-        exchange="CME",
+        symbol="BTCUSD",
+        sec_type="CFD",
+        exchange="",
         currency="USD",
-        multiplier=0.1,
-        min_size=1,
-        max_size=50,
+        multiplier=1,
+        min_size=0.01,
+        max_size=5.0,
         default_sl_distance=2000.0,
         default_tp_distance=4000.0,
-        min_stop_distance=220.0,
+        min_stop_distance=250.0,
         max_stop_distance=15000.0,
         yahoo_symbol="BTC-USD",
-        display_name="Micro Bitcoin (MBT)",
-        size_unit="contracts",
-        is_future=True,
-        tick_size=5.0,
-        future_cycle="FGHJKMNQUVXZ",  # monthly
+        display_name="BTC/USD CFD",
+        size_unit="BTC",
+        tick_size=0.01,
         trading_sessions=(),  # 24/7 crypto
         warn_low_liquidity=True,  # weekends
-        swing_strategy="rsi_reversal",  # Krabbe macro factors don't suit crypto
+        swing_strategy="rsi_reversal",
+        broker="icmarkets",
     ),
 }
 
@@ -223,7 +223,9 @@ def get_instrument(key: str | None) -> InstrumentSpec:
 
 
 def build_ibkr_contract(spec: InstrumentSpec):
-    """Build an ib_async Contract from an InstrumentSpec."""
+    """Build an ib_async Contract from an InstrumentSpec. Returns None for non-IBKR instruments."""
+    if spec.broker != "ibkr":
+        return None
     from ib_async import Contract
 
     kwargs = {

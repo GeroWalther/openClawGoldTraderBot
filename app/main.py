@@ -9,6 +9,7 @@ from app.config import Settings
 from app.models.database import Base
 from app.services.atr_calculator import ATRCalculator
 from app.services.ibkr_client import IBKRClient
+from app.services.icmarkets_client import ICMarketsClient
 from app.services.technical_analyzer import TechnicalAnalyzer
 from app.services.telegram_notifier import TelegramNotifier
 from app.services.trade_monitor import TradeCloseMonitor
@@ -52,12 +53,26 @@ async def lifespan(app: FastAPI):
     app.state.atr_calculator = ATRCalculator(settings)
     app.state.technical_analyzer = TechnicalAnalyzer()
 
+    # IC Markets Client (cTrader)
+    icm_client = ICMarketsClient(settings)
+    if settings.icm_client_id:
+        try:
+            await icm_client.connect()
+            app.state.icm_connected = True
+        except Exception:
+            logger.warning("Could not connect to IC Markets — BTC trading disabled")
+            app.state.icm_connected = False
+    else:
+        app.state.icm_connected = False
+    app.state.icm_client = icm_client
+
     # Trade close monitor (background task)
     monitor_task = None
-    if app.state.ibkr_connected:
+    if app.state.ibkr_connected or app.state.icm_connected:
         notifier = TelegramNotifier(settings)
         monitor = TradeCloseMonitor(
             ibkr_client=ibkr_client,
+            icm_client=icm_client,
             session_factory=app.state.async_session,
             notifier=notifier,
             settings=settings,
@@ -67,6 +82,7 @@ async def lifespan(app: FastAPI):
     # Telegram command handler (/status, /pnl) — webhook mode
     telegram_handler = TelegramCommandHandler(
         ibkr_client=ibkr_client,
+        icm_client=icm_client,
         session_factory=app.state.async_session,
         settings=settings,
     )
@@ -96,6 +112,7 @@ async def lifespan(app: FastAPI):
             pass
 
     await ibkr_client.disconnect()
+    await icm_client.disconnect()
     await engine.dispose()
     logger.info("Trader Bot shut down")
 

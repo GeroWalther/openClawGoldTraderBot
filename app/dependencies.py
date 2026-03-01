@@ -3,6 +3,7 @@ from fastapi import Depends, Request
 from app.config import Settings
 from app.services.atr_calculator import ATRCalculator
 from app.services.ibkr_client import IBKRClient
+from app.services.icmarkets_client import ICMarketsClient
 from app.services.position_sizer import PositionSizer
 from app.services.risk_manager import RiskManager
 from app.services.session_filter import SessionFilter
@@ -22,6 +23,10 @@ def get_ibkr_client(request: Request) -> IBKRClient:
     return request.app.state.ibkr_client
 
 
+def get_icm_client(request: Request) -> ICMarketsClient:
+    return request.app.state.icm_client
+
+
 def get_atr_calculator(request: Request) -> ATRCalculator:
     return request.app.state.atr_calculator
 
@@ -35,6 +40,7 @@ def get_trade_executor(
     request: Request,
     settings: Settings = Depends(get_settings),
     ibkr_client: IBKRClient = Depends(get_ibkr_client),
+    icm_client: ICMarketsClient = Depends(get_icm_client),
     atr_calculator: ATRCalculator = Depends(get_atr_calculator),
     db_session=Depends(get_db_session),
 ) -> TradeExecutor:
@@ -45,6 +51,7 @@ def get_trade_executor(
     risk_manager = RiskManager(settings)
     return TradeExecutor(
         ibkr_client=ibkr_client,
+        icm_client=icm_client,
         validator=validator,
         sizer=sizer,
         db_session=db_session,

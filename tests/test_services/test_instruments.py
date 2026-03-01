@@ -103,14 +103,14 @@ def test_build_ibkr_contract_usdjpy():
     assert contract.currency == "JPY"
 
 
-def test_build_ibkr_contract_btc_future():
+def test_btc_is_icmarkets_cfd():
+    """BTC is routed to IC Markets (not IBKR), so build_ibkr_contract returns None."""
     spec = INSTRUMENTS["BTC"]
+    assert spec.broker == "icmarkets"
+    assert spec.symbol == "BTCUSD"
+    assert spec.sec_type == "CFD"
     contract = build_ibkr_contract(spec)
-    assert contract.symbol == "MBT"
-    assert contract.secType == "FUT"
-    assert contract.exchange == "CME"
-    assert contract.currency == "USD"
-    assert contract.lastTradeDateOrContractMonth is not None
+    assert contract is None  # Not an IBKR instrument
 
 
 def test_instrument_spec_fields():

@@ -58,6 +58,14 @@ class Settings(BaseSettings):
     telegram_chat_id: str
     telegram_webhook_secret: str = ""  # secret_token for webhook verification
 
+    # IC Markets (cTrader Open API)
+    icm_client_id: str = ""
+    icm_client_secret: str = ""
+    icm_access_token: str = ""
+    icm_account_id: int = 0
+    icm_host: str = "live.ctraderapi.com"
+    icm_port: int = 5035
+
     # App
     api_secret_key: str
     database_url: str = "sqlite+aiosqlite:///./trades.db"
