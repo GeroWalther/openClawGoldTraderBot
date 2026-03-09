@@ -10,7 +10,7 @@ from app.instruments import (
 
 
 def test_all_instruments_registered():
-    assert set(INSTRUMENTS.keys()) == {"XAUUSD", "MES", "IBUS500", "EURUSD", "EURJPY", "CADJPY", "USDJPY", "BTC"}
+    assert set(INSTRUMENTS.keys()) == {"XAUUSD", "MES", "IBUS500", "EURUSD", "EURJPY", "CADJPY", "USDJPY", "NZDUSD", "AUDUSD", "GBPUSD", "BTC"}
 
 
 def test_get_instrument_default():

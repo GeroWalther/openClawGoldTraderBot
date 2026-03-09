@@ -39,17 +39,10 @@ class TelegramCommandHandler:
         self._app: Application | None = None
 
     async def start(self):
-        """Build Application (no updater/polling).
-
-        Webhook URL must be registered once on the VPS via:
-            curl -F "url=https://IP/webhook/telegram" \
-                 -F "certificate=@/etc/ssl/certs/telegram-webhook.pem" \
-                 "https://api.telegram.org/bot$TOKEN/setWebhook"
-        """
+        """Build Application with polling (pulls updates from Telegram)."""
         self._app = (
             Application.builder()
             .token(self.settings.telegram_bot_token)
-            .updater(None)  # No polling — we process updates via FastAPI route
             .build()
         )
         self._app.add_handler(CommandHandler("status", self._handle_status))
@@ -58,11 +51,19 @@ class TelegramCommandHandler:
 
         await self._app.initialize()
         await self._app.start()
-        logger.info("TelegramCommandHandler started (webhook mode)")
+
+        # Delete any old webhook so polling works
+        await self._app.bot.delete_webhook()
+
+        # Start polling in background
+        await self._app.updater.start_polling(drop_pending_updates=True)
+        logger.info("TelegramCommandHandler started (polling mode)")
 
     async def stop(self):
-        """Stop the Application (does NOT delete webhook — it persists across restarts)."""
+        """Stop polling and the Application."""
         if self._app:
+            if self._app.updater and self._app.updater.running:
+                await self._app.updater.stop()
             await self._app.stop()
             await self._app.shutdown()
             logger.info("TelegramCommandHandler stopped")
@@ -83,20 +84,13 @@ class TelegramCommandHandler:
 
         lines: list[str] = []
 
-        # --- IBKR positions ---
-        try:
-            ibkr_positions = await self.ibkr.get_open_positions()
-        except Exception:
-            ibkr_positions = []
-            lines.append("(IBKR disconnected)")
-
         # --- IC Markets positions ---
         icm_positions = []
         if self.icm:
             try:
                 icm_positions = await self.icm.get_open_positions()
             except Exception:
-                pass
+                lines.append("(IC Markets disconnected)")
 
         # Find matching DB trades for SL/TP info
         async with self.session_factory() as session:
@@ -109,57 +103,32 @@ class TelegramCommandHandler:
         for trade in open_trades:
             trade_map[(trade.epic, trade.direction)] = trade
 
-        if ibkr_positions:
-            lines.append("IBKR POSITIONS")
-            lines.append("─" * 16)
-            for pos in ibkr_positions:
-                spec = INSTRUMENTS.get(pos["instrument"])
-                name = spec.display_name if spec else pos["instrument"]
-                unit = spec.size_unit if spec else "units"
-                lines.append(
-                    f"{pos['direction']} {name}\n"
-                    f"  Size: {abs(pos['size']):.0f} {unit}\n"
-                    f"  Avg cost: {pos['avg_cost']:.2f}"
-                )
-                trade = trade_map.get((pos["instrument"], pos["direction"]))
-                if trade:
-                    sl_str = f"{trade.stop_loss:.2f}" if trade.stop_loss else "N/A"
-                    tp_str = f"{trade.take_profit:.2f}" if trade.take_profit else "trailing"
-                    lines.append(f"  SL: {sl_str} | TP: {tp_str}")
-
         if icm_positions:
-            lines.append("")
-            lines.append("IC MARKETS POSITIONS")
+            lines.append("OPEN POSITIONS")
             lines.append("─" * 16)
             for pos in icm_positions:
                 spec = INSTRUMENTS.get(pos["instrument"])
                 name = spec.display_name if spec else pos["instrument"]
-                unit = spec.size_unit if spec else "units"
+                unit = spec.size_unit if spec else "lots"
                 size_fmt = f"{abs(pos['size']):.4f}" if abs(pos['size']) < 1 else f"{abs(pos['size']):.2f}"
                 lines.append(
                     f"{pos['direction']} {name}\n"
                     f"  Size: {size_fmt} {unit}\n"
-                    f"  Avg cost: {pos['avg_cost']:.2f}"
+                    f"  Avg cost: {pos['avg_cost']:.5f}"
                 )
                 trade = trade_map.get((pos["instrument"], pos["direction"]))
                 if trade:
-                    sl_str = f"{trade.stop_loss:.2f}" if trade.stop_loss else "N/A"
-                    tp_str = f"{trade.take_profit:.2f}" if trade.take_profit else "trailing"
+                    sl_str = f"{trade.stop_loss:.5f}" if trade.stop_loss else "N/A"
+                    tp_str = f"{trade.take_profit:.5f}" if trade.take_profit else "trailing"
                     lines.append(f"  SL: {sl_str} | TP: {tp_str}")
-
-        if not ibkr_positions and not icm_positions:
+        else:
             lines.append("No open positions")
 
-        # Pending orders (both brokers)
+        # Pending orders
         pending = []
-        try:
-            pending = await self.ibkr.get_pending_orders()
-        except Exception:
-            pass
         if self.icm:
             try:
-                icm_pending = await self.icm.get_pending_orders()
-                pending.extend(icm_pending)
+                pending = await self.icm.get_pending_orders()
             except Exception:
                 pass
 
@@ -175,19 +144,13 @@ class TelegramCommandHandler:
                 )
 
         # Account info
-        lines.append("")
-        lines.append("ACCOUNTS")
-        lines.append("─" * 16)
-        try:
-            account = await self.ibkr.get_account_info()
-            nlv = account.get("NetLiquidation", 0)
-            lines.append(f"IBKR NLV: ${nlv:,.2f}")
-        except Exception:
-            pass
         if self.icm:
             try:
                 icm_account = await self.icm.get_account_info()
                 icm_balance = icm_account.get("NetLiquidation", 0)
+                lines.append("")
+                lines.append("ACCOUNT")
+                lines.append("─" * 16)
                 lines.append(f"IC Markets Equity: ${icm_balance:,.2f}")
             except Exception:
                 pass

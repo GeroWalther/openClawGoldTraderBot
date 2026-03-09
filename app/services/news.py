@@ -28,6 +28,9 @@ INSTRUMENT_NEWS_QUERIES: dict[str, list[str]] = {
     "EURJPY": ["EUR JPY forex"],
     "CADJPY": ["CAD JPY forex"],
     "USDJPY": ["USD JPY forex", "dollar yen"],
+    "NZDUSD": ["NZD USD forex", "new zealand dollar"],
+    "AUDUSD": ["AUD USD forex", "australian dollar"],
+    "GBPUSD": ["GBP USD forex", "british pound"],
     "BTC": ["bitcoin price", "bitcoin BTC"],
 }
 

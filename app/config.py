@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # IBKR Connection (IB Gateway)
+    ibkr_enabled: bool = False  # Set True to connect to IBKR
     ibkr_host: str = "127.0.0.1"
     ibkr_port: int = 4001  # 4001=live, 4002=paper
     ibkr_client_id: int = 1
@@ -62,9 +63,16 @@ class Settings(BaseSettings):
     icm_client_id: str = ""
     icm_client_secret: str = ""
     icm_access_token: str = ""
+    icm_refresh_token: str = ""
     icm_account_id: int = 0
     icm_host: str = "live.ctraderapi.com"
     icm_port: int = 5035
+
+    # M5 Scalp BTC (separate flag from AUDUSD scalp)
+    scalp_btc_enabled: bool = False
+
+    # M15 Sensei (BTC W/M pattern strategy)
+    sensei_btc_enabled: bool = False
 
     # App
     api_secret_key: str

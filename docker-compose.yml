@@ -1,18 +1,17 @@
 services:
-  ib-gateway:
-    image: ghcr.io/gnzsnz/ib-gateway:stable
-    container_name: ib-gateway
+  trader:
+    build: .
+    container_name: gold-trader
     restart: unless-stopped
     ports:
-      - "127.0.0.1:4002:4004"  # gnzsnz/ib-gateway uses 4003 for live API
+      - "127.0.0.1:8001:8001"
     env_file:
-      - .env.production
+      - .env
     volumes:
-      - ib-gateway-data:/opt/ibc
-    ulimits:
-      nofile:
-        soft: 10240
-        hard: 10240
+      - trader-data:/app/data
+      - ./journal:/app/journal
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///./data/trades.db
 
 volumes:
-  ib-gateway-data:
+  trader-data:

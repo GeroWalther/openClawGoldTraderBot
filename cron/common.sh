@@ -5,8 +5,16 @@
 set -euo pipefail
 
 # --- Config ---
-ENV_FILE="/opt/gold-trader/.env.production"
-JOURNAL_DIR="/opt/gold-trader/journal"
+# Auto-detect: Docker (/app) or VPS (/opt/gold-trader)
+if [ -f "/app/.env.production" ]; then
+    BASE_DIR="/app"
+elif [ -f "/opt/gold-trader/.env.production" ]; then
+    BASE_DIR="/opt/gold-trader"
+else
+    BASE_DIR="/app"
+fi
+ENV_FILE="$BASE_DIR/.env.production"
+JOURNAL_DIR="$BASE_DIR/journal"
 LOG_FILE="$JOURNAL_DIR/cron.log"
 BOT_URL="http://localhost:8001"
 
@@ -151,7 +159,7 @@ import sys, json
 
 # Correlation groups — instruments in same group move together
 CORRELATION_GROUPS = {
-    'risk_on_usd_down': ['XAUUSD', 'EURUSD'],     # Both rise when USD weakens
+    'risk_on_usd_down': ['XAUUSD', 'EURUSD', 'AUDUSD', 'NZDUSD', 'GBPUSD'],  # Rise when USD weakens
     'risk_on_crypto':   ['BTC'],                     # Crypto — independent
     'jpy_pairs':        ['EURJPY', 'CADJPY', 'USDJPY'],  # JPY crosses
     'sp500':            ['MES', 'IBUS500'],          # S&P 500
@@ -341,12 +349,24 @@ else:
     sd = round(sl_level - ref, 2)
     ld = round(ref - tp_level, 2)
 
+# M15 Sensei: SL=0.8*ATR, no TP (trail-only via trade monitor), MARKET order
+if timeframe == 'm15' and strategy == 'm15_sensei':
+    m15_atr = float(d.get('technicals', {}).get('m15', {}).get('atr', 0) or 0)
+    if m15_atr > 0:
+        MIN_STOP_M15 = {'BTC': 250.0, 'XAUUSD': 3.0}
+        min_sd = MIN_STOP_M15.get(inst, 0)
+        sd = round(max(m15_atr * 0.8, min_sd), 2)
+        payload['stop_distance'] = sd
+        payload['order_type'] = 'MARKET'
+        print(json.dumps(payload))
+    sys.exit()
+
 # Per-instrument minimum stop distances (must match app/instruments.py)
 # Scalp (M5): SL only — runner mode handles TP (TP1 at 1R, then monitor trails SL)
 if timeframe == 'm5':
     m5_atr = float(d.get('technicals', {}).get('m5', {}).get('atr', 0) or 0)
     if m5_atr > 0:
-        MIN_STOP_M5 = {'BTC': 250.0, 'XAUUSD': 3.0}
+        MIN_STOP_M5 = {'BTC': 250.0, 'XAUUSD': 3.0, 'AUDUSD': 0.0005, 'NZDUSD': 0.0005, 'EURUSD': 0.0005, 'GBPUSD': 0.0005}
         min_sd = MIN_STOP_M5.get(inst, 0)
         sd = round(max(m5_atr * 1.0, min_sd), 2)
         payload['stop_distance'] = sd

@@ -16,7 +16,7 @@ import yfinance as yf
 
 from app.instruments import INSTRUMENTS, InstrumentSpec
 from app.services.calendar import CalendarService
-from app.services.indicators import compute_indicators, compute_scalp_indicators
+from app.services.indicators import compute_indicators, compute_scalp_indicators, compute_sensei_indicators
 from app.services.macro_data import MacroDataService, VIX_LEVELS
 from app.services.news import NewsService
 from app.services.patterns import compute_sr_levels, detect_patterns
@@ -31,6 +31,12 @@ from app.services.m5_scalp_scoring import (
     M5_HIGH_CONVICTION_THRESHOLD,
     M5_SIGNAL_THRESHOLD,
     M5ScalpScoringEngine,
+)
+from app.services.m15_sensei_scoring import (
+    M15_SENSEI_FACTOR_WEIGHTS,
+    M15_SENSEI_HIGH_CONVICTION_THRESHOLD,
+    M15_SENSEI_SIGNAL_THRESHOLD,
+    M15SenseiScoringEngine,
 )
 from app.services.scoring_engine import (
     FACTOR_WEIGHTS,
@@ -189,6 +195,7 @@ class TechnicalAnalyzer:
         self._scoring_engine = ScoringEngine()
         self._intraday_scoring_engine = IntradayScoringEngine()
         self._m5_scalp_scoring_engine = M5ScalpScoringEngine()
+        self._m15_sensei_scoring_engine = M15SenseiScoringEngine()
         self._calendar_service = CalendarService()
         self._news_service = NewsService()
 
@@ -229,6 +236,158 @@ class TechnicalAnalyzer:
         instrument = INSTRUMENTS[key]
         result = await self._run_intraday_analysis(key, instrument)
         self._cache[cache_key] = (result, time.monotonic())
+        return result
+
+    async def analyze_m15_sensei(self, instrument_key: str) -> dict:
+        """M15 Sensei analysis using H1 trend filter and M15 W/M pattern detection."""
+        key = instrument_key.upper()
+        cache_key = f"{key}_m15sensei"
+        now = time.monotonic()
+
+        cached = self._cache.get(cache_key)
+        if cached:
+            data, ts = cached
+            if now - ts < 120:  # 2-minute cache (2 M15 bars)
+                return data
+
+        if key not in INSTRUMENTS:
+            return {"error": f"Unknown instrument: {key}", "available": list(INSTRUMENTS)}
+
+        instrument = INSTRUMENTS[key]
+        result = await self._run_m15_sensei_analysis(key, instrument)
+        self._cache[cache_key] = (result, time.monotonic())
+        return result
+
+    async def _run_m15_sensei_analysis(self, key: str, instrument: InstrumentSpec) -> dict:
+        """Execute M15 Sensei analysis: fetch H1 + M15 data, compute sensei indicators, score."""
+        warnings = []
+        loop = asyncio.get_event_loop()
+        symbol = instrument.yahoo_symbol
+
+        # Fetch H1 (1 month for SMA100) and M15 (5 days for pattern detection)
+        h1_future = loop.run_in_executor(_executor, _fetch_ohlcv, symbol, "1mo", "1h")
+        m15_future = loop.run_in_executor(_executor, _fetch_ohlcv, symbol, "5d", "15m")
+
+        results = await asyncio.gather(h1_future, m15_future, return_exceptions=True)
+
+        h1_df = results[0] if not isinstance(results[0], Exception) else pd.DataFrame()
+        m15_df = results[1] if not isinstance(results[1], Exception) else pd.DataFrame()
+
+        if isinstance(results[0], Exception):
+            warnings.append(f"H1 fetch failed: {results[0]}")
+        if isinstance(results[1], Exception):
+            warnings.append(f"M15 fetch failed: {results[1]}")
+
+        if h1_df.empty:
+            return {"error": f"H1 data unavailable for {key}", "warnings": warnings}
+        if m15_df.empty:
+            return {"error": f"M15 data unavailable for {key}", "warnings": warnings}
+
+        # Compute indicators on H1 (need SMA100 for trend filter)
+        h1_row = None
+        h1_block = None
+        if len(h1_df) >= 20:
+            try:
+                compute_indicators(h1_df)
+                # Add SMA100 to H1
+                h1_df["sma100"] = h1_df["close"].rolling(100).mean()
+                h1_block = _build_timeframe_block(h1_df, include_sma=True)
+                h1_row = h1_df.iloc[-1]
+            except Exception as e:
+                warnings.append(f"H1 indicators failed: {e}")
+
+        # Compute indicators on M15 (standard + sensei)
+        m15_block = None
+        if len(m15_df) >= 50:
+            try:
+                compute_indicators(m15_df)
+                compute_sensei_indicators(m15_df)
+                m15_block = _build_timeframe_block(m15_df, include_sma=True)
+            except Exception as e:
+                warnings.append(f"M15 indicators failed: {e}")
+
+        if h1_row is None:
+            return {"error": f"H1 indicators unavailable for {key}", "warnings": warnings}
+        if m15_df.empty or m15_block is None:
+            return {"error": f"M15 indicators unavailable for {key}", "warnings": warnings}
+
+        # Current price from M15
+        m15_last = m15_df.iloc[-1]
+        current = float(m15_last["close"])
+        prev_close = float(m15_df["close"].iloc[-2]) if len(m15_df) >= 2 else current
+        change_pct = round((current - prev_close) / prev_close * 100, 2) if prev_close else 0
+        price_info = {
+            "current": round(current, 4 if current < 10 else 2),
+            "previous_close": round(prev_close, 4 if prev_close < 10 else 2),
+            "change_pct": change_pct,
+        }
+
+        # S/R levels from H1 pivot clustering
+        levels = {}
+        try:
+            sr = compute_sr_levels(h1_df, pivot_range=2)
+            levels["resistance"] = [r["level"] for r in sr["resistance"]]
+            levels["support"] = [s["level"] for s in sr["support"]]
+            levels["sr_meta"] = sr
+        except Exception as e:
+            warnings.append(f"S/R computation failed, using fallback: {e}")
+            high_20 = h1_row.get("high_20")
+            low_20 = h1_row.get("low_20")
+            atr = h1_row.get("atr")
+            if not pd.isna(high_20) and not pd.isna(atr):
+                levels["resistance"] = [
+                    round(float(high_20), 2),
+                    round(float(high_20 + atr), 2),
+                ]
+            if not pd.isna(low_20) and not pd.isna(atr):
+                levels["support"] = [
+                    round(float(low_20), 2),
+                    round(float(low_20 - atr), 2),
+                ]
+
+        # Scoring
+        score_result = self._m15_sensei_scoring_engine.score(h1_row, m15_df)
+        scoring = {
+            "total_score": score_result["total_score"],
+            "max_score": score_result["max_score"],
+            "direction": score_result["direction"],
+            "conviction": score_result["conviction"],
+            "factors": score_result["factors"],
+            "signal_type": "sensei",
+        }
+
+        # Summary
+        direction = scoring.get("direction", "NO TRADE")
+        conviction = scoring.get("conviction")
+        h1_trend = h1_block.get("trend", "?") if h1_block else "?"
+        total = scoring.get("total_score", 0)
+
+        summary = (
+            f"{conviction or 'LOW'} conviction {direction or 'NO TRADE'}. "
+            f"H1 trend {h1_trend}. "
+            f"Score {total}/{scoring.get('max_score', 22)}."
+        )
+
+        result = {
+            "instrument": key,
+            "display_name": instrument.display_name,
+            "mode": "m15_sensei",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "price": price_info,
+            "technicals": {},
+            "levels": levels,
+            "scoring": scoring,
+            "summary": summary,
+        }
+
+        if h1_block:
+            result["technicals"]["h1"] = h1_block
+        if m15_block:
+            result["technicals"]["m15"] = m15_block
+
+        if warnings:
+            result["warnings"] = warnings
+
         return result
 
     async def analyze_m5_scalp(self, instrument_key: str) -> dict:

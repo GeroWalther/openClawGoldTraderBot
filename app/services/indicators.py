@@ -81,3 +81,95 @@ def compute_scalp_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["rsi7"] = 100 - (100 / (1 + rs))
 
     return df
+
+
+def compute_sensei_indicators(
+    df: pd.DataFrame,
+    conv_thresh: float = 10.0,
+    conv_bars: int = 8,
+    db_tol: float = 6.0,
+    pivot_lb: int = 3,
+    db_min: int = 5,
+    db_max: int = 80,
+) -> pd.DataFrame:
+    """Compute Sensei strategy indicators on an M15 OHLCV DataFrame.
+
+    Adds columns: sma5, sma10, sma100, is_converged, conv_count,
+    is_consolidating, pivot_low, pivot_high, w_active, m_active.
+
+    Should be called after compute_indicators() which provides sma20, sma50, rsi, atr.
+
+    Args:
+        df: DataFrame with standard indicators already computed.
+        conv_thresh: MA convergence threshold (% spread).
+        conv_bars: Minimum bars of convergence for consolidation.
+        db_tol: Double bottom/top tolerance (%).
+        pivot_lb: Pivot lookback bars.
+        db_min: Minimum bars between pivots.
+        db_max: Maximum bars between pivots.
+    """
+    import numpy as np
+
+    close = df["close"]
+    low = df["low"].values
+    high = df["high"].values
+
+    # Additional SMAs (sma20, sma50 already from compute_indicators)
+    df["sma5"] = close.rolling(5).mean()
+    df["sma10"] = close.rolling(10).mean()
+    df["sma100"] = close.rolling(100).mean()
+
+    # MA convergence spread
+    ma_df = df[["sma5", "sma10", "sma20", "sma50"]]
+    spread = (ma_df.max(axis=1) - ma_df.min(axis=1)) / close * 100
+    df["is_converged"] = spread <= conv_thresh
+
+    # Consolidation count
+    conv_count = np.zeros(len(df))
+    for i in range(1, len(df)):
+        conv_count[i] = conv_count[i - 1] + 1 if df["is_converged"].iloc[i] else 0
+    df["conv_count"] = conv_count
+    df["is_consolidating"] = conv_count >= conv_bars
+
+    # Pivot lows & highs
+    df["pivot_low"] = np.nan
+    df["pivot_high"] = np.nan
+    for i in range(pivot_lb, len(df) - pivot_lb):
+        if all(low[i] <= low[i - j] and low[i] <= low[i + j] for j in range(1, pivot_lb + 1)):
+            df.iloc[i, df.columns.get_loc("pivot_low")] = low[i]
+        if all(high[i] >= high[i - j] and high[i] >= high[i + j] for j in range(1, pivot_lb + 1)):
+            df.iloc[i, df.columns.get_loc("pivot_high")] = high[i]
+
+    # Double bottom (W) — right bottom higher than left
+    w_active = np.zeros(len(df), dtype=bool)
+    bot1_p, bot1_i = np.nan, 0
+    for i in range(len(df)):
+        if not np.isnan(df["pivot_low"].iloc[i]):
+            p = df["pivot_low"].iloc[i]
+            if not np.isnan(bot1_p):
+                d = i - bot1_i
+                pct = abs(p - bot1_p) / bot1_p * 100
+                consol = conv_count[i] >= conv_bars * 0.4
+                if pct <= db_tol and db_min <= d <= db_max and p > bot1_p and consol:
+                    for j in range(i, min(i + db_max, len(df))):
+                        w_active[j] = True
+            bot1_p, bot1_i = p, i
+    df["w_active"] = w_active
+
+    # Double top (M) — right top lower than left
+    m_active = np.zeros(len(df), dtype=bool)
+    top1_p, top1_i = np.nan, 0
+    for i in range(len(df)):
+        if not np.isnan(df["pivot_high"].iloc[i]):
+            p = df["pivot_high"].iloc[i]
+            if not np.isnan(top1_p):
+                d = i - top1_i
+                pct = abs(p - top1_p) / top1_p * 100
+                consol = conv_count[i] >= conv_bars * 0.4
+                if pct <= db_tol and db_min <= d <= db_max and p < top1_p and consol:
+                    for j in range(i, min(i + db_max, len(df))):
+                        m_active[j] = True
+            top1_p, top1_i = p, i
+    df["m_active"] = m_active
+
+    return df

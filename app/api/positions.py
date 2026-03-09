@@ -48,7 +48,12 @@ async def get_positions(
         positions = await broker.get_open_positions(instrument_key=instrument)
     else:
         # Aggregate from both brokers
-        positions = await ibkr_client.get_open_positions()
+        positions = []
+        if ibkr_client._connected:
+            try:
+                positions = await ibkr_client.get_open_positions()
+            except Exception:
+                pass
         try:
             icm_positions = await icm_client.get_open_positions()
             positions.extend(icm_positions)
@@ -66,10 +71,18 @@ async def get_account(
 ):
     if x_api_key != settings.api_secret_key:
         raise HTTPException(status_code=401, detail="Invalid API key")
-    account = await ibkr_client.get_account_info()
+    account = {}
+    if ibkr_client._connected:
+        try:
+            account = await ibkr_client.get_account_info()
+        except Exception:
+            pass
     try:
         icm_account = await icm_client.get_account_info()
-        account["icm"] = icm_account
+        if not account:
+            account = icm_account
+        else:
+            account["icm"] = icm_account
     except Exception:
         pass
     return {"account": account}
@@ -257,10 +270,19 @@ async def get_trade_status(
     if x_api_key != settings.api_secret_key:
         raise HTTPException(status_code=401, detail="Invalid API key")
 
-    positions = await ibkr_client.get_open_positions()
-    open_orders = await ibkr_client.get_open_orders()
-    account = await ibkr_client.get_account_info()
-    pending_orders_raw = await ibkr_client.get_pending_orders()
+    positions = []
+    open_orders = []
+    account = {}
+    pending_orders_raw = []
+
+    if ibkr_client._connected:
+        try:
+            positions = await ibkr_client.get_open_positions()
+            open_orders = await ibkr_client.get_open_orders()
+            account = await ibkr_client.get_account_info()
+            pending_orders_raw = await ibkr_client.get_pending_orders()
+        except Exception:
+            pass
 
     # Aggregate IC Markets positions + orders
     try:
@@ -275,7 +297,10 @@ async def get_trade_status(
         pass
     try:
         icm_account = await icm_client.get_account_info()
-        account["icm"] = icm_account
+        if not account:
+            account = icm_account
+        else:
+            account["icm"] = icm_account
     except Exception:
         pass
 

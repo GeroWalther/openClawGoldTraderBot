@@ -34,19 +34,23 @@ async def lifespan(app: FastAPI):
     app.state.engine = engine
     app.state.async_session = async_sessionmaker(engine, expire_on_commit=False)
 
-    # IBKR Client
+    # IBKR Client — only connect if icm is not the sole broker
     ibkr_client = IBKRClient(settings)
-    try:
-        await ibkr_client.connect()
-        app.state.ibkr_connected = True
-    except Exception:
-        logger.warning(
-            "Could not connect to IB Gateway at %s:%s — "
-            "trading disabled, analysis-only mode",
-            settings.ibkr_host,
-            settings.ibkr_port,
-        )
+    if settings.icm_client_id and not settings.ibkr_enabled:
+        # IC Markets is configured and IBKR is disabled — skip IBKR entirely
+        logger.info("IBKR disabled (IC Markets only mode)")
         app.state.ibkr_connected = False
+    else:
+        try:
+            await ibkr_client.connect()
+            app.state.ibkr_connected = True
+        except Exception:
+            logger.warning(
+                "Could not connect to IB Gateway at %s:%s — IBKR disabled",
+                settings.ibkr_host,
+                settings.ibkr_port,
+            )
+            app.state.ibkr_connected = False
 
     app.state.ibkr_client = ibkr_client
     app.state.settings = settings
@@ -59,8 +63,8 @@ async def lifespan(app: FastAPI):
         try:
             await icm_client.connect()
             app.state.icm_connected = True
-        except Exception:
-            logger.warning("Could not connect to IC Markets — BTC trading disabled")
+        except Exception as e:
+            logger.warning("Could not connect to IC Markets — BTC trading disabled: %s", e, exc_info=True)
             app.state.icm_connected = False
     else:
         app.state.icm_connected = False

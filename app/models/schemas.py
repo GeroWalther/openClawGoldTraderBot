@@ -157,7 +157,7 @@ class CooldownStatusResponse(BaseModel):
 
 class BacktestRequest(BaseModel):
     instrument: str = "XAUUSD"
-    strategy: str = Field(..., pattern="^(sma_crossover|rsi_reversal|breakout|krabbe_scored|m5_scalp|intraday_pure_atr|intraday_relaxed_rr|intraday_atr_capped_sr|intraday_hybrid)$")
+    strategy: str = Field(..., pattern="^(sma_crossover|rsi_reversal|breakout|krabbe_scored|m5_scalp|m15_sensei|intraday_pure_atr|intraday_relaxed_rr|intraday_atr_capped_sr|intraday_hybrid)$")
     period: str = Field("1y", pattern="^(5d|60d|6mo|1y|2y|5y)$")
     start_date: str | None = None  # "YYYY-MM-DD" — overrides period if set
     end_date: str | None = None    # "YYYY-MM-DD" — overrides period if set

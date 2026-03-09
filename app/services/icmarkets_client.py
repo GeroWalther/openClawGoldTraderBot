@@ -45,12 +45,21 @@ class ICMarketsClient:
         self._reactor_thread: threading.Thread | None = None
         self._account_id: int = settings.icm_account_id
         self._access_token: str = settings.icm_access_token
+        self._refresh_token: str = settings.icm_refresh_token
 
         # Resolved symbol IDs: instrument_key -> cTrader symbolId
         self._symbol_ids: dict[str, int] = {}
 
         # Price cache: instrument_key -> {bid, ask, last}
         self._prices: dict[str, dict[str, float]] = {}
+
+        # Track which symbols we've subscribed to spots for
+        self._subscribed_symbols: set[str] = set()
+
+        # Symbol metadata: digits, lot size, min volume
+        self._symbol_digits: dict[str, int] = {}
+        self._symbol_lot_sizes: dict[str, int] = {}  # cTrader lotSize (e.g. 10_000_000 for forex)
+        self._symbol_min_volumes: dict[str, int] = {}  # cTrader minVolume
 
         # Pending response futures: clientMsgId -> asyncio.Future
         self._pending: dict[str, asyncio.Future] = {}
@@ -93,6 +102,8 @@ class ICMarketsClient:
             ProtoOAOrderErrorEvent,
             ProtoOAGetAccountListByAccessTokenReq,
             ProtoOAGetAccountListByAccessTokenRes,
+            ProtoOASymbolByIdReq,
+            ProtoOASymbolByIdRes,
         )
         from twisted.internet import reactor as twisted_reactor
 
@@ -120,6 +131,8 @@ class ICMarketsClient:
             "ProtoOAErrorRes": ProtoOAErrorRes,
             "ProtoOAOrderErrorEvent": ProtoOAOrderErrorEvent,
             "ProtoHeartbeatEvent": ProtoHeartbeatEvent,
+            "ProtoOASymbolByIdReq": ProtoOASymbolByIdReq,
+            "ProtoOASymbolByIdRes": ProtoOASymbolByIdRes,
         }
 
         # Determine host
@@ -164,6 +177,10 @@ class ICMarketsClient:
         if "BTC" in self._symbol_ids:
             await self._subscribe_spots("BTC")
 
+        # Start background token refresh task
+        if self._refresh_token:
+            self._refresh_task = asyncio.create_task(self._token_refresh_loop())
+
         logger.info(
             "Connected to IC Markets cTrader (%s:%s, account=%s, symbols=%s)",
             host, port, self._account_id, list(self._symbol_ids.keys()),
@@ -190,6 +207,7 @@ class ICMarketsClient:
         """Twisted callback: TCP disconnected."""
         logger.warning("cTrader disconnected: %s", reason)
         self._connected = False
+        self._subscribed_symbols.clear()  # Must resubscribe after reconnect
 
     def _on_error(self, failure):
         """Twisted errback."""
@@ -234,6 +252,11 @@ class ICMarketsClient:
         if payload_type == ErrorRes().payloadType:
             error_code = getattr(extracted, "errorCode", "UNKNOWN")
             description = getattr(extracted, "description", "")
+            # ALREADY_LOGGED_IN on reconnect — skip app auth, proceed to account auth
+            if error_code == "ALREADY_LOGGED_IN":
+                logger.info("cTrader app already authenticated, proceeding to account auth...")
+                self._send_account_auth()
+                return
             logger.error("cTrader error: %s — %s", error_code, description)
             if client_msg_id and client_msg_id in self._pending:
                 fut = self._pending.pop(client_msg_id)
@@ -288,22 +311,17 @@ class ICMarketsClient:
         if inst_key is None:
             return
 
-        # cTrader spot prices have bid/ask as integer pips, need to divide by pipSize
-        # But in ProtoOASpotEvent, bid and ask are actual prices (double)
         bid = getattr(event, "bid", 0) or 0
         ask = getattr(event, "ask", 0) or 0
 
-        # cTrader sends prices as integers scaled by 10^digits
-        # For BTCUSD with 2 digits: price 6850000 = 68500.00
-        # We need to check if prices look like integers (> 100000 for BTC)
-        # The ProtoOASpotEvent actually sends bid/ask as uint64 price values
-        # that need to be divided by 10^(digits) — retrieve digits from symbol info
+        # cTrader spot event bid/ask are always uint64 divided by 100000 (10^5)
+        # regardless of the symbol's digits field. Round to digits for display.
+        # Ref: https://help.ctrader.com/open-api/symbol-data/
         digits = self._symbol_digits.get(inst_key, 2)
-        divisor = 10 ** digits
         if bid > 0:
-            bid = bid / divisor
+            bid = round(bid / 100000, digits)
         if ask > 0:
-            ask = ask / divisor
+            ask = round(ask / 100000, digits)
 
         last = (bid + ask) / 2 if bid > 0 and ask > 0 else bid or ask
 
@@ -346,7 +364,7 @@ class ICMarketsClient:
         return await asyncio.wait_for(future, timeout=timeout)
 
     async def _resolve_symbols(self):
-        """Fetch symbol list and map our instrument keys to cTrader symbolIds."""
+        """Fetch symbol list, then full symbol details for correct digits."""
         Req = self._proto_modules["ProtoOASymbolsListReq"]
         request = Req()
         request.ctidTraderAccountId = self._account_id
@@ -355,24 +373,64 @@ class ICMarketsClient:
 
         self._symbol_digits = {}  # instrument_key -> digits (decimal places)
 
-        # Map known symbols
+        # Map known symbols — key is our instrument key, values are cTrader symbol names
         symbol_map = {
             "BTC": ["BTCUSD", "BTC/USD"],
+            "XAUUSD": ["XAUUSD", "XAU/USD"],
+            "EURUSD": ["EURUSD", "EUR/USD"],
+            "NZDUSD": ["NZDUSD", "NZD/USD"],
+            "AUDUSD": ["AUDUSD", "AUD/USD"],
+            "USDJPY": ["USDJPY", "USD/JPY"],
+            "GBPUSD": ["GBPUSD", "GBP/USD"],
+            "EURJPY": ["EURJPY", "EUR/JPY"],
+            "CADJPY": ["CADJPY", "CAD/JPY"],
         }
 
+        # Phase 1: resolve symbolIds from the light symbol list
+        resolved_ids = []  # (inst_key, symbolId)
         for symbol in response.symbol:
             name = getattr(symbol, "symbolName", "")
             sid = symbol.symbolId
-            digits = getattr(symbol, "digits", 2)
 
             for inst_key, names in symbol_map.items():
                 if name in names:
                     self._symbol_ids[inst_key] = sid
-                    self._symbol_digits[inst_key] = digits
-                    logger.info("Resolved %s → symbolId=%d (digits=%d)", inst_key, sid, digits)
+                    resolved_ids.append((inst_key, sid))
 
         if not self._symbol_ids:
             logger.warning("No IC Markets symbols resolved — check symbol names")
+            return
+
+        # Phase 2: fetch full symbol details for correct digits
+        ByIdReq = self._proto_modules["ProtoOASymbolByIdReq"]
+        detail_req = ByIdReq()
+        detail_req.ctidTraderAccountId = self._account_id
+        for _, sid in resolved_ids:
+            detail_req.symbolId.append(sid)
+
+        try:
+            detail_res = await self._send_request(detail_req)
+            for full_symbol in detail_res.symbol:
+                sid = full_symbol.symbolId
+                digits = getattr(full_symbol, "digits", 2)
+                lot_size = getattr(full_symbol, "lotSize", 100)
+                min_volume = getattr(full_symbol, "minVolume", 1)
+                for inst_key, resolved_sid in resolved_ids:
+                    if resolved_sid == sid:
+                        self._symbol_digits[inst_key] = digits
+                        self._symbol_lot_sizes[inst_key] = lot_size
+                        self._symbol_min_volumes[inst_key] = min_volume
+                        logger.info(
+                            "Resolved %s → symbolId=%d (digits=%d, lotSize=%d, minVolume=%d)",
+                            inst_key, sid, digits, lot_size, min_volume,
+                        )
+        except Exception as e:
+            logger.warning("Could not fetch full symbol details, using defaults: %s", e)
+            for inst_key, sid in resolved_ids:
+                self._symbol_digits[inst_key] = 2
+                self._symbol_lot_sizes[inst_key] = 100
+                self._symbol_min_volumes[inst_key] = 1
+                logger.info("Resolved %s → symbolId=%d (defaults)", inst_key, sid)
 
     async def _subscribe_spots(self, instrument_key: str):
         """Subscribe to real-time spot prices for an instrument."""
@@ -380,12 +438,24 @@ class ICMarketsClient:
             logger.warning("Cannot subscribe spots for %s — symbolId unknown", instrument_key)
             return
 
+        # Skip if already subscribed
+        if instrument_key in self._subscribed_symbols:
+            return
+
         Req = self._proto_modules["ProtoOASubscribeSpotsReq"]
         request = Req()
         request.ctidTraderAccountId = self._account_id
         request.symbolId.append(self._symbol_ids[instrument_key])
 
-        await self._send_request(request)
+        try:
+            await self._send_request(request)
+        except RuntimeError as e:
+            if "ALREADY_SUBSCRIBED" in str(e):
+                logger.debug("Already subscribed to %s spots", instrument_key)
+            else:
+                raise
+
+        self._subscribed_symbols.add(instrument_key)
         logger.info("Subscribed to spot prices for %s", instrument_key)
 
     def _get_symbol_id(self, instrument_key: str) -> int:
@@ -394,12 +464,109 @@ class ICMarketsClient:
             raise RuntimeError(f"Symbol not resolved for {instrument_key}")
         return self._symbol_ids[instrument_key]
 
+    def _size_to_volume(self, size: float, instrument_key: str) -> int:
+        """Convert trade size (units) to cTrader volume.
+
+        cTrader volume = units * 100 for all instruments:
+        - BTC: 0.01 BTC → volume 1
+        - Forex: 1000 AUD → volume 100,000
+        - Gold: 1 oz → volume 100
+        """
+        return int(round(size * VOLUME_MULTIPLIER))
+
+    def _volume_to_size(self, volume: int, instrument_key: str) -> float:
+        """Convert cTrader volume back to trade size (units)."""
+        return volume / VOLUME_MULTIPLIER
+
+    # ------------------------------------------------------------------
+    # Token refresh
+    # ------------------------------------------------------------------
+
+    async def _token_refresh_loop(self):
+        """Refresh the access token every 25 days (tokens expire in ~30 days)."""
+        REFRESH_INTERVAL = 25 * 24 * 3600  # 25 days in seconds
+        while True:
+            await asyncio.sleep(REFRESH_INTERVAL)
+            try:
+                await self._refresh_access_token()
+            except Exception:
+                logger.exception("Token refresh failed — will retry in 1 hour")
+                await asyncio.sleep(3600)
+
+    async def _refresh_access_token(self):
+        """Use refresh token to get a new access token from cTrader OAuth."""
+        import httpx
+
+        url = "https://openapi.ctrader.com/apps/token"
+        params = {
+            "grant_type": "refresh_token",
+            "refresh_token": self._refresh_token,
+            "client_id": self.settings.icm_client_id,
+            "client_secret": self.settings.icm_client_secret,
+        }
+
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(url, params=params)
+            resp.raise_for_status()
+            data = resp.json()
+
+        new_access = data.get("accessToken")
+        new_refresh = data.get("refreshToken")
+
+        if not new_access:
+            raise RuntimeError(f"Token refresh returned no accessToken: {data}")
+
+        old_token = self._access_token[:8] + "..."
+        self._access_token = new_access
+        if new_refresh:
+            self._refresh_token = new_refresh
+
+        # Update .env file so new tokens persist across restarts
+        self._persist_tokens(new_access, new_refresh)
+
+        logger.info("Access token refreshed (%s → %s...)", old_token, new_access[:8])
+
+        # Reconnect with new token
+        if self._connected:
+            await self.disconnect()
+            await asyncio.sleep(2)
+            await self.connect()
+
+    def _persist_tokens(self, access_token: str, refresh_token: str | None):
+        """Update .env file with new tokens so they survive restarts."""
+        import re
+        from pathlib import Path
+
+        for env_path in [Path(".env"), Path(".env.production"), Path("/app/.env"), Path("/app/.env.production")]:
+            if not env_path.exists():
+                continue
+            try:
+                content = env_path.read_text()
+                content = re.sub(
+                    r"(?m)^icm_access_token=.*$",
+                    f"icm_access_token={access_token}",
+                    content,
+                )
+                if refresh_token:
+                    content = re.sub(
+                        r"(?m)^icm_refresh_token=.*$",
+                        f"icm_refresh_token={refresh_token}",
+                        content,
+                    )
+                env_path.write_text(content)
+                logger.info("Updated tokens in %s", env_path)
+            except Exception as e:
+                logger.warning("Could not update %s: %s", env_path, e)
+
     # ------------------------------------------------------------------
     # Public API (matches IBKRClient interface)
     # ------------------------------------------------------------------
 
     async def disconnect(self):
         """Disconnect from cTrader."""
+        if hasattr(self, "_refresh_task") and self._refresh_task:
+            self._refresh_task.cancel()
+            self._refresh_task = None
         if self._connected and self._client:
             self._connected = False
             try:
@@ -412,7 +579,47 @@ class ICMarketsClient:
         """Reconnect if connection was lost."""
         if not self._connected:
             logger.warning("IC Markets connection lost, reconnecting...")
-            await self.connect()
+            try:
+                await self._reconnect()
+            except Exception as e:
+                logger.error("IC Markets reconnect failed: %s", e)
+                raise RuntimeError("IC Markets not connected") from e
+
+    async def _reconnect(self):
+        """Reconnect by restarting the client service."""
+        self._loop = asyncio.get_running_loop()
+
+        # Stop existing service first
+        if self._client:
+            try:
+                self._twisted_reactor.callFromThread(self._client.stopService)
+            except Exception:
+                pass
+            await asyncio.sleep(2)
+
+        # Clear stale state
+        self._subscribed_symbols.clear()
+        for msg_id, fut in list(self._pending.items()):
+            if not fut.done():
+                self._loop.call_soon_threadsafe(
+                    fut.set_exception, RuntimeError("Reconnecting")
+                )
+        self._pending.clear()
+
+        # Restart service — _on_connected will fire app auth → account auth
+        connect_future = self._loop.create_future()
+        self._pending["__connect__"] = connect_future
+
+        self._twisted_reactor.callFromThread(self._client.startService)
+
+        await asyncio.wait_for(connect_future, timeout=30.0)
+        self._connected = True
+
+        # Re-resolve symbols and resubscribe
+        await self._resolve_symbols()
+        for key in list(self._symbol_ids.keys()):
+            if key in self._prices:  # Was previously subscribed
+                await self._subscribe_spots(key)
 
     async def get_price(self, instrument_key: str = "BTC") -> dict:
         """Get current bid/ask/last for an instrument from cached spot data."""
@@ -485,15 +692,13 @@ class ICMarketsClient:
         request.symbolId = self._get_symbol_id(instrument_key)
         request.orderType = ProtoOAOrderType.MARKET
         request.tradeSide = ProtoOATradeSide.BUY if direction == "BUY" else ProtoOATradeSide.SELL
-        request.volume = _to_volume(size)
+        request.volume = self._size_to_volume(size, instrument_key)
 
         msg_id = self._next_msg_id()
         request.label = msg_id  # Used to correlate execution events
 
-        if stop_price is not None:
-            request.stopLoss = stop_price
-        if take_profit_price is not None:
-            request.takeProfit = take_profit_price
+        # MARKET orders: cTrader doesn't allow absolute SL/TP, so we open
+        # without and amend immediately after fill.
 
         response = await self._send_request(request, client_msg_id=msg_id, timeout=30.0)
 
@@ -504,16 +709,28 @@ class ICMarketsClient:
         fill_price = None
         position_id = None
         if position:
-            fill_price = getattr(position, "price", None)
-            if fill_price:
-                fill_price = fill_price / (10 ** self._symbol_digits.get(instrument_key, 2))
+            fill_price = getattr(position, "price", None)  # double — already actual price
             position_id = getattr(position, "positionId", None)
 
-        status = "Filled"
-        if order:
-            order_status = getattr(order, "orderStatus", None)
-            if order_status and str(order_status) != "2":  # 2 = FILLED
-                status = "Failed"
+        # If a position was created, the order filled successfully
+        status = "Filled" if position_id else "Failed"
+
+        # Set SL/TP via amend after fill
+        if position_id and (stop_price is not None or take_profit_price is not None):
+            try:
+                AmendReq = self._proto_modules["ProtoOAAmendPositionSLTPReq"]
+                amend = AmendReq()
+                amend.ctidTraderAccountId = self._account_id
+                amend.positionId = position_id
+                if stop_price is not None:
+                    amend.stopLoss = stop_price
+                if take_profit_price is not None:
+                    amend.takeProfit = take_profit_price
+                amend_id = self._next_msg_id()
+                await self._send_request(amend, client_msg_id=amend_id, timeout=10.0)
+                logger.info("Set SL=%s TP=%s on position %s", stop_price, take_profit_price, position_id)
+            except Exception as e:
+                logger.warning("Could not set SL/TP after fill: %s — trade monitor will handle", e)
 
         return {
             "orderId": position_id or 0,
@@ -615,7 +832,7 @@ class ICMarketsClient:
         request.ctidTraderAccountId = self._account_id
         request.symbolId = self._get_symbol_id(instrument_key)
         request.tradeSide = ProtoOATradeSide.BUY if direction == "BUY" else ProtoOATradeSide.SELL
-        request.volume = _to_volume(size)
+        request.volume = self._size_to_volume(size, instrument_key)
 
         if order_type == "LIMIT":
             request.orderType = ProtoOAOrderType.LIMIT
@@ -688,7 +905,7 @@ class ICMarketsClient:
         request = Req()
         request.ctidTraderAccountId = self._account_id
         request.positionId = position_id
-        request.volume = _to_volume(size)
+        request.volume = self._size_to_volume(size, instrument_key)
 
         msg_id = self._next_msg_id()
         response = await self._send_request(request, client_msg_id=msg_id, timeout=30.0)
@@ -697,9 +914,7 @@ class ICMarketsClient:
         position = getattr(response, "position", None)
         close_price = None
         if position:
-            close_price = getattr(position, "price", None)
-            if close_price:
-                close_price = close_price / (10 ** self._symbol_digits.get(instrument_key, 2))
+            close_price = getattr(position, "price", None)  # double — already actual price
 
         return {
             "orderId": position_id,
@@ -734,14 +949,10 @@ class ICMarketsClient:
             if instrument_key and inst_key != instrument_key:
                 continue
 
-            digits = self._symbol_digits.get(inst_key, 2)
-            divisor = 10 ** digits
-            price = getattr(pos, "price", 0)
-            if price:
-                price = price / divisor
+            price = getattr(pos, "price", 0)  # double — already actual price
 
             is_buy = pos.tradeData.tradeSide == 1  # BUY=1, SELL=2
-            size = _from_volume(pos.tradeData.volume)
+            size = self._volume_to_size(pos.tradeData.volume, inst_key)
 
             result.append({
                 "instrument": inst_key,
@@ -750,7 +961,7 @@ class ICMarketsClient:
                 "direction": "BUY" if is_buy else "SELL",
                 "avg_cost": price,
                 "unrealized_pnl": None,
-                "size_unit": "BTC",
+                "size_unit": "lots",
                 "positionId": pos.positionId,
                 "stopLoss": getattr(pos, "stopLoss", None),
                 "takeProfit": getattr(pos, "takeProfit", None),
@@ -786,24 +997,21 @@ class ICMarketsClient:
             if instrument_key and inst_key != instrument_key:
                 continue
 
-            digits = self._symbol_digits.get(inst_key, 2)
-            divisor = 10 ** digits
-
             is_buy = order.tradeData.tradeSide == 1
             entry_price = None
             order_type = "LIMIT"
             if hasattr(order, "limitPrice") and order.limitPrice:
-                entry_price = order.limitPrice / divisor
+                entry_price = order.limitPrice  # double — already actual price
                 order_type = "LMT"
             elif hasattr(order, "stopPrice") and order.stopPrice:
-                entry_price = order.stopPrice / divisor
+                entry_price = order.stopPrice  # double — already actual price
                 order_type = "STP"
 
             result.append({
                 "orderId": order.orderId,
                 "orderType": order_type,
                 "action": "BUY" if is_buy else "SELL",
-                "totalQuantity": _from_volume(order.tradeData.volume),
+                "totalQuantity": self._volume_to_size(order.tradeData.volume, inst_key),
                 "entryPrice": entry_price,
                 "status": "Submitted",
                 "instrument": inst_key,

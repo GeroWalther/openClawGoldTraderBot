@@ -67,13 +67,14 @@ class TradeCloseMonitor:
         # 1. Get open positions from both brokers
         position_map: dict[tuple[str, str], float] = {}
 
-        try:
-            ibkr_positions = await self.ibkr.get_open_positions()
-            for pos in ibkr_positions:
-                key = (pos["instrument"], pos["direction"])
-                position_map[key] = position_map.get(key, 0) + abs(pos["size"])
-        except Exception:
-            logger.warning("Cannot fetch IBKR positions — skipping IBKR instruments")
+        if self.ibkr and self.ibkr._connected:
+            try:
+                ibkr_positions = await self.ibkr.get_open_positions()
+                for pos in ibkr_positions:
+                    key = (pos["instrument"], pos["direction"])
+                    position_map[key] = position_map.get(key, 0) + abs(pos["size"])
+            except Exception:
+                logger.warning("Cannot fetch IBKR positions — skipping IBKR instruments")
 
         if self.icm:
             try:

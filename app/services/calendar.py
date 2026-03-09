@@ -28,6 +28,9 @@ INSTRUMENT_COUNTRIES: dict[str, list[str]] = {
     "EURJPY": ["EUR", "JPY"],
     "CADJPY": ["CAD", "JPY"],
     "USDJPY": ["USD", "JPY"],
+    "NZDUSD": ["NZD", "USD"],
+    "AUDUSD": ["AUD", "USD"],
+    "GBPUSD": ["GBP", "USD"],
     "BTC": ["USD"],
 }
 
