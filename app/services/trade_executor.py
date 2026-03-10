@@ -233,6 +233,8 @@ class TradeExecutor:
         else:
             size = request.size
 
+        logger.info(f"Position sizing: balance={balance}, sd={stop_distance}, size={size}, instrument={instrument.key}")
+
         # 6. Calculate absolute TP price and SL price from reference_price
         if request.direction == "BUY":
             stop_price = reference_price - stop_distance

@@ -10,6 +10,7 @@ services:
     volumes:
       - trader-data:/app/data
       - ./journal:/app/journal
+      - ./.env:/app/.env:ro
     environment:
       - DATABASE_URL=sqlite+aiosqlite:///./data/trades.db
 

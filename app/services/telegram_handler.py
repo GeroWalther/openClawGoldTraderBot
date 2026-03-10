@@ -89,7 +89,8 @@ class TelegramCommandHandler:
         if self.icm:
             try:
                 icm_positions = await self.icm.get_open_positions()
-            except Exception:
+            except Exception as e:
+                logger.error("IC Markets get_open_positions failed: %s", e)
                 lines.append("(IC Markets disconnected)")
 
         # Find matching DB trades for SL/TP info
@@ -111,10 +112,13 @@ class TelegramCommandHandler:
                 name = spec.display_name if spec else pos["instrument"]
                 unit = spec.size_unit if spec else "lots"
                 size_fmt = f"{abs(pos['size']):.4f}" if abs(pos['size']) < 1 else f"{abs(pos['size']):.2f}"
+                pnl = pos.get("unrealized_pnl")
+                pnl_str = f"  P&L: ${pnl:+.2f}" if pnl is not None else ""
                 lines.append(
                     f"{pos['direction']} {name}\n"
                     f"  Size: {size_fmt} {unit}\n"
-                    f"  Avg cost: {pos['avg_cost']:.5f}"
+                    f"  Avg cost: {pos['avg_cost']:.5f}\n"
+                    f"{pnl_str}"
                 )
                 trade = trade_map.get((pos["instrument"], pos["direction"]))
                 if trade:

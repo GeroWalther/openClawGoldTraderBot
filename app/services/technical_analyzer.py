@@ -170,7 +170,7 @@ def _build_timeframe_block(df: pd.DataFrame, include_sma: bool = False) -> dict 
     if include_sma:
         atr = row.get("atr")
         if not pd.isna(atr):
-            result["atr"] = round(float(atr), 2)
+            result["atr"] = round(float(atr), 5)
 
         bb_upper = row.get("bb_upper")
         bb_lower = row.get("bb_lower")

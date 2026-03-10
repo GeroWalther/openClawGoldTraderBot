@@ -954,13 +954,24 @@ class ICMarketsClient:
             is_buy = pos.tradeData.tradeSide == 1  # BUY=1, SELL=2
             size = self._volume_to_size(pos.tradeData.volume, inst_key)
 
+            # Calculate unrealized P&L from cached spot price
+            unrealized_pnl = None
+            spot = self._prices.get(inst_key)
+            if spot and price:
+                current = spot["bid"] if is_buy else spot["ask"]
+                if current and current > 0:
+                    if is_buy:
+                        unrealized_pnl = round((current - price) * size, 2)
+                    else:
+                        unrealized_pnl = round((price - current) * size, 2)
+
             result.append({
                 "instrument": inst_key,
                 "symbol": inst_key,
                 "size": size if is_buy else -size,
                 "direction": "BUY" if is_buy else "SELL",
                 "avg_cost": price,
-                "unrealized_pnl": None,
+                "unrealized_pnl": unrealized_pnl,
                 "size_unit": "lots",
                 "positionId": pos.positionId,
                 "stopLoss": getattr(pos, "stopLoss", None),

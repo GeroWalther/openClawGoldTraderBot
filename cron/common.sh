@@ -366,9 +366,10 @@ if timeframe == 'm15' and strategy == 'm15_sensei':
 if timeframe == 'm5':
     m5_atr = float(d.get('technicals', {}).get('m5', {}).get('atr', 0) or 0)
     if m5_atr > 0:
-        MIN_STOP_M5 = {'BTC': 250.0, 'XAUUSD': 3.0, 'AUDUSD': 0.0005, 'NZDUSD': 0.0005, 'EURUSD': 0.0005, 'GBPUSD': 0.0005}
+        MIN_STOP_M5 = {'BTC': 250.0, 'XAUUSD': 3.0, 'AUDUSD': 0.0015, 'NZDUSD': 0.0015, 'EURUSD': 0.0015, 'GBPUSD': 0.0015}
         min_sd = MIN_STOP_M5.get(inst, 0)
-        sd = round(max(m5_atr * 1.0, min_sd), 2)
+        digits = 5 if inst in ('AUDUSD','NZDUSD','EURUSD','GBPUSD') else 2
+        sd = round(max(m5_atr * 1.0, min_sd), digits)
         payload['stop_distance'] = sd
         payload['order_type'] = 'MARKET'
         print(json.dumps(payload))
