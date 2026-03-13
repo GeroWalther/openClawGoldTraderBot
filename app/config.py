@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     # ATR-based dynamic stops
     atr_enabled: bool = True
     atr_period: int = 14
-    atr_sl_multiplier: float = 1.5
+    atr_sl_multiplier: float = 2.0
     atr_tp_multiplier: float = 2.0
     atr_cache_ttl_seconds: int = 3600
 
@@ -38,12 +38,12 @@ class Settings(BaseSettings):
 
     # Daily loss limits
     daily_loss_limit_enabled: bool = True
-    max_daily_loss_percent: float = 3.0
+    max_daily_loss_percent: float = 6.0
     max_daily_trades: int = 9999
 
     # Weekly loss limit (% of account)
     weekly_loss_limit_enabled: bool = True
-    max_weekly_loss_percent: float = 6.0
+    max_weekly_loss_percent: float = 15.0
 
     # Spread protection — reject if spread > this % of stop distance
     max_spread_to_sl_ratio: float = 0.40
@@ -72,8 +72,8 @@ class Settings(BaseSettings):
     max_position_size: float = 0.0
 
     # M5 scalp signal threshold (default 6, lower = more trades but lower quality)
-    m5_signal_threshold: float = 6.0
-    m5_high_conviction_threshold: float = 9.0
+    m5_signal_threshold: float = 8.0
+    m5_high_conviction_threshold: float = 11.0
 
     # M5 Scalp BTC (separate flag from AUDUSD scalp)
     scalp_btc_enabled: bool = False

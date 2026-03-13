@@ -61,7 +61,7 @@ with open('$DEBOUNCE_FILE', 'w') as f:
 }
 
 # M5 scalp instruments
-SCALP_INSTRUMENTS=("NZDUSD")
+SCALP_INSTRUMENTS=("NZDUSD" "AUDUSD")
 
 # Add BTC if enabled via env flag
 SCALP_BTC_ENABLED=$(grep -E '^scalp_btc_enabled=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- | tr '[:upper:]' '[:lower:]' || true)
@@ -83,8 +83,9 @@ for inst in "${SCALP_INSTRUMENTS[@]}"; do
         continue
     fi
 
-    # Save full JSON
+    # Save full JSON (per-scan archive + per-instrument latest for Telegram)
     echo "$json" > "$JOURNAL_DIR/scalp/scans/${DATE}_${TIMESTAMP##*_}_${inst}.json"
+    echo "$json" > "$JOURNAL_DIR/scalp/latest_scan_${inst}.json"
 
     # Extract fields (|| true prevents pipefail from killing the script)
     price=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('price',{}).get('current',''))" 2>/dev/null || true)
@@ -103,8 +104,8 @@ for inst in "${SCALP_INSTRUMENTS[@]}"; do
     # Check signal threshold (±5)
     if [ -n "$score" ]; then
         abs_score=$(python3 -c "print(abs(float('$score')))" 2>/dev/null || echo "0")
-        M5_THRESHOLD=$(grep -E '^M5_SIGNAL_THRESHOLD=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || echo "6.0")
-        is_signal=$(python3 -c "print('yes' if float('$abs_score') >= float('${M5_THRESHOLD:-6.0}') else 'no')" 2>/dev/null || echo "no")
+        M5_THRESHOLD=$(grep -E '^M5_SIGNAL_THRESHOLD=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || echo "8.0")
+        is_signal=$(python3 -c "print('yes' if float('$abs_score') >= float('${M5_THRESHOLD:-8.0}') else 'no')" 2>/dev/null || echo "no")
 
         if [ "$is_signal" = "yes" ]; then
             signals_found=$((signals_found + 1))

@@ -21,8 +21,8 @@ M5_FACTOR_WEIGHTS = {
 
 M5_MAX_SCORE = sum(2 * w for w in M5_FACTOR_WEIGHTS.values())  # 14
 
-M5_SIGNAL_THRESHOLD = 6  # default; overridden by Settings.m5_signal_threshold
-M5_HIGH_CONVICTION_THRESHOLD = 9  # default; overridden by Settings.m5_high_conviction_threshold
+M5_SIGNAL_THRESHOLD = 8  # default; overridden by Settings.m5_signal_threshold
+M5_HIGH_CONVICTION_THRESHOLD = 11  # default; overridden by Settings.m5_high_conviction_threshold
 
 
 class M5ScalpScoringEngine:

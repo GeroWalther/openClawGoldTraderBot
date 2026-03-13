@@ -90,8 +90,8 @@ async def test_daily_trade_count_limit(settings, db_session):
 
 @pytest.mark.asyncio
 async def test_daily_loss_limit(risk_manager, db_session):
-    # Create a big losing trade today (> 3% of 10000 = $300)
-    await _create_closed_trade(db_session, pnl=-350.0)
+    # Create a big losing trade today (> 6% of 10000 = $600)
+    await _create_closed_trade(db_session, pnl=-650.0)
     ok, reason = await risk_manager.can_trade(db_session, account_balance=10000.0)
     assert ok is False
     assert "Daily loss limit" in reason

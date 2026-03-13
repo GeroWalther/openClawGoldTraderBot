@@ -265,45 +265,52 @@ class TelegramCommandHandler:
         lines: list[str] = ["LAST SIGNALS", "─" * 16]
 
         for label, folder in strategies:
-            scan_file = journal_dir / folder / "latest_scan.json"
-            if not scan_file.exists():
-                continue
+            # Collect scan files: per-instrument files (latest_scan_INST.json)
+            # falling back to single latest_scan.json
+            scan_files = sorted(journal_dir.glob(f"{folder}/latest_scan_*.json"))
+            if not scan_files:
+                single = journal_dir / folder / "latest_scan.json"
+                scan_files = [single] if single.exists() else []
 
-            try:
-                data = json.loads(scan_file.read_text())
-            except Exception:
-                continue
+            for scan_file in scan_files:
+                if not scan_file.exists():
+                    continue
 
-            # File modification time = when the scan ran
-            mtime = datetime.fromtimestamp(scan_file.stat().st_mtime, tz=timezone.utc)
-            age_min = (datetime.now(timezone.utc) - mtime).total_seconds() / 60
+                try:
+                    data = json.loads(scan_file.read_text())
+                except Exception:
+                    continue
 
-            if "error" in data:
-                lines.append(f"\n{label} ({age_min:.0f}m ago)")
-                lines.append(f"  ERROR: {data['error']}")
-                continue
+                # File modification time = when the scan ran
+                mtime = datetime.fromtimestamp(scan_file.stat().st_mtime, tz=timezone.utc)
+                age_min = (datetime.now(timezone.utc) - mtime).total_seconds() / 60
 
-            scoring = data.get("scoring", {})
-            score = scoring.get("total_score", "?")
-            max_score = scoring.get("max_score", "?")
-            direction = scoring.get("direction") or "NO TRADE"
-            conviction = scoring.get("conviction") or "-"
-            price = data.get("price", {}).get("current", "?")
-            instrument = data.get("display_name") or data.get("instrument", "?")
-            session = data.get("session", {}).get("current", "?")
+                if "error" in data:
+                    lines.append(f"\n{label} ({age_min:.0f}m ago)")
+                    lines.append(f"  ERROR: {data['error']}")
+                    continue
 
-            lines.append(f"\n{label} — {instrument} ({age_min:.0f}m ago)")
-            lines.append(f"  Score: {score}/{max_score}")
-            lines.append(f"  Signal: {direction} ({conviction})")
-            lines.append(f"  Price: {price}")
-            lines.append(f"  Session: {session}")
+                scoring = data.get("scoring", {})
+                score = scoring.get("total_score", "?")
+                max_score = scoring.get("max_score", "?")
+                direction = scoring.get("direction") or "NO TRADE"
+                conviction = scoring.get("conviction") or "-"
+                price = data.get("price", {}).get("current", "?")
+                instrument = data.get("display_name") or data.get("instrument", "?")
+                session = data.get("session", {}).get("current", "?")
 
-            # Show scoring factors
-            factors = scoring.get("factors", {})
-            if factors:
-                factor_strs = [f"{k}={v:+.1f}" if isinstance(v, (int, float)) else f"{k}={v}"
-                               for k, v in factors.items()]
-                lines.append(f"  Factors: {', '.join(factor_strs)}")
+                lines.append(f"\n{label} — {instrument} ({age_min:.0f}m ago)")
+                lines.append(f"  Score: {score}/{max_score}")
+                lines.append(f"  Signal: {direction} ({conviction})")
+                lines.append(f"  Price: {price}")
+                lines.append(f"  Session: {session}")
+
+                # Show scoring factors
+                factors = scoring.get("factors", {})
+                if factors:
+                    factor_strs = [f"{k}={v:+.1f}" if isinstance(v, (int, float)) else f"{k}={v}"
+                                   for k, v in factors.items()]
+                    lines.append(f"  Factors: {', '.join(factor_strs)}")
 
         if len(lines) == 2:
             lines.append("\nNo scan data found")

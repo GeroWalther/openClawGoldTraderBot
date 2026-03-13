@@ -205,6 +205,11 @@ for pos in open_positions:
     if pos_inst == inst:
         continue  # Same instrument check is handled by has_open_position
 
+    # Allow NZDUSD + AUDUSD to run simultaneously (dual-pair scalp setup)
+    dual_scalp_pairs = {'NZDUSD', 'AUDUSD'}
+    if inst in dual_scalp_pairs and pos_inst in dual_scalp_pairs:
+        continue
+
     # Check same correlation group
     for group_name, members in CORRELATION_GROUPS.items():
         if pos_inst in members and group_name in inst_groups:
@@ -369,7 +374,7 @@ if timeframe == 'm5':
         MIN_STOP_M5 = {'BTC': 250.0, 'XAUUSD': 3.0, 'AUDUSD': 0.0005, 'NZDUSD': 0.0005, 'EURUSD': 0.0005, 'GBPUSD': 0.0005}
         min_sd = MIN_STOP_M5.get(inst, 0)
         digits = 5 if inst in ('AUDUSD','NZDUSD','EURUSD','GBPUSD') else 2
-        sd = round(max(m5_atr * 1.0, min_sd), digits)
+        sd = round(max(m5_atr * 2.0, min_sd), digits)
         payload['stop_distance'] = sd
         payload['order_type'] = 'MARKET'
         print(json.dumps(payload))
