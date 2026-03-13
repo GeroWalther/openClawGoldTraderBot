@@ -1,12 +1,16 @@
 import asyncio
 import logging
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 
 from fastapi import FastAPI
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from app.config import Settings
+from app.instruments import INSTRUMENTS
 from app.models.database import Base
+from app.models.trade import Trade, TradeStatus
 from app.services.atr_calculator import ATRCalculator
 from app.services.ibkr_client import IBKRClient
 from app.services.icmarkets_client import ICMarketsClient
@@ -97,6 +101,15 @@ async def lifespan(app: FastAPI):
         logger.exception("Failed to start Telegram command handler")
         telegram_handler = None
 
+    # Reconcile orphaned positions on startup
+    await _reconcile_positions(
+        ibkr_client=ibkr_client,
+        icm_client=icm_client,
+        session_factory=app.state.async_session,
+        ibkr_connected=app.state.ibkr_connected,
+        icm_connected=app.state.icm_connected,
+    )
+
     logger.info(
         "Trader Bot v4 started (IBKR %s:%s, connected=%s)",
         settings.ibkr_host,
@@ -119,6 +132,83 @@ async def lifespan(app: FastAPI):
     await icm_client.disconnect()
     await engine.dispose()
     logger.info("Trader Bot shut down")
+
+
+async def _reconcile_positions(
+    ibkr_client: IBKRClient,
+    icm_client: ICMarketsClient,
+    session_factory: async_sessionmaker,
+    ibkr_connected: bool,
+    icm_connected: bool,
+):
+    """Reconcile broker positions with DB on startup.
+
+    Finds positions on brokers that have no matching EXECUTED trade in the DB
+    and creates placeholder trades so the TradeCloseMonitor can track them.
+    """
+    broker_positions: list[dict] = []
+
+    if ibkr_connected:
+        try:
+            for pos in await ibkr_client.get_open_positions():
+                pos["_broker"] = "ibkr"
+                broker_positions.append(pos)
+        except Exception:
+            logger.warning("Reconciliation: failed to fetch IBKR positions")
+
+    if icm_connected:
+        try:
+            for pos in await icm_client.get_open_positions():
+                pos["_broker"] = "icmarkets"
+                broker_positions.append(pos)
+        except Exception:
+            logger.warning("Reconciliation: failed to fetch IC Markets positions")
+
+    if not broker_positions:
+        return
+
+    async with session_factory() as session:
+        result = await session.execute(
+            select(Trade).where(Trade.status == TradeStatus.EXECUTED)
+        )
+        db_trades = result.scalars().all()
+        # Build set of (epic, direction) from DB
+        db_keys = {(t.epic, t.direction) for t in db_trades}
+
+        reconciled = 0
+        for pos in broker_positions:
+            inst = pos.get("instrument", pos.get("contract", ""))
+            direction = pos.get("direction", "")
+            if not inst or not direction:
+                continue
+            if (inst, direction) in db_keys:
+                continue  # Already tracked
+
+            entry_price = pos.get("avg_cost", 0.0)
+            size = abs(pos.get("size", 0))
+
+            trade = Trade(
+                direction=direction,
+                epic=inst,
+                size=size,
+                entry_price=entry_price,
+                status=TradeStatus.EXECUTED,
+                source="reconciliation",
+                strategy="orphaned",
+                broker=pos["_broker"],
+                claude_reasoning=f"Orphaned position found on {pos['_broker']} at startup",
+                created_at=datetime.now(timezone.utc),
+            )
+            session.add(trade)
+            reconciled += 1
+            logger.warning(
+                "Reconciled orphaned position: %s %s %.4f @ %.5f on %s",
+                direction, inst, size, entry_price, pos["_broker"],
+            )
+
+        if reconciled:
+            await session.commit()
+            logger.info("Reconciliation complete: %d orphaned position(s) added to DB", reconciled)
 
 
 app = FastAPI(title="Trader Bot", version="4.0.0", lifespan=lifespan)

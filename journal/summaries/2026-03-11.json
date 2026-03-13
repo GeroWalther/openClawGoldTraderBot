@@ -1,0 +1,19 @@
+{
+  "date": "2026-03-11",
+  "account_balance": "149.5",
+  "daily_pnl": -4.34,
+  "trades_closed": 4,
+  "wins": 1,
+  "losses": 3,
+  "win_rate": 25.0,
+  "open_positions": 1,
+  "unrealized_pnl": -0.04,
+  "pending_orders": 0,
+  "intraday_signals": 0,
+  "swing_signals": 0,
+  "scalp_signals": 10,
+  "total_analyses": 10,
+  "intraday_scans": 0,
+  "swing_scans": 0,
+  "scalp_scans": 158
+}

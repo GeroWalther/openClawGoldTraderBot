@@ -101,7 +101,7 @@ if $i < len(items):
                     log "SWING $inst: SKIP trade — $corr_reason with open $corr_inst"
                 else
                     # Extract per-instrument JSON for S/R level computation
-                    inst_json=$(echo "$json" | python3 -c "import sys,json; print(json.dumps(json.load(sys.stdin).get('instruments',[])[$i]))" 2>/dev/null)
+                    inst_json=$(echo "$json" | python3 -c "import sys,json; print(json.dumps(json.load(sys.stdin).get('instruments',[])[$i]))" 2>/dev/null || true)
                     payload=$(echo "$inst_json" | build_trade_payload \
                         "$direction" "$inst" "$conviction" "cron_swing" \
                         "Auto swing: score $score/$max_score, conviction $conviction" \

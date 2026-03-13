@@ -21,12 +21,16 @@ M5_FACTOR_WEIGHTS = {
 
 M5_MAX_SCORE = sum(2 * w for w in M5_FACTOR_WEIGHTS.values())  # 14
 
-M5_SIGNAL_THRESHOLD = 6
-M5_HIGH_CONVICTION_THRESHOLD = 9
+M5_SIGNAL_THRESHOLD = 6  # default; overridden by Settings.m5_signal_threshold
+M5_HIGH_CONVICTION_THRESHOLD = 9  # default; overridden by Settings.m5_high_conviction_threshold
 
 
 class M5ScalpScoringEngine:
     """4-factor scoring engine for M5 scalp trades."""
+
+    def __init__(self, signal_threshold: float | None = None, high_conviction_threshold: float | None = None):
+        self.signal_threshold = signal_threshold if signal_threshold is not None else M5_SIGNAL_THRESHOLD
+        self.high_conviction_threshold = high_conviction_threshold if high_conviction_threshold is not None else M5_HIGH_CONVICTION_THRESHOLD
 
     def score(
         self,
@@ -81,17 +85,17 @@ class M5ScalpScoringEngine:
 
         total_score = round(total_score * session_mult, 2)
 
-        if total_score >= M5_SIGNAL_THRESHOLD:
+        if total_score >= self.signal_threshold:
             direction = "BUY"
-        elif total_score <= -M5_SIGNAL_THRESHOLD:
+        elif total_score <= -self.signal_threshold:
             direction = "SELL"
         else:
             direction = None
 
         abs_score = abs(total_score)
-        if abs_score >= M5_HIGH_CONVICTION_THRESHOLD:
+        if abs_score >= self.high_conviction_threshold:
             conviction = "HIGH"
-        elif abs_score >= M5_SIGNAL_THRESHOLD:
+        elif abs_score >= self.signal_threshold:
             conviction = "MEDIUM"
         else:
             conviction = None

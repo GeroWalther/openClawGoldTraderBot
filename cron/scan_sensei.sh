@@ -5,7 +5,7 @@
 source "$(dirname "$0")/common.sh"
 
 # --- Feature flag check ---
-SENSEI_ENABLED=$(grep -E '^sensei_btc_enabled=' "$ENV_FILE" | cut -d= -f2- | tr '[:upper:]' '[:lower:]')
+SENSEI_ENABLED=$(grep -E '^sensei_btc_enabled=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- | tr '[:upper:]' '[:lower:]' || true)
 if [ "$SENSEI_ENABLED" != "true" ]; then
     log "M15_SENSEI: Feature flag disabled (sensei_btc_enabled=$SENSEI_ENABLED), exiting"
     exit 0
@@ -82,17 +82,17 @@ for inst in "${SENSEI_INSTRUMENTS[@]}"; do
     # Save full JSON
     echo "$json" > "$JOURNAL_DIR/sensei/scans/${DATE}_${TIMESTAMP##*_}_${inst}.json"
 
-    # Extract fields
-    price=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('price',{}).get('current',''))" 2>/dev/null)
-    score=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('total_score',''))" 2>/dev/null)
-    max_score=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('max_score',''))" 2>/dev/null)
-    direction=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('direction','') or '')" 2>/dev/null)
-    conviction=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('conviction','') or '')" 2>/dev/null)
-    consol=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('factors',{}).get('consolidation_quality',''))" 2>/dev/null)
-    pattern=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('factors',{}).get('pattern_quality',''))" 2>/dev/null)
-    sma20_cross=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('factors',{}).get('sma20_cross',''))" 2>/dev/null)
-    trend=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('factors',{}).get('trend_alignment',''))" 2>/dev/null)
-    rsi=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('factors',{}).get('rsi_confirmation',''))" 2>/dev/null)
+    # Extract fields (|| true prevents pipefail from killing the script)
+    price=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('price',{}).get('current',''))" 2>/dev/null || true)
+    score=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('total_score',''))" 2>/dev/null || true)
+    max_score=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('max_score',''))" 2>/dev/null || true)
+    direction=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('direction','') or '')" 2>/dev/null || true)
+    conviction=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('conviction','') or '')" 2>/dev/null || true)
+    consol=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('factors',{}).get('consolidation_quality',''))" 2>/dev/null || true)
+    pattern=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('factors',{}).get('pattern_quality',''))" 2>/dev/null || true)
+    sma20_cross=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('factors',{}).get('sma20_cross',''))" 2>/dev/null || true)
+    trend=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('factors',{}).get('trend_alignment',''))" 2>/dev/null || true)
+    rsi=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('factors',{}).get('rsi_confirmation',''))" 2>/dev/null || true)
 
     # Append CSV row
     echo "${TIMESTAMP},${inst},${price},${score},${max_score},${direction},${conviction},${consol},${pattern},${sma20_cross},${trend},${rsi}" >> "$CSV_FILE"

@@ -59,12 +59,23 @@ async def test_forex_rounds_to_nearest_1000(settings):
 
 
 @pytest.mark.asyncio
-async def test_forex_small_balance_returns_min(settings):
+async def test_forex_small_balance_returns_zero(settings):
     sizer = PositionSizer(settings)
     instrument = get_instrument("EURUSD")
     # 3% of 100 = 3. 3 / 0.005 = 600 → rounds to 1000, but min=20000
+    # Margin for 20000 EURUSD at 1:30 ≈ $667 > 80% of $100 → returns 0 (insufficient)
     size = await sizer.calculate(account_balance=100, stop_distance=0.005, instrument=instrument)
-    assert size == 20000.0
+    assert size == 0.0
+
+
+@pytest.mark.asyncio
+async def test_forex_adequate_balance_returns_min(settings):
+    sizer = PositionSizer(settings)
+    instrument = get_instrument("NZDUSD")
+    # 3% of 50 = 1.5. 1.5 / 0.003 = 500 → rounds to 1000 (min_size).
+    # Margin for 1000 NZDUSD at 1:30 ≈ $33 < 80% of $50 → allowed
+    size = await sizer.calculate(account_balance=50, stop_distance=0.003, instrument=instrument)
+    assert size == 1000.0
 
 
 @pytest.mark.asyncio

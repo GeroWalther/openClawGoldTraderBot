@@ -36,16 +36,16 @@ for inst in "${INSTRUMENTS[@]}"; do
     # Save full JSON
     echo "$json" > "$JOURNAL_DIR/intraday/scans/${DATE}_${TIMESTAMP##*_}_${inst}.json"
 
-    # Extract fields
-    price=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('price',{}).get('current',''))" 2>/dev/null)
-    score=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('total_score',''))" 2>/dev/null)
-    max_score=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('max_score',''))" 2>/dev/null)
-    direction=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('direction','') or '')" 2>/dev/null)
-    conviction=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('conviction','') or '')" 2>/dev/null)
-    h1_trend=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('technicals',{}).get('h1',{}).get('trend',''))" 2>/dev/null)
-    h1_rsi=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('technicals',{}).get('h1',{}).get('rsi',''))" 2>/dev/null)
-    m15_rsi=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('technicals',{}).get('m15',{}).get('rsi',''))" 2>/dev/null)
-    session_quality=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('factors',{}).get('session_quality',''))" 2>/dev/null)
+    # Extract fields (|| true prevents pipefail from killing the script)
+    price=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('price',{}).get('current',''))" 2>/dev/null || true)
+    score=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('total_score',''))" 2>/dev/null || true)
+    max_score=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('max_score',''))" 2>/dev/null || true)
+    direction=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('direction','') or '')" 2>/dev/null || true)
+    conviction=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('conviction','') or '')" 2>/dev/null || true)
+    h1_trend=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('technicals',{}).get('h1',{}).get('trend',''))" 2>/dev/null || true)
+    h1_rsi=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('technicals',{}).get('h1',{}).get('rsi',''))" 2>/dev/null || true)
+    m15_rsi=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('technicals',{}).get('m15',{}).get('rsi',''))" 2>/dev/null || true)
+    session_quality=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('factors',{}).get('session_quality',''))" 2>/dev/null || true)
 
     # Append CSV row
     echo "${TIMESTAMP},${inst},${price},${score},${max_score},${direction},${conviction},${h1_trend},${h1_rsi},${m15_rsi},${session_quality}" >> "$CSV_FILE"

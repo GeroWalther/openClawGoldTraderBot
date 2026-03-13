@@ -40,7 +40,7 @@ echo "$json" > "$JOURNAL_DIR/latest_monitor.json"
 OPEN_INSTRUMENTS=""
 
 # Process each position
-echo "$json" | python3 -c "
+_POSITION_LINES=$(echo "$json" | python3 -c "
 import sys, json
 
 d = json.load(sys.stdin)
@@ -55,10 +55,21 @@ for t in recent_trades:
     if key not in trade_lookup:
         trade_lookup[key] = t
 
-# Output position data for bash processing
+# Deduplicate positions by instrument+direction (aggregate size/pnl, keep first entry)
+merged = {}
 for p in positions:
     inst = p.get('instrument', p.get('contract', ''))
     direction = p.get('direction', p.get('side', ''))
+    key = (inst, direction)
+    if key not in merged:
+        merged[key] = dict(p)
+    else:
+        m = merged[key]
+        m['size'] = m.get('size', 0) + p.get('size', p.get('quantity', 0))
+        m['unrealized_pnl'] = (m.get('unrealized_pnl', m.get('pnl', 0)) or 0) + (p.get('unrealized_pnl', p.get('pnl', 0)) or 0)
+
+# Output position data for bash processing
+for (inst, direction), p in merged.items():
     size = p.get('size', p.get('quantity', 0))
     entry = p.get('entry_price', p.get('avg_cost', 0))
     current = p.get('current_price', p.get('market_price', 0))
@@ -66,23 +77,19 @@ for p in positions:
     sl = p.get('stop_loss', 0) or 0
     tp = p.get('take_profit', 0) or 0
 
-    # Check if this is a runner position:
-    # 1. No TP order (TP1 already filled, no TP2)
-    # 2. Matching trade has strategy == 'm5_scalp'
+    # Check if this is a ratchet position (m5_scalp with no TP)
     matching_trade = trade_lookup.get((inst, direction))
-    is_runner = False
+    is_ratchet = False
     stop_distance = 0
     if matching_trade:
         strategy = matching_trade.get('strategy', '')
         trade_tp = matching_trade.get('take_profit')
         stop_distance = matching_trade.get('stop_distance', 0) or 0
-        # Runner: m5_scalp with no TP2 in DB, and no TP order on position
-        if strategy == 'm5_scalp' and (trade_tp is None or trade_tp == 0) and (tp == 0):
-            is_runner = True
+        if strategy == 'm5_scalp' and (trade_tp is None or trade_tp == 0):
+            is_ratchet = True
 
-    if is_runner:
-        # Output runner line with stop_distance as extra field
-        print(f'{inst}|{direction}|{size}|{entry}|{current}|{pnl}|{sl}|{tp}|0.0|runner_trail|{stop_distance}')
+    if is_ratchet:
+        print(f'{inst}|{direction}|{size}|{entry}|{current}|{pnl}|{sl}|{tp}|0.0|ratchet_trail|{stop_distance}')
         continue
 
     # Calculate % to TP and % to SL
@@ -122,7 +129,10 @@ for o in pending:
     osource = o.get('source', '')
     ocreated = o.get('created_at', '')
     print(f'PENDING|{oinst}|{odir}|{osource}|{ocreated}|||||0.0|pending|0')
-" 2>/dev/null | while IFS='|' read -r inst direction size entry current pnl sl tp pct_to_tp action stop_dist; do
+" 2>/dev/null
+)
+
+while IFS='|' read -r inst direction size entry current pnl sl tp pct_to_tp action stop_dist; do
     if [ -z "$inst" ]; then
         continue
     fi
@@ -184,137 +194,102 @@ print(json.dumps({'instrument': '$p_inst', 'direction': '$p_dir'}))
     log "MONITOR $inst: dir=$direction pnl=$pnl pct_to_tp=${pct_to_tp}% action=$action"
 
     # Act on signals
-    if [ "$action" = "runner_trail" ]; then
-        # Runner position: trail SL at 1R behind peak price
-        state_file="$JOURNAL_DIR/monitors/runner_${inst}_${direction}.json"
-
-        # Fetch current M5 ATR for trail distance (1 ATR behind peak)
-        runner_atr=$(api_get "/api/v1/technicals/${inst}/m5scalp" | python3 -c "
-import sys, json
-d = json.load(sys.stdin)
-atr = d.get('technicals', {}).get('m5', {}).get('atr', 0) or 0
-print(f'{float(atr):.2f}')
-" 2>/dev/null || echo "0")
+    if [ "$action" = "ratchet_trail" ]; then
+        # Ratchet SL: tighten by 0.5×sl_dist each time price moves 1R in profit
+        state_file="$JOURNAL_DIR/monitors/ratchet_${inst}_${direction}.json"
 
         if [ ! -f "$state_file" ]; then
-            # First detection: move SL to breakeven + resize SL quantity
-            log "MONITOR $inst: Runner first detection — SL to BE + resize to $size (ATR=$runner_atr)"
-            runner_payload=$(python3 -c "
+            # First detection: create state file, no SL move yet
+            log "MONITOR $inst: Ratchet init — sl_dist=$stop_dist entry=$entry"
+            python3 -c "
 import json
-print(json.dumps({
-    'instrument': '$inst',
-    'direction': '$direction',
-    'new_stop_loss': float('$entry'),
-    'new_sl_quantity': abs(float('$size')),
-    'reasoning': 'Runner: TP1 filled, SL to breakeven + resize'
-}))
-" 2>/dev/null || echo "")
-            if [ -n "$runner_payload" ]; then
-                runner_result=$(api_post "/api/v1/positions/modify" "$runner_payload" 2>&1) || true
-                runner_status=$(echo "$runner_result" | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','UNKNOWN'))" 2>/dev/null || echo "UNKNOWN")
-                log "MONITOR $inst: Runner init result=$runner_status"
-                if [ "$runner_status" = "modified" ]; then
-                    # Create state file with current ATR as trail distance
-                    python3 -c "
-import json
-atr = float('$runner_atr')
-# Use current M5 ATR for trailing, fall back to stop_distance if ATR unavailable
-trail_dist = atr if atr > 0 else float('$stop_dist')
 state = {
     'instrument': '$inst',
     'direction': '$direction',
     'entry_price': float('$entry'),
-    'r_distance': trail_dist,
-    'peak_price': float('$current'),
-    'sl_adjusted': True
+    'sl_dist': float('$stop_dist'),
+    'last_ratchet_level': 0
 }
 with open('$state_file', 'w') as f:
     json.dump(state, f, indent=2)
 " 2>/dev/null
-                    send_telegram "🏃 Runner active for *$inst* $direction — SL moved to breakeven, trail=1 ATR ($runner_atr)"
-                fi
-            fi
+            log "MONITOR $inst: Ratchet state file created"
         else
-            # Subsequent run: update ATR + peak + trail SL (never move SL back)
+            # Subsequent run: check if price moved another R, tighten SL
             trail_result=$(python3 -c "
-import json, sys
+import json, sys, math
 
 with open('$state_file') as f:
     state = json.load(f)
 
 direction = state['direction']
-peak_price = state['peak_price']
 entry_price = state['entry_price']
+sl_dist = state['sl_dist']
+last_level = state.get('last_ratchet_level', 0)
 current = float('$current')
-current_sl = float('$sl') if float('$sl') != 0 else entry_price
+current_sl = float('$sl') if float('$sl') != 0 else (entry_price - sl_dist if direction == 'BUY' else entry_price + sl_dist)
 
-# Use current M5 ATR for trail distance (adapts to volatility)
-atr = float('$runner_atr')
-r_distance = atr if atr > 0 else state['r_distance']
+if sl_dist <= 0:
+    print('ERROR')
+    sys.exit()
 
-# Update peak
+# Calculate current profit in R-multiples
 if direction == 'BUY':
-    peak_price = max(peak_price, current)
+    profit_r = (current - entry_price) / sl_dist
 else:
-    peak_price = min(peak_price, current)
+    profit_r = (entry_price - current) / sl_dist
 
-# Calculate trailing SL (1 ATR behind peak, never move back)
-if direction == 'BUY':
-    new_sl = max(entry_price, peak_price - r_distance)
-    should_move = new_sl > current_sl
-else:
-    new_sl = min(entry_price, peak_price + r_distance)
-    should_move = new_sl < current_sl
+# Ratchet level = floor of profit R (only positive)
+ratchet_level = max(0, int(math.floor(profit_r)))
 
-# Calculate profit in R-multiples (using original stop_distance for R calc)
-orig_r = state['r_distance']
-if orig_r > 0:
+# Calculate new SL: entry + ratchet_level × 0.5 × sl_dist
+if ratchet_level > last_level and ratchet_level >= 1:
     if direction == 'BUY':
-        profit_r = (new_sl - entry_price) / orig_r
+        new_sl = entry_price + ratchet_level * 0.5 * sl_dist
+        should_move = new_sl > current_sl
     else:
-        profit_r = (entry_price - new_sl) / orig_r
-else:
-    profit_r = 0
+        new_sl = entry_price - ratchet_level * 0.5 * sl_dist
+        should_move = new_sl < current_sl
 
-# Update state file with current ATR and peak
-state['peak_price'] = peak_price
-state['r_distance'] = r_distance
-with open('$state_file', 'w') as f:
-    json.dump(state, f, indent=2)
-
-if should_move:
-    print(f'TRAIL|{new_sl:.2f}|{peak_price:.2f}|{profit_r:.1f}|{r_distance:.0f}')
+    if should_move and abs(new_sl - current_sl) > 1e-7:
+        state['last_ratchet_level'] = ratchet_level
+        with open('$state_file', 'w') as f:
+            json.dump(state, f, indent=2)
+        locked_r = ratchet_level * 0.5
+        print(f'TRAIL|{new_sl:.6f}|{ratchet_level}|{locked_r:.1f}|{profit_r:.1f}')
+    else:
+        print(f'HOLD|{current_sl:.6f}|{last_level}|{last_level * 0.5:.1f}|{profit_r:.1f}')
 else:
-    print(f'HOLD|{current_sl:.2f}|{peak_price:.2f}|{profit_r:.1f}|{r_distance:.0f}')
+    print(f'HOLD|{current_sl:.6f}|{last_level}|{last_level * 0.5:.1f}|{profit_r:.1f}')
 " 2>/dev/null || echo "ERROR")
 
             trail_action=$(echo "$trail_result" | cut -d'|' -f1)
             trail_new_sl=$(echo "$trail_result" | cut -d'|' -f2)
-            trail_peak=$(echo "$trail_result" | cut -d'|' -f3)
-            trail_profit_r=$(echo "$trail_result" | cut -d'|' -f4)
-            trail_atr=$(echo "$trail_result" | cut -d'|' -f5)
+            trail_level=$(echo "$trail_result" | cut -d'|' -f3)
+            trail_locked_r=$(echo "$trail_result" | cut -d'|' -f4)
+            trail_profit_r=$(echo "$trail_result" | cut -d'|' -f5)
 
             if [ "$trail_action" = "TRAIL" ]; then
-                log "MONITOR $inst: Runner trailing SL to $trail_new_sl (peak=$trail_peak, ATR=$trail_atr, locking ${trail_profit_r}R)"
+                log "MONITOR $inst: Ratchet SL to $trail_new_sl (${trail_level}R reached, locking ${trail_locked_r}R, current ${trail_profit_r}R)"
                 trail_payload=$(python3 -c "
 import json
 print(json.dumps({
     'instrument': '$inst',
     'direction': '$direction',
     'new_stop_loss': float('$trail_new_sl'),
-    'reasoning': 'Runner trail: peak=$trail_peak, 1 ATR=$trail_atr, locking ${trail_profit_r}R'
+    'reasoning': 'Ratchet: ${trail_level}R reached, locking ${trail_locked_r}R profit'
 }))
 " 2>/dev/null || echo "")
                 if [ -n "$trail_payload" ]; then
                     modify_result=$(api_post "/api/v1/positions/modify" "$trail_payload" 2>&1) || true
                     modify_status=$(echo "$modify_result" | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','UNKNOWN'))" 2>/dev/null || echo "UNKNOWN")
-                    log "MONITOR $inst: Runner trail result=$modify_status"
+                    log "MONITOR $inst: Ratchet result=$modify_status"
                     if [ "$modify_status" = "modified" ]; then
-                        send_telegram "🏃 Runner *$inst*: SL trailed to $trail_new_sl (peak $trail_peak, 1ATR=$trail_atr, ${trail_profit_r}R locked)"
+                        send_telegram "📈 Ratchet *$inst*: SL moved to $trail_new_sl (${trail_level}R hit, locking ${trail_locked_r}R profit)"
                     fi
                 fi
             else
-                log "MONITOR $inst: Runner holding (SL=$trail_new_sl, peak=$trail_peak, ATR=$trail_atr, ${trail_profit_r}R)"
+                log "MONITOR $inst: Ratchet holding (SL=$trail_new_sl, level=${trail_level}R, locked=${trail_locked_r}R, current=${trail_profit_r}R)"
             fi
         fi
     elif [ "$action" = "trail_sl" ]; then
@@ -329,7 +304,7 @@ if direction in ('BUY', 'LONG'):
 else:
     profit = entry - current
     new_sl = entry - profit * 0.5
-print(f'{new_sl:.2f}')
+print(f'{new_sl:.6f}')
 " 2>/dev/null || echo "")
         if [ -n "$trail_level" ]; then
             # Only trail if new SL is better than current SL
@@ -392,18 +367,22 @@ print(json.dumps({
         log "MONITOR $inst: >70% toward SL — sending alert"
         send_telegram "⚠️ *$inst* $direction position near SL — PnL: $pnl, ${pct_to_tp}% to TP"
     fi
-done
+done <<< "$_POSITION_LINES"
 
-# Cleanup stale runner state files for positions that no longer exist
-for state_file in "$JOURNAL_DIR"/monitors/runner_*.json; do
+# Cleanup stale ratchet state files for positions that no longer exist
+for state_file in "$JOURNAL_DIR"/monitors/ratchet_*.json; do
     [ -f "$state_file" ] || continue
-    # Extract instrument_direction from filename: runner_BTC_BUY.json -> BTC_BUY
     basename=$(basename "$state_file" .json)
-    inst_dir="${basename#runner_}"
+    inst_dir="${basename#ratchet_}"
     if ! echo "$OPEN_INSTRUMENTS" | grep -q "$inst_dir"; then
-        log "MONITOR: Cleaning up stale runner state: $basename"
+        log "MONITOR: Cleaning up stale ratchet state: $basename"
         rm -f "$state_file"
     fi
+done
+# Also clean up old runner state files
+for state_file in "$JOURNAL_DIR"/monitors/runner_*.json; do
+    [ -f "$state_file" ] || continue
+    rm -f "$state_file"
 done
 
 log "MONITOR done"

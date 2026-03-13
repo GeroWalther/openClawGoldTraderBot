@@ -21,7 +21,7 @@ signals_found=0
 # --- Same-direction debounce (defense-in-depth, matches backtest 12-bar debounce) ---
 DEBOUNCE_DIR="$JOURNAL_DIR/scalp"
 DEBOUNCE_FILE="$DEBOUNCE_DIR/last_trade.json"
-DEBOUNCE_MINUTES=60  # skip same direction within 60 min
+DEBOUNCE_MINUTES=0  # disabled for testing
 
 check_debounce() {
     local inst="$1"
@@ -64,12 +64,19 @@ with open('$DEBOUNCE_FILE', 'w') as f:
 SCALP_INSTRUMENTS=("NZDUSD")
 
 # Add BTC if enabled via env flag
-SCALP_BTC_ENABLED=$(grep -E '^scalp_btc_enabled=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- | tr '[:upper:]' '[:lower:]')
+SCALP_BTC_ENABLED=$(grep -E '^scalp_btc_enabled=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- | tr '[:upper:]' '[:lower:]' || true)
 if [ "$SCALP_BTC_ENABLED" = "true" ]; then
     SCALP_INSTRUMENTS+=("BTC")
 fi
 
 for inst in "${SCALP_INSTRUMENTS[@]}"; do
+    # Skip entire scan if we already have an open position for this instrument
+    open=$(has_open_position "$inst")
+    if [ "$open" = "yes" ]; then
+        log "M5_SCALP $inst: SKIP scan — already has open position"
+        continue
+    fi
+
     json=$(api_get "/api/v1/technicals/${inst}/m5scalp")
     if [ -z "$json" ]; then
         log "M5_SCALP: Failed to fetch $inst"
@@ -79,14 +86,14 @@ for inst in "${SCALP_INSTRUMENTS[@]}"; do
     # Save full JSON
     echo "$json" > "$JOURNAL_DIR/scalp/scans/${DATE}_${TIMESTAMP##*_}_${inst}.json"
 
-    # Extract fields
-    price=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('price',{}).get('current',''))" 2>/dev/null)
-    score=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('total_score',''))" 2>/dev/null)
-    max_score=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('max_score',''))" 2>/dev/null)
-    direction=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('direction','') or '')" 2>/dev/null)
-    conviction=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('conviction','') or '')" 2>/dev/null)
-    h1_trend=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('technicals',{}).get('h1',{}).get('trend',''))" 2>/dev/null)
-    session_quality=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('factors',{}).get('session_quality',''))" 2>/dev/null)
+    # Extract fields (|| true prevents pipefail from killing the script)
+    price=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('price',{}).get('current',''))" 2>/dev/null || true)
+    score=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('total_score',''))" 2>/dev/null || true)
+    max_score=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('max_score',''))" 2>/dev/null || true)
+    direction=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('direction','') or '')" 2>/dev/null || true)
+    conviction=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('conviction','') or '')" 2>/dev/null || true)
+    h1_trend=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('technicals',{}).get('h1',{}).get('trend',''))" 2>/dev/null || true)
+    session_quality=$(echo "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('scoring',{}).get('factors',{}).get('session_quality',''))" 2>/dev/null || true)
 
     # Append CSV row
     echo "${TIMESTAMP},${inst},${price},${score},${max_score},${direction},${conviction},${h1_trend},,,${session_quality}" >> "$CSV_FILE"
@@ -96,7 +103,8 @@ for inst in "${SCALP_INSTRUMENTS[@]}"; do
     # Check signal threshold (±5)
     if [ -n "$score" ]; then
         abs_score=$(python3 -c "print(abs(float('$score')))" 2>/dev/null || echo "0")
-        is_signal=$(python3 -c "print('yes' if float('$abs_score') >= 6.0 else 'no')" 2>/dev/null || echo "no")
+        M5_THRESHOLD=$(grep -E '^M5_SIGNAL_THRESHOLD=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || echo "6.0")
+        is_signal=$(python3 -c "print('yes' if float('$abs_score') >= float('${M5_THRESHOLD:-6.0}') else 'no')" 2>/dev/null || echo "no")
 
         if [ "$is_signal" = "yes" ]; then
             signals_found=$((signals_found + 1))
@@ -115,12 +123,6 @@ for inst in "${SCALP_INSTRUMENTS[@]}"; do
 
             # Auto-trade: M5 scalp, MEDIUM+HIGH conviction
             if ([ "$conviction" = "MEDIUM" ] || [ "$conviction" = "HIGH" ]) && ([ "$inst" = "NZDUSD" ] || [ "$inst" = "BTC" ]); then
-                open=$(has_open_position "$inst")
-                if [ "$open" = "yes" ]; then
-                    log "M5_SCALP $inst: SKIP trade — already has open position/order"
-                    continue
-                fi
-
                 # Same-direction debounce (defense-in-depth)
                 if ! check_debounce "$inst" "$direction"; then
                     debounce_info=$(check_debounce "$inst" "$direction" 2>&1 || true)
@@ -152,6 +154,11 @@ for inst in "${SCALP_INSTRUMENTS[@]}"; do
                             if [ "$trade_status" != "rejected" ] && [ "$trade_status" != "UNKNOWN" ]; then
                                 write_debounce "$inst" "$direction"
                             fi
+                            # Debounce on margin errors to prevent retry spam
+                            if echo "$trade_msg" | grep -qi "NOT_ENOUGH_MONEY\|Insufficient balance"; then
+                                log "M5_SCALP $inst: Margin insufficient — writing debounce to prevent retry"
+                                write_debounce "$inst" "$direction"
+                            fi
                         else
                             log "M5_SCALP $inst: Trade FAILED — no response from bot"
                         fi
@@ -163,6 +170,6 @@ for inst in "${SCALP_INSTRUMENTS[@]}"; do
 done
 
 # Save latest scan
-echo "$json" > "$JOURNAL_DIR/scalp/latest_scan.json" 2>/dev/null || true
+[ -n "${json:-}" ] && echo "$json" > "$JOURNAL_DIR/scalp/latest_scan.json" 2>/dev/null || true
 
 log "M5 SCALP SCAN done — $signals_found signal(s) found"

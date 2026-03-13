@@ -68,6 +68,13 @@ class Settings(BaseSettings):
     icm_host: str = "live.ctraderapi.com"
     icm_port: int = 5035
 
+    # Max position size cap (0 = no cap, uses risk-based sizing only)
+    max_position_size: float = 0.0
+
+    # M5 scalp signal threshold (default 6, lower = more trades but lower quality)
+    m5_signal_threshold: float = 6.0
+    m5_high_conviction_threshold: float = 9.0
+
     # M5 Scalp BTC (separate flag from AUDUSD scalp)
     scalp_btc_enabled: bool = False
 

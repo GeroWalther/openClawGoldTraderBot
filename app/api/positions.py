@@ -1,5 +1,7 @@
 import logging
+import os
 from datetime import datetime, timezone
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from sqlalchemy import select
@@ -129,9 +131,10 @@ async def close_position(
         close_price = result.get("fillPrice")
         status = "closed" if result.get("status") == "Filled" else result.get("status", "unknown")
 
-        # Calculate P&L (multiply by instrument multiplier)
-        pnl = None
-        if close_price and position["avg_cost"]:
+        # Use broker-reported P&L (in account currency, includes swap/commission)
+        pnl = result.get("pnl")
+        if pnl is None and close_price and position["avg_cost"]:
+            # Fallback: calculate from price difference
             if request.direction == "BUY":
                 pnl = (close_price - position["avg_cost"]) * close_size * instrument.multiplier
             else:
@@ -154,14 +157,21 @@ async def close_position(
             trade.closed_at = datetime.now(timezone.utc)
             await db_session.commit()
 
+        # Clean up ratchet state file for this position
+        ratchet_file = Path(os.environ.get("JOURNAL_DIR", "/app/journal")) / "monitors" / f"ratchet_{instrument.key}_{request.direction}.json"
+        ratchet_file.unlink(missing_ok=True)
+
         # Notify via Telegram
         notifier = TelegramNotifier(settings)
-        pnl_str = f"${pnl:+.2f}" if pnl is not None else "N/A"
+        pnl_str = f"{pnl:+.2f}€" if pnl is not None else "N/A"
+        tick = instrument.tick_size
+        decimals = max(2, len(f"{tick:.10f}".rstrip("0").split(".")[1]))
+        cp_str = f"{close_price:.{decimals}f}" if close_price else "N/A"
         await notifier.send_message(
             f"Position CLOSED — {instrument.display_name}\n"
             f"Direction: {request.direction}\n"
             f"Size: {close_size} {instrument.size_unit}\n"
-            f"Close Price: {close_price}\n"
+            f"Close Price: {cp_str}\n"
             f"P&L: {pnl_str}"
             + (f"\n\nReasoning: {request.reasoning[:200]}" if request.reasoning else "")
         )
@@ -245,6 +255,8 @@ async def modify_position(
         old_tp=result["old_tp"],
         new_sl=result["new_sl"],
         new_tp=result["new_tp"],
+        entry_price=trade.entry_price if trade else None,
+        size=trade.size if trade else None,
     )
 
     return ModifyPositionResponse(
@@ -347,7 +359,7 @@ async def get_trade_status(
                 elif order["orderType"] == "LMT":
                     pos["take_profit"] = order["lmtPrice"]
 
-        # Calculate unrealized P&L using current price
+        # Calculate unrealized P&L using current price (converted to EUR)
         try:
             spec = get_instrument(instrument_key)
             pos_broker = _get_broker_for_instrument(instrument_key, ibkr_client, icm_client)
@@ -355,13 +367,12 @@ async def get_trade_status(
             current_price = price_data.get("last") or price_data.get("bid") or 0
             if current_price and pos["avg_cost"]:
                 if direction == "BUY":
-                    pos["unrealized_pnl"] = round(
-                        (current_price - pos["avg_cost"]) * abs(pos["size"]) * spec.multiplier, 2
-                    )
+                    raw_pnl = (current_price - pos["avg_cost"]) * abs(pos["size"]) * spec.multiplier
                 else:
-                    pos["unrealized_pnl"] = round(
-                        (pos["avg_cost"] - current_price) * abs(pos["size"]) * spec.multiplier, 2
-                    )
+                    raw_pnl = (pos["avg_cost"] - current_price) * abs(pos["size"]) * spec.multiplier
+                if spec.broker == "icmarkets" and icm_client:
+                    raw_pnl = icm_client.usd_to_eur(raw_pnl)
+                pos["unrealized_pnl"] = round(raw_pnl, 2)
                 pos["current_price"] = current_price
         except Exception:
             logger.warning("Could not fetch price for %s", instrument_key)

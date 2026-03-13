@@ -20,9 +20,9 @@ BOT_URL="http://localhost:8001"
 
 # Load environment
 if [ -f "$ENV_FILE" ]; then
-    TG_TOKEN=$(grep -E '^TELEGRAM_BOT_TOKEN=' "$ENV_FILE" | cut -d= -f2-)
-    TG_CHAT_ID=$(grep -E '^TELEGRAM_CHAT_ID=' "$ENV_FILE" | cut -d= -f2-)
-    API_KEY=$(grep -E '^API_SECRET_KEY=' "$ENV_FILE" | cut -d= -f2-)
+    TG_TOKEN=$(grep -E '^TELEGRAM_BOT_TOKEN=' "$ENV_FILE" | cut -d= -f2- || true)
+    TG_CHAT_ID=$(grep -E '^TELEGRAM_CHAT_ID=' "$ENV_FILE" | cut -d= -f2- || true)
+    API_KEY=$(grep -E '^API_SECRET_KEY=' "$ENV_FILE" | cut -d= -f2- || true)
 else
     echo "ERROR: $ENV_FILE not found"
     exit 1
@@ -362,11 +362,11 @@ if timeframe == 'm15' and strategy == 'm15_sensei':
     sys.exit()
 
 # Per-instrument minimum stop distances (must match app/instruments.py)
-# Scalp (M5): SL only — runner mode handles TP (TP1 at 1R, then monitor trails SL)
+# Scalp (M5): SL only — ratchet exit tightens SL by 0.5R each 1R of profit
 if timeframe == 'm5':
     m5_atr = float(d.get('technicals', {}).get('m5', {}).get('atr', 0) or 0)
     if m5_atr > 0:
-        MIN_STOP_M5 = {'BTC': 250.0, 'XAUUSD': 3.0, 'AUDUSD': 0.0015, 'NZDUSD': 0.0015, 'EURUSD': 0.0015, 'GBPUSD': 0.0015}
+        MIN_STOP_M5 = {'BTC': 250.0, 'XAUUSD': 3.0, 'AUDUSD': 0.0005, 'NZDUSD': 0.0005, 'EURUSD': 0.0005, 'GBPUSD': 0.0005}
         min_sd = MIN_STOP_M5.get(inst, 0)
         digits = 5 if inst in ('AUDUSD','NZDUSD','EURUSD','GBPUSD') else 2
         sd = round(max(m5_atr * 1.0, min_sd), digits)

@@ -93,7 +93,7 @@ if [ -z "$json" ]; then
     log "DAILY: Failed to fetch $inst"
 else
     echo "$json" > "$JOURNAL_DIR/daily/scans/${DATE}_${inst}.json"
-    price=$(echo "$json" | python3 -c "import sys,json; print(json.load(sys.stdin).get('price',{}).get('current',''))" 2>/dev/null)
+    price=$(echo "$json" | python3 -c "import sys,json; print(json.load(sys.stdin).get('price',{}).get('current',''))" 2>/dev/null || true)
 
     for strategy in rsi_reversal sma_crossover; do
         read -r sig direction conviction < <(

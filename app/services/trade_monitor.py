@@ -1,8 +1,7 @@
 """Background trade close detection.
 
-Polls IBKR positions every 30s and compares against DB trades with status=EXECUTED.
-When a position disappears from IBKR, the trade is marked CLOSED with P&L calculated.
-Also detects TP1 partial fills for m5_scalp runner trades.
+Polls broker positions every 30s and compares against DB trades with status=EXECUTED.
+When a position disappears, the trade is marked CLOSED with P&L calculated.
 """
 
 from __future__ import annotations
@@ -40,7 +39,6 @@ class TradeCloseMonitor:
         self.notifier = notifier
         self.settings = settings
         self.poll_interval = poll_interval
-        self._last_known_sizes: dict[int, float] = {}  # trade.id -> last seen position size
 
     def _get_broker(self, instrument_key: str):
         """Return the correct broker client for an instrument."""
@@ -66,6 +64,7 @@ class TradeCloseMonitor:
         """Single poll: compare DB trades vs broker positions."""
         # 1. Get open positions from both brokers
         position_map: dict[tuple[str, str], float] = {}
+        failed_brokers: set[str] = set()
 
         if self.ibkr and self.ibkr._connected:
             try:
@@ -75,6 +74,7 @@ class TradeCloseMonitor:
                     position_map[key] = position_map.get(key, 0) + abs(pos["size"])
             except Exception:
                 logger.warning("Cannot fetch IBKR positions — skipping IBKR instruments")
+                failed_brokers.add("ibkr")
 
         if self.icm:
             try:
@@ -84,6 +84,7 @@ class TradeCloseMonitor:
                     position_map[key] = position_map.get(key, 0) + abs(pos["size"])
             except Exception:
                 logger.warning("Cannot fetch IC Markets positions — skipping ICM instruments")
+                failed_brokers.add("icmarkets")
 
         # 2. Get all EXECUTED trades from DB
         async with self.session_factory() as session:
@@ -96,47 +97,57 @@ class TradeCloseMonitor:
             return
 
         for trade in open_trades:
-            pos_key = (trade.epic, trade.direction)
-            ibkr_size = position_map.get(pos_key, 0)
+            # Skip trades whose broker failed to respond — avoid false closures
+            trade_broker = getattr(trade, "broker", None) or "ibkr"
+            spec = INSTRUMENTS.get(trade.epic)
+            if spec:
+                trade_broker = spec.broker
+            if trade_broker in failed_brokers:
+                continue
 
-            if ibkr_size == 0:
+            pos_key = (trade.epic, trade.direction)
+            broker_size = position_map.get(pos_key, 0)
+
+            if broker_size == 0:
                 # Position fully closed
                 await self._handle_close(trade)
-            elif trade.id in self._last_known_sizes:
-                last_size = self._last_known_sizes[trade.id]
-                if ibkr_size < last_size and trade.strategy == "m5_scalp":
-                    # Partial fill — TP1 hit on runner trade
-                    await self._handle_tp1_hit(trade, ibkr_size)
-
-            # Track current size for next cycle
-            if ibkr_size > 0:
-                self._last_known_sizes[trade.id] = ibkr_size
-            else:
-                self._last_known_sizes.pop(trade.id, None)
 
     async def _handle_close(self, trade: Trade):
         """Mark trade as CLOSED, calculate P&L, notify."""
         now = datetime.now(timezone.utc)
-
-        # Get approximate close price from correct broker
-        broker = self._get_broker(trade.epic)
-        try:
-            price_data = await broker.get_price(trade.epic)
-            close_price = price_data.get("last") or price_data.get("bid") or 0.0
-        except Exception:
-            close_price = 0.0
-            logger.warning("Cannot get close price for %s — using 0", trade.epic)
-
-        # Calculate P&L
         spec = INSTRUMENTS.get(trade.epic)
-        multiplier = spec.multiplier if spec else 1.0
-        if trade.entry_price and close_price:
-            if trade.direction == "BUY":
-                pnl = (close_price - trade.entry_price) * trade.size * multiplier
+
+        # Try to get actual P&L and close price from broker deal history
+        pnl = None
+        close_price = 0.0
+        if self.icm and spec and spec.broker == "icmarkets" and trade.deal_id:
+            try:
+                details = await self.icm.get_position_close_details(int(trade.deal_id))
+                if details:
+                    pnl = details["pnl"]
+                    if details.get("close_price"):
+                        close_price = details["close_price"]
+            except Exception:
+                logger.warning("Failed to get broker close details for trade #%d", trade.id)
+
+        # Fallback: use current market price (inaccurate if delayed)
+        if not close_price:
+            broker = self._get_broker(trade.epic)
+            try:
+                price_data = await broker.get_price(trade.epic)
+                close_price = price_data.get("last") or price_data.get("bid") or 0.0
+            except Exception:
+                logger.warning("Cannot get close price for %s — using 0", trade.epic)
+
+        if pnl is None:
+            multiplier = spec.multiplier if spec else 1.0
+            if trade.entry_price and close_price:
+                if trade.direction == "BUY":
+                    pnl = (close_price - trade.entry_price) * trade.size * multiplier
+                else:
+                    pnl = (trade.entry_price - close_price) * trade.size * multiplier
             else:
-                pnl = (trade.entry_price - close_price) * trade.size * multiplier
-        else:
-            pnl = 0.0
+                pnl = 0.0
 
         # Duration
         if trade.created_at:
@@ -165,46 +176,12 @@ class TradeCloseMonitor:
             await session.commit()
 
         logger.info(
-            "Trade #%d CLOSED: %s %s — P&L: $%.2f — Duration: %s",
+            "Trade #%d CLOSED: %s %s — P&L: €%.2f — Duration: %s",
             trade.id, trade.epic, trade.direction, pnl, duration_str,
         )
 
-        await self.notifier.send_close_update(trade, close_price, round(pnl, 2), duration_str)
-        self._last_known_sizes.pop(trade.id, None)
-
-    async def _handle_tp1_hit(self, trade: Trade, remaining_size: float):
-        """Notify when TP1 fills on a runner trade and resize SL to runner qty."""
-        spec = INSTRUMENTS.get(trade.epic)
-
-        # Calculate TP1 price from entry + 1R
-        if trade.stop_distance and trade.entry_price:
-            r_distance = trade.stop_distance * self.settings.partial_tp_r_multiple
-            if trade.direction == "BUY":
-                tp1_price = trade.entry_price + r_distance
-            else:
-                tp1_price = trade.entry_price - r_distance
-        else:
-            tp1_price = 0.0
-
-        logger.info(
-            "TP1 HIT on trade #%d: %s %s — runner %.0f remaining",
-            trade.id, trade.epic, trade.direction, remaining_size,
-        )
-
-        # Resize SL to match remaining runner position (prevents over-closing)
-        broker = self._get_broker(trade.epic)
-        try:
-            await broker.modify_sl_tp(
-                instrument_key=trade.epic,
-                direction=trade.direction,
-                new_sl=trade.stop_loss,
-                new_sl_quantity=remaining_size,
-            )
-            logger.info(
-                "SL resized to %.0f for runner trade #%d",
-                remaining_size, trade.id,
-            )
-        except Exception:
-            logger.exception("Failed to resize SL after TP1 hit on trade #%d", trade.id)
-
-        await self.notifier.send_tp1_hit_update(trade, tp1_price, remaining_size)
+        if self.notifier:
+            try:
+                await self.notifier.send_close_update(trade, close_price, round(pnl, 2), duration_str)
+            except Exception:
+                logger.exception("Failed to send close notification for trade #%d", trade.id)

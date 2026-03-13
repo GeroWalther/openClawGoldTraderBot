@@ -30,6 +30,7 @@ def settings():
         daily_loss_limit_enabled=True,
         conviction_sizing_enabled=True,
         partial_tp_enabled=True,
+        max_position_size=0,  # no cap in tests
     )
 
 

@@ -65,6 +65,7 @@ class ICMarketsClient:
         self._pending: dict[str, asyncio.Future] = {}
         self._msg_counter = 0
         self._loop: asyncio.AbstractEventLoop | None = None
+        self._reconnect_lock = asyncio.Lock()
 
     # ------------------------------------------------------------------
     # Connection
@@ -104,6 +105,8 @@ class ICMarketsClient:
             ProtoOAGetAccountListByAccessTokenRes,
             ProtoOASymbolByIdReq,
             ProtoOASymbolByIdRes,
+            ProtoOADealListByPositionIdReq,
+            ProtoOADealListByPositionIdRes,
         )
         from twisted.internet import reactor as twisted_reactor
 
@@ -133,6 +136,8 @@ class ICMarketsClient:
             "ProtoHeartbeatEvent": ProtoHeartbeatEvent,
             "ProtoOASymbolByIdReq": ProtoOASymbolByIdReq,
             "ProtoOASymbolByIdRes": ProtoOASymbolByIdRes,
+            "ProtoOADealListByPositionIdReq": ProtoOADealListByPositionIdReq,
+            "ProtoOADealListByPositionIdRes": ProtoOADealListByPositionIdRes,
         }
 
         # Determine host
@@ -173,9 +178,12 @@ class ICMarketsClient:
         # Resolve symbol IDs
         await self._resolve_symbols()
 
-        # Subscribe to BTC spot prices
-        if "BTC" in self._symbol_ids:
-            await self._subscribe_spots("BTC")
+        # Subscribe to spot prices for all resolved instruments
+        for key in self._symbol_ids:
+            try:
+                await self._subscribe_spots(key)
+            except Exception:
+                logger.warning("Failed to subscribe spots for %s", key)
 
         # Start background token refresh task
         if self._refresh_token:
@@ -576,8 +584,12 @@ class ICMarketsClient:
             logger.info("Disconnected from IC Markets cTrader")
 
     async def ensure_connected(self):
-        """Reconnect if connection was lost."""
-        if not self._connected:
+        """Reconnect if connection was lost (with lock to prevent concurrent reconnects)."""
+        if self._connected:
+            return
+        async with self._reconnect_lock:
+            if self._connected:  # Re-check after acquiring lock
+                return
             logger.warning("IC Markets connection lost, reconnecting...")
             try:
                 await self._reconnect()
@@ -643,6 +655,18 @@ class ICMarketsClient:
                 return self._prices[instrument_key]
 
         return {"bid": 0.0, "ask": 0.0, "last": 0.0}
+
+    def usd_to_eur(self, usd_amount: float) -> float:
+        """Convert a USD amount to EUR using cached EURUSD spot price.
+
+        Falls back to returning the USD amount unchanged if no rate available.
+        """
+        spot = self._prices.get("EURUSD")
+        if spot:
+            rate = spot.get("bid") or spot.get("ask") or spot.get("last")
+            if rate and rate > 0:
+                return usd_amount / rate
+        return usd_amount
 
     async def get_account_info(self) -> dict:
         """Get account balance/equity info."""
@@ -910,11 +934,31 @@ class ICMarketsClient:
         msg_id = self._next_msg_id()
         response = await self._send_request(request, client_msg_id=msg_id, timeout=30.0)
 
-        # Extract close price
+        # Extract close (fill) price from the order execution, not the position
+        order = getattr(response, "order", None)
         position = getattr(response, "position", None)
         close_price = None
-        if position:
-            close_price = getattr(position, "price", None)  # double — already actual price
+
+        if order:
+            # order.executionPrice is the actual fill price for the close
+            exec_price = getattr(order, "executionPrice", None)
+            if exec_price:
+                digits = self._symbol_digits.get(instrument_key, 5)
+                close_price = round(exec_price / 100000, digits)
+                logger.info("Close fill price from order.executionPrice: %s", close_price)
+
+        # Fallback: use cached spot price (position.price is the ENTRY price, not fill)
+        if not close_price:
+            spot = self._prices.get(instrument_key)
+            if spot:
+                close_price = spot["ask"] if direction == "SELL" else spot["bid"]
+                logger.info("Close fill price from spot fallback: %s", close_price)
+
+        # Get actual P&L and close price from broker deal history
+        details = await self.get_position_close_details(position_id)
+        broker_pnl = details["pnl"] if details else None
+        if details and details.get("close_price"):
+            close_price = details["close_price"]
 
         return {
             "orderId": position_id,
@@ -923,7 +967,52 @@ class ICMarketsClient:
             "size": size,
             "fillPrice": close_price,
             "dealId": str(position_id),
+            "pnl": broker_pnl,
         }
+
+    async def get_position_close_details(self, position_id: int) -> dict | None:
+        """Get actual realized P&L and close price from cTrader deal history.
+
+        Returns dict with 'pnl' (in account currency EUR, includes swap/commission)
+        and 'close_price', or None if unavailable.
+        """
+        try:
+            Req = self._proto_modules["ProtoOADealListByPositionIdReq"]
+            request = Req()
+            request.ctidTraderAccountId = self._account_id
+            request.positionId = position_id
+
+            response = await self._send_request(request, timeout=10.0)
+
+            total_pnl = 0.0
+            close_price = None
+            has_close = False
+            for deal in response.deal:
+                # closePositionDetail contains P&L for closing deals
+                close_detail = getattr(deal, "closePositionDetail", None)
+                if close_detail:
+                    has_close = True
+                    # All values in cents of account currency
+                    gross = getattr(close_detail, "grossProfit", 0) / 100.0
+                    swap = getattr(close_detail, "swap", 0) / 100.0
+                    commission = getattr(close_detail, "commission", 0) / 100.0
+                    total_pnl += gross + swap + commission
+                    logger.info(
+                        "Deal P&L for position %s: gross=%.2f swap=%.2f commission=%.2f total=%.2f",
+                        position_id, gross, swap, commission, total_pnl,
+                    )
+                # Get execution price from the closing deal
+                exec_price = getattr(deal, "executionPrice", None)
+                if exec_price and close_detail:
+                    digits = 5  # default for forex
+                    close_price = exec_price / 100000
+
+            if has_close:
+                return {"pnl": round(total_pnl, 2), "close_price": close_price}
+            return None
+        except Exception:
+            logger.warning("Failed to get deal details for position %s", position_id, exc_info=True)
+            return None
 
     async def get_open_positions(
         self, instrument_key: str | None = None
@@ -954,16 +1043,40 @@ class ICMarketsClient:
             is_buy = pos.tradeData.tradeSide == 1  # BUY=1, SELL=2
             size = self._volume_to_size(pos.tradeData.volume, inst_key)
 
-            # Calculate unrealized P&L from cached spot price
+            # Read broker-reported swap and commission (in account currency cents)
+            swap = getattr(pos, "swap", 0) / 100.0
+            commission = getattr(pos, "commission", 0) / 100.0
+
+            # Log all position fields once for debugging
+            logger.debug(
+                "Position %s fields: %s",
+                pos.positionId,
+                {f.name: getattr(pos, f.name) for f in pos.DESCRIPTOR.fields},
+            )
+
+            # Ensure spot price subscription for this instrument
+            if inst_key not in self._prices:
+                try:
+                    await self._subscribe_spots(inst_key)
+                    for _ in range(20):  # wait up to 2s
+                        await asyncio.sleep(0.1)
+                        if inst_key in self._prices:
+                            break
+                except Exception:
+                    pass
+
+            # Calculate unrealized P&L from cached spot price (converted to EUR)
             unrealized_pnl = None
+            current_price = None
             spot = self._prices.get(inst_key)
             if spot and price:
-                current = spot["bid"] if is_buy else spot["ask"]
-                if current and current > 0:
+                current_price = spot["bid"] if is_buy else spot["ask"]
+                if current_price and current_price > 0:
                     if is_buy:
-                        unrealized_pnl = round((current - price) * size, 2)
+                        raw_pnl = (current_price - price) * size
                     else:
-                        unrealized_pnl = round((price - current) * size, 2)
+                        raw_pnl = (price - current_price) * size
+                    unrealized_pnl = round(self.usd_to_eur(raw_pnl), 2)
 
             result.append({
                 "instrument": inst_key,
@@ -972,6 +1085,7 @@ class ICMarketsClient:
                 "direction": "BUY" if is_buy else "SELL",
                 "avg_cost": price,
                 "unrealized_pnl": unrealized_pnl,
+                "current_price": current_price,
                 "size_unit": "lots",
                 "positionId": pos.positionId,
                 "stopLoss": getattr(pos, "stopLoss", None),

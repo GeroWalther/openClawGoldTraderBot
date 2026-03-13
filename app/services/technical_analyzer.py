@@ -194,7 +194,12 @@ class TechnicalAnalyzer:
         self._macro_service = MacroDataService()
         self._scoring_engine = ScoringEngine()
         self._intraday_scoring_engine = IntradayScoringEngine()
-        self._m5_scalp_scoring_engine = M5ScalpScoringEngine()
+        from app.config import Settings
+        _settings = Settings()
+        self._m5_scalp_scoring_engine = M5ScalpScoringEngine(
+            signal_threshold=_settings.m5_signal_threshold,
+            high_conviction_threshold=_settings.m5_high_conviction_threshold,
+        )
         self._m15_sensei_scoring_engine = M15SenseiScoringEngine()
         self._calendar_service = CalendarService()
         self._news_service = NewsService()

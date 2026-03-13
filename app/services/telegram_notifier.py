@@ -1,6 +1,7 @@
 import logging
 
 from telegram import Bot
+from telegram.request import HTTPXRequest
 
 from app.config import Settings
 from app.instruments import INSTRUMENTS
@@ -11,7 +12,8 @@ logger = logging.getLogger(__name__)
 
 class TelegramNotifier:
     def __init__(self, settings: Settings):
-        self.bot = Bot(token=settings.telegram_bot_token)
+        request = HTTPXRequest(connect_timeout=20, read_timeout=20)
+        self.bot = Bot(token=settings.telegram_bot_token, request=request)
         self.chat_id = settings.telegram_chat_id
 
     async def send_trade_update(self, trade: Trade):
@@ -20,12 +22,22 @@ class TelegramNotifier:
         unit = spec.size_unit if spec else "units"
 
         strategy_line = f"\nStrategy: {trade.strategy}" if trade.strategy else ""
+        # Calculate SL risk in account currency
+        sl_risk_line = ""
+        if trade.stop_loss and trade.entry_price and trade.size:
+            mult = spec.multiplier if spec else 1
+            if trade.direction == "BUY":
+                sl_risk = (trade.entry_price - trade.stop_loss) * trade.size * mult
+            else:
+                sl_risk = (trade.stop_loss - trade.entry_price) * trade.size * mult
+            sl_risk_line = f"\nRisk: {sl_risk:.2f}€ if SL hit"
         text = (
             f"Trade {trade.status.value.upper()} — {name}\n"
             f"Direction: {trade.direction}\n"
             f"Size: {trade.size} {unit}\n"
             f"Entry: {trade.entry_price}\n"
-            f"SL: {trade.stop_loss} | TP: {trade.take_profit}\n"
+            f"SL: {trade.stop_loss} | TP: {trade.take_profit}"
+            f"{sl_risk_line}\n"
             f"Order: {trade.deal_id or 'N/A'}"
             f"{strategy_line}"
         )
@@ -78,12 +90,11 @@ class TelegramNotifier:
         spec = INSTRUMENTS.get(trade.epic)
         name = spec.display_name if spec else trade.epic
 
-        pnl_emoji = "+" if pnl >= 0 else ""
         text = (
             f"Trade CLOSED — {name}\n"
             f"Direction: {trade.direction}\n"
             f"Entry: {trade.entry_price} → Exit: {close_price}\n"
-            f"P&L: {pnl_emoji}${pnl:.2f}\n"
+            f"P&L: {pnl:+.2f}€\n"
             f"Duration: {duration_str}"
         )
         if trade.strategy:
@@ -141,15 +152,30 @@ class TelegramNotifier:
         old_tp: float | None,
         new_sl: float | None,
         new_tp: float | None,
+        entry_price: float | None = None,
+        size: float | None = None,
     ):
         name = instrument.display_name if hasattr(instrument, "display_name") else str(instrument)
+        # Derive decimal places from tick_size (e.g. 0.00005 → 5)
+        tick = getattr(instrument, "tick_size", 0.01)
+        decimals = max(2, len(f"{tick:.10f}".rstrip("0").split(".")[1]))
+        multiplier = getattr(instrument, "multiplier", 1)
+
         lines = [f"SL/TP Modified — {name}", f"Direction: {direction}"]
         if new_sl is not None:
-            old_str = f"{old_sl:.2f}" if old_sl is not None else "N/A"
-            lines.append(f"Stop Loss: {old_str} → {new_sl:.2f}")
+            old_str = f"{old_sl:.{decimals}f}" if old_sl is not None else "N/A"
+            lines.append(f"Stop Loss: {old_str} → {new_sl:.{decimals}f}")
+            # Show locked-in P&L at new SL level
+            if entry_price is not None and size is not None:
+                if direction == "BUY":
+                    locked_pnl = (new_sl - entry_price) * size * multiplier
+                else:
+                    locked_pnl = (entry_price - new_sl) * size * multiplier
+                sign = "+" if locked_pnl >= 0 else ""
+                lines.append(f"Locks in: {sign}{locked_pnl:.2f}€ if SL hit")
         if new_tp is not None:
-            old_str = f"{old_tp:.2f}" if old_tp is not None else "N/A"
-            lines.append(f"Take Profit: {old_str} → {new_tp:.2f}")
+            old_str = f"{old_tp:.{decimals}f}" if old_tp is not None else "N/A"
+            lines.append(f"Take Profit: {old_str} → {new_tp:.{decimals}f}")
         try:
             await self.bot.send_message(chat_id=self.chat_id, text="\n".join(lines))
         except Exception:

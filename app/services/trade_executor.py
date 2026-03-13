@@ -74,8 +74,20 @@ class TradeExecutor:
                 f"entry_price is required for {order_type} orders",
             )
 
-        # 1. Risk manager check (cooldown + daily limits)
+        # 0b. Reject if already have an open position for this instrument
         broker = self._get_broker(instrument)
+        try:
+            open_positions = await broker.get_open_positions()
+            for pos in open_positions:
+                if pos.get("instrument") == instrument.key:
+                    return self._reject(
+                        request, instrument.key,
+                        f"Already have open {instrument.display_name} position",
+                    )
+        except Exception:
+            pass  # If we can't check, proceed (don't block trades on API errors)
+
+        # 1. Risk manager check (cooldown + daily limits)
         if self.risk_manager is not None:
             account_info = await broker.get_account_info()
             balance = account_info.get("NetLiquidation", 10000.0)
@@ -225,6 +237,7 @@ class TradeExecutor:
         limit_distance = limit_distance or instrument.default_tp_distance
 
         # 5. Conviction-based position sizing
+        balance = None
         if request.size is None:
             if self.risk_manager is None:
                 account_info = await broker.get_account_info()
@@ -234,6 +247,16 @@ class TradeExecutor:
             size = request.size
 
         logger.info(f"Position sizing: balance={balance}, sd={stop_distance}, size={size}, instrument={instrument.key}")
+
+        if size == 0:
+            reason = f"Insufficient balance (${balance or 0:.2f}) for minimum position size on {instrument.display_name}"
+            await self.notifier.send_message(
+                f"⚠️ NOT ENOUGH MONEY — {instrument.display_name}\n"
+                f"Balance: ${balance or 0:.2f}\n"
+                f"Min size: {instrument.min_size} {instrument.size_unit}\n"
+                f"Strategy: {request.strategy or 'N/A'}"
+            )
+            return self._reject(request, instrument.key, reason)
 
         # 6. Calculate absolute TP price and SL price from reference_price
         if request.direction == "BUY":
@@ -278,18 +301,22 @@ class TradeExecutor:
                 status = TradeStatus.PENDING_ORDER
                 message = f"Pending {order_type} order placed: order {deal_id}"
             else:
-                # Market order path (existing behavior)
-                if self.settings.partial_tp_enabled and self._can_split(size, instrument):
-                    if request.strategy == "m5_scalp":
-                        result = await self._execute_runner(
-                            request.direction, size, stop_price,
-                            stop_distance, instrument,
-                        )
-                    else:
-                        result = await self._execute_partial_tp(
-                            request.direction, size, stop_price, tp_price,
-                            stop_distance, instrument,
-                        )
+                # Market order path
+                if request.strategy == "m5_scalp":
+                    # M5 scalp: SL only, no TP — ratchet SL exit via monitor
+                    result = await broker.open_position(
+                        direction=request.direction,
+                        size=size,
+                        stop_distance=stop_distance,
+                        take_profit_price=None,
+                        instrument_key=instrument.key,
+                        stop_price=stop_price,
+                    )
+                elif self.settings.partial_tp_enabled and self._can_split(size, instrument):
+                    result = await self._execute_partial_tp(
+                        request.direction, size, stop_price, tp_price,
+                        stop_distance, instrument,
+                    )
                 else:
                     result = await broker.open_position(
                         direction=request.direction,
@@ -327,7 +354,7 @@ class TradeExecutor:
             else:
                 stop_price = _round_to_tick(fill_price + stop_distance, instrument.tick_size)
 
-        # Runner trades (m5_scalp) have no fixed TP2 — monitor trails the SL
+        # M5 scalp: no TP — ratchet SL exit handles it via monitor
         db_take_profit = None if (request.strategy == "m5_scalp" and not is_pending) else tp_price
         trade = Trade(
             deal_id=deal_id,
@@ -357,25 +384,6 @@ class TradeExecutor:
         # 9. Notify via Telegram
         if is_pending:
             await self.notifier.send_pending_order_update(trade)
-        elif request.strategy == "m5_scalp" and status == TradeStatus.EXECUTED and stop_distance:
-            # Show TP1 + runner info instead of "TP: None"
-            r_distance = stop_distance * self.settings.partial_tp_r_multiple
-            if request.direction == "BUY":
-                tp1_price = db_entry_price + r_distance
-            else:
-                tp1_price = db_entry_price - r_distance
-            tp1_size_raw = size * (self.settings.partial_tp_percent / 100.0)
-            runner_size_raw = size - tp1_size_raw
-            instrument = get_instrument(request.instrument)
-            if instrument.sec_type == "CASH":
-                tp1_size = max(round(tp1_size_raw / 1000) * 1000, instrument.min_size)
-                runner_size = max(round(runner_size_raw / 1000) * 1000, instrument.min_size)
-            else:
-                tp1_size = max(round(tp1_size_raw), int(instrument.min_size))
-                runner_size = max(round(runner_size_raw), int(instrument.min_size))
-            await self.notifier.send_runner_trade_update(
-                trade, tp1_price=tp1_price, tp1_size=tp1_size, runner_size=runner_size,
-            )
         else:
             await self.notifier.send_trade_update(trade)
 
