@@ -66,6 +66,7 @@ class ICMarketsClient:
         self._msg_counter = 0
         self._loop: asyncio.AbstractEventLoop | None = None
         self._reconnect_lock = asyncio.Lock()
+        self._shutting_down = False
 
     # ------------------------------------------------------------------
     # Connection
@@ -212,10 +213,15 @@ class ICMarketsClient:
         deferred.addErrback(self._on_error)
 
     def _on_disconnected(self, client, reason):
-        """Twisted callback: TCP disconnected."""
+        """Twisted callback: TCP disconnected — auto-reconnect unless shutting down."""
         logger.warning("cTrader disconnected: %s", reason)
         self._connected = False
         self._subscribed_symbols.clear()  # Must resubscribe after reconnect
+        # Schedule auto-reconnect with backoff
+        if self._loop and not self._shutting_down:
+            self._loop.call_soon_threadsafe(
+                asyncio.ensure_future, self._auto_reconnect()
+            )
 
     def _on_error(self, failure):
         """Twisted errback."""
@@ -238,6 +244,12 @@ class ICMarketsClient:
         HeartbeatEvent = self._proto_modules["ProtoHeartbeatEvent"]
 
         if payload_type == HeartbeatEvent().payloadType:
+            # Respond to server heartbeat to keep connection alive
+            try:
+                response = HeartbeatEvent()
+                client.send(response)
+            except Exception:
+                pass
             return
 
         if payload_type == AppAuthRes().payloadType:
@@ -570,8 +582,24 @@ class ICMarketsClient:
     # Public API (matches IBKRClient interface)
     # ------------------------------------------------------------------
 
+    async def _auto_reconnect(self, max_retries: int = 5):
+        """Auto-reconnect with exponential backoff after unexpected disconnect."""
+        for attempt in range(max_retries):
+            delay = min(2 ** attempt, 30)  # 1, 2, 4, 8, 16, 30s
+            await asyncio.sleep(delay)
+            if self._connected or self._shutting_down:
+                return
+            try:
+                await self._reconnect()
+                logger.info("IC Markets reconnected after %d attempt(s)", attempt + 1)
+                return
+            except Exception as e:
+                logger.warning("Reconnect attempt %d/%d failed: %s", attempt + 1, max_retries, e)
+        logger.error("IC Markets: gave up reconnecting after %d attempts", max_retries)
+
     async def disconnect(self):
         """Disconnect from cTrader."""
+        self._shutting_down = True
         if hasattr(self, "_refresh_task") and self._refresh_task:
             self._refresh_task.cancel()
             self._refresh_task = None

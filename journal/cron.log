@@ -2244,3 +2244,256 @@ ERROR: Could not acquire lock 'trade_scanner' after 30s
 [2026-03-13 12:42:04 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5833
 [2026-03-13 12:42:07 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7052
 [2026-03-13 12:42:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 12:45:01 UTC] MONITOR starting
+[2026-03-13 12:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-13 12:45:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-13 12:47:01 UTC] M5 SCALP SCAN starting
+[2026-03-13 12:47:04 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5839
+[2026-03-13 12:47:07 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7062
+[2026-03-13 12:47:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 12:53:53 UTC] M5 SCALP SCAN starting
+[2026-03-13 12:54:21 UTC] M5_SCALP NZDUSD: score=/ dir= conv= price=
+[2026-03-13 12:54:34 UTC] M5_SCALP AUDUSD: score=/ dir= conv= price=
+[2026-03-13 12:54:34 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 12:55:01 UTC] MONITOR starting
+[2026-03-13 12:55:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-13 12:57:01 UTC] M5 SCALP SCAN starting
+[2026-03-13 12:57:04 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5838
+[2026-03-13 12:57:07 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.706
+[2026-03-13 12:57:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 13:00:01 UTC] MONITOR starting
+[2026-03-13 13:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-13 13:00:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-13 13:02:01 UTC] M5 SCALP SCAN starting
+[2026-03-13 13:02:04 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5836
+[2026-03-13 13:02:07 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7057
+[2026-03-13 13:02:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 13:05:01 UTC] MONITOR starting
+[2026-03-13 13:05:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-13 13:07:01 UTC] M5 SCALP SCAN starting
+[2026-03-13 13:07:04 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5833
+[2026-03-13 13:07:07 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.705
+[2026-03-13 13:07:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 14:15:48 UTC] MONITOR starting
+[2026-03-13 14:15:48 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-13 14:15:48 UTC] M5 SCALP SCAN starting
+[2026-03-13 14:16:06 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-13 14:16:16 UTC] M5_SCALP NZDUSD: score=/ dir= conv= price=
+ERROR: Could not acquire lock 'trade_scanner' after 30s
+[2026-03-13 14:16:29 UTC] M5_SCALP AUDUSD: score=/ dir= conv= price=
+[2026-03-13 14:16:29 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 14:16:29 UTC] M5 SCALP SCAN starting
+[2026-03-13 14:16:32 UTC] M5_SCALP NZDUSD: score=/ dir= conv= price=
+[2026-03-13 14:16:35 UTC] M5_SCALP AUDUSD: score=/ dir= conv= price=
+[2026-03-13 14:16:35 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 14:16:35 UTC] M5 SCALP SCAN starting
+ERROR: Could not acquire lock 'trade_scanner' after 30s
+[2026-03-13 14:16:38 UTC] M5_SCALP NZDUSD: score=/ dir= conv= price=
+[2026-03-13 14:16:41 UTC] M5_SCALP AUDUSD: score=/ dir= conv= price=
+[2026-03-13 14:16:41 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 14:16:41 UTC] M5 SCALP SCAN starting
+[2026-03-13 14:16:44 UTC] M5_SCALP NZDUSD: score=/ dir= conv= price=
+ERROR: Could not acquire lock 'trade_scanner' after 30s
+[2026-03-13 14:16:47 UTC] M5_SCALP AUDUSD: score=/ dir= conv= price=
+[2026-03-13 14:16:47 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 14:16:47 UTC] M5 SCALP SCAN starting
+[2026-03-13 14:16:50 UTC] M5_SCALP NZDUSD: score=/ dir= conv= price=
+[2026-03-13 14:16:53 UTC] M5_SCALP AUDUSD: score=/ dir= conv= price=
+[2026-03-13 14:16:53 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 14:16:53 UTC] M5 SCALP SCAN starting
+ERROR: Could not acquire lock 'trade_scanner' after 30s
+[2026-03-13 14:16:56 UTC] M5_SCALP NZDUSD: score=/ dir= conv= price=
+[2026-03-13 14:16:59 UTC] M5_SCALP AUDUSD: score=/ dir= conv= price=
+[2026-03-13 14:16:59 UTC] M5 SCALP SCAN done — 0 signal(s) found
+ERROR: Could not acquire lock 'trade_scanner' after 30s
+[2026-03-13 14:16:59 UTC] M5 SCALP SCAN starting
+[2026-03-13 14:17:02 UTC] M5_SCALP NZDUSD: score=/ dir= conv= price=
+[2026-03-13 14:17:05 UTC] M5_SCALP AUDUSD: score=/ dir= conv= price=
+[2026-03-13 14:17:05 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 14:17:05 UTC] M5 SCALP SCAN starting
+[2026-03-13 14:17:08 UTC] M5_SCALP NZDUSD: score=/ dir= conv= price=
+[2026-03-13 14:17:11 UTC] M5_SCALP AUDUSD: score=/ dir= conv= price=
+[2026-03-13 14:17:11 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 14:17:11 UTC] M5 SCALP SCAN starting
+[2026-03-13 14:17:14 UTC] M5_SCALP NZDUSD: score=/ dir= conv= price=
+[2026-03-13 14:17:17 UTC] M5_SCALP AUDUSD: score=/ dir= conv= price=
+[2026-03-13 14:17:17 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 14:29:04 UTC] M5 SCALP SCAN starting
+ERROR: Could not acquire lock 'trade_scanner' after 30s
+[2026-03-13 17:38:12 UTC] M5_SCALP NZDUSD: score=-4.67/14.0 dir= conv= price=0.5797
+ERROR: Could not acquire lock 'trade_scanner' after 30s
+ERROR: Could not acquire lock 'trade_scanner' after 30s
+ERROR: Could not acquire lock 'trade_scanner' after 30s
+ERROR: Could not acquire lock 'trade_scanner' after 30s
+ERROR: Could not acquire lock 'trade_scanner' after 30s
+ERROR: Could not acquire lock 'trade_scanner' after 30s
+ERROR: Could not acquire lock 'trade_scanner' after 30s
+ERROR: Could not acquire lock 'trade_scanner' after 30s
+[2026-03-13 20:00:06 UTC] MONITOR starting
+[2026-03-13 20:00:06 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-13 20:00:11 UTC] M5_SCALP AUDUSD: score=/ dir= conv= price=
+[2026-03-13 20:00:11 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 20:00:11 UTC] M5 SCALP SCAN starting
+ERROR: Could not acquire lock 'trade_scanner' after 30s
+[2026-03-13 20:00:23 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-13 20:00:24 UTC] M5_SCALP NZDUSD: score=/ dir= conv= price=
+ERROR: Could not acquire lock 'trade_scanner' after 30s
+[2026-03-13 20:00:27 UTC] M5_SCALP AUDUSD: score=/ dir= conv= price=
+[2026-03-13 20:00:27 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 20:00:27 UTC] M5 SCALP SCAN starting
+[2026-03-13 20:00:30 UTC] M5_SCALP NZDUSD: score=/ dir= conv= price=
+[2026-03-13 20:00:33 UTC] M5_SCALP AUDUSD: score=/ dir= conv= price=
+[2026-03-13 20:00:33 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 20:00:34 UTC] M5 SCALP SCAN starting
+[2026-03-13 20:00:36 UTC] M5_SCALP NZDUSD: score=/ dir= conv= price=
+[2026-03-13 20:00:39 UTC] M5_SCALP AUDUSD: score=/ dir= conv= price=
+[2026-03-13 20:00:39 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 20:00:39 UTC] M5 SCALP SCAN starting
+[2026-03-13 20:00:42 UTC] M5_SCALP NZDUSD: score=/ dir= conv= price=
+[2026-03-13 20:00:45 UTC] M5_SCALP AUDUSD: score=/ dir= conv= price=
+[2026-03-13 20:00:45 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 20:00:45 UTC] M5 SCALP SCAN starting
+[2026-03-13 20:00:48 UTC] M5_SCALP NZDUSD: score=/ dir= conv= price=
+[2026-03-13 20:00:51 UTC] M5_SCALP AUDUSD: score=/ dir= conv= price=
+[2026-03-13 20:00:51 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 20:02:01 UTC] M5 SCALP SCAN starting
+[2026-03-13 20:02:05 UTC] M5_SCALP NZDUSD: score=-5.1/14.0 dir= conv= price=0.5784
+[2026-03-13 20:02:09 UTC] M5_SCALP AUDUSD: score=-5.1/14.0 dir= conv= price=0.6993
+[2026-03-13 20:02:09 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 20:05:01 UTC] MONITOR starting
+[2026-03-13 20:05:03 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-13 20:07:01 UTC] M5 SCALP SCAN starting
+[2026-03-13 20:07:05 UTC] M5_SCALP NZDUSD: score=-5.1/14.0 dir= conv= price=0.578
+[2026-03-13 20:07:08 UTC] M5_SCALP AUDUSD: score=-5.1/14.0 dir= conv= price=0.6989
+[2026-03-13 20:07:08 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 20:10:01 UTC] MONITOR starting
+[2026-03-13 20:10:03 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-13 20:12:01 UTC] M5 SCALP SCAN starting
+[2026-03-13 20:12:04 UTC] M5_SCALP NZDUSD: score=-5.1/14.0 dir= conv= price=0.578
+[2026-03-13 20:12:06 UTC] M5_SCALP AUDUSD: score=-5.1/14.0 dir= conv= price=0.6988
+[2026-03-13 20:12:06 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 20:15:01 UTC] MONITOR starting
+[2026-03-13 20:15:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-13 20:15:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-13 20:17:01 UTC] M5 SCALP SCAN starting
+[2026-03-13 20:17:04 UTC] M5_SCALP NZDUSD: score=-5.1/14.0 dir= conv= price=0.578
+[2026-03-13 20:17:07 UTC] M5_SCALP AUDUSD: score=-5.1/14.0 dir= conv= price=0.6988
+[2026-03-13 20:17:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 20:20:01 UTC] MONITOR starting
+[2026-03-13 20:20:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-13 20:22:01 UTC] M5 SCALP SCAN starting
+[2026-03-13 20:22:05 UTC] M5_SCALP NZDUSD: score=-5.1/14.0 dir= conv= price=0.578
+[2026-03-13 20:22:08 UTC] M5_SCALP AUDUSD: score=-5.1/14.0 dir= conv= price=0.6988
+[2026-03-13 20:22:08 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-13 21:52:02 UTC] M5 SCALP SCAN starting
+ERROR: Could not acquire lock 'trade_scanner' after 5s
+[2026-03-13 21:52:18 UTC] M5_SCALP NZDUSD: score=-2.1/14.0 dir= conv= price=0.5776
+ERROR: Could not acquire lock 'trade_scanner' after 5s
+[2026-03-14 00:27:54 UTC] M5_SCALP AUDUSD: score=-2.8/14.0 dir= conv= price=0.6983
+[2026-03-14 00:27:54 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-14 09:31:48 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-14 09:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-14 10:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-14 10:15:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-14 20:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-14 20:15:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-14 20:30:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-14 20:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-14 21:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-14 21:15:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-14 21:30:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-14 21:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-14 22:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-14 22:15:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-14 22:30:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 02:30:30 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 08:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 09:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 09:15:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 09:30:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 09:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 10:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 10:15:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 10:30:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 10:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 11:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 11:15:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 11:30:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 11:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 12:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 12:15:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 12:30:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 13:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 13:15:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 13:30:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 13:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 14:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 15:15:32 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 16:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 20:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 21:30:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 22:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-15 22:15:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 00:30:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 00:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 01:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 01:15:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 05:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 08:42:49 UTC] M5 SCALP SCAN starting
+[2026-03-16 08:42:56 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5813
+[2026-03-16 08:43:05 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7016
+[2026-03-16 08:43:05 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 08:45:01 UTC] MONITOR starting
+[2026-03-16 08:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 08:45:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 08:47:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 08:47:07 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5812
+[2026-03-16 08:47:14 UTC] M5_SCALP AUDUSD: score=-6.38/14.0 dir=SELL conv=MEDIUM price=0.7014
+[2026-03-16 08:47:14 UTC] M5_SCALP AUDUSD: SIGNAL detected (score=-6.38)
+[2026-03-16 08:47:14 UTC] M5 SCALP SCAN done — 1 signal(s) found
+[2026-03-16 08:50:01 UTC] MONITOR starting
+[2026-03-16 08:50:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 08:52:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 08:52:09 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5815
+[2026-03-16 08:52:17 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7017
+[2026-03-16 08:52:17 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 08:55:01 UTC] MONITOR starting
+[2026-03-16 08:55:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 08:57:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 08:57:10 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5819
+[2026-03-16 08:57:17 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7022
+[2026-03-16 08:57:17 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 09:00:01 UTC] MONITOR starting
+[2026-03-16 09:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 09:00:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 09:02:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 09:02:08 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5818
+[2026-03-16 09:02:19 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7021
+[2026-03-16 09:02:19 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 09:05:01 UTC] MONITOR starting
+[2026-03-16 09:05:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 09:07:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 09:07:07 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5815
+[2026-03-16 09:07:15 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7017
+[2026-03-16 09:07:15 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 09:10:01 UTC] MONITOR starting
+[2026-03-16 09:10:08 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 09:12:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 09:12:07 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5818
+[2026-03-16 09:12:14 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.702
+[2026-03-16 09:12:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 09:15:01 UTC] MONITOR starting
+[2026-03-16 09:15:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 09:15:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 09:17:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 09:17:07 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.582
+[2026-03-16 09:17:14 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7021
+[2026-03-16 09:17:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 09:20:01 UTC] MONITOR starting
+[2026-03-16 09:20:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 09:22:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 09:22:09 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5821
+[2026-03-16 09:22:16 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7023
+[2026-03-16 09:22:16 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 09:25:01 UTC] MONITOR starting
+[2026-03-16 09:25:07 UTC] MONITOR: No open positions or pending orders — skipping

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.gold-trader.keepawake</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>HOUR=$(date -u +%H | sed 's/^0//'); MIN=$(date -u +%M | sed 's/^0//'); DAY=$(date -u +%u); if [ "$DAY" -lt 1 ] || [ "$DAY" -gt 5 ]; then exit 0; fi; if [ "$HOUR" -lt 7 ] || [ "$HOUR" -gt 21 ]; then exit 0; fi; if [ "$HOUR" -eq 21 ] &amp;&amp; [ "$MIN" -ge 30 ]; then exit 0; fi; CONTAINER_PID=$(/usr/local/bin/docker inspect --format '{{.State.Pid}}' gold-trader 2>/dev/null || echo "0"); if [ "$CONTAINER_PID" = "0" ] || [ -z "$CONTAINER_PID" ]; then echo "$(date -u '+%Y-%m-%d %H:%M UTC') container not running"; exit 0; fi; echo "$(date -u '+%Y-%m-%d %H:%M UTC') Keeping awake PID $CONTAINER_PID"; exec /usr/bin/caffeinate -i -s -w "$CONTAINER_PID"</string>
+    </array>
+    <key>StartInterval</key>
+    <integer>300</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/tmp/gold-trader-keepawake.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/gold-trader-keepawake.log</string>
+</dict>
+</plist>

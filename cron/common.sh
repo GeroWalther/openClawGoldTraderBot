@@ -51,7 +51,7 @@ mkdir -p "$LOCK_DIR"
 acquire_lock() {
     local name="$1"
     local lockfile="$LOCK_DIR/${name}.lock"
-    local max_wait=30  # seconds
+    local max_wait=5  # seconds (short to prevent pileup after Mac wake)
 
     for i in $(seq 1 "$max_wait"); do
         if mkdir "$lockfile" 2>/dev/null; then
