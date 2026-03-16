@@ -2497,3 +2497,569 @@ ERROR: Could not acquire lock 'trade_scanner' after 5s
 [2026-03-16 09:22:16 UTC] M5 SCALP SCAN done — 0 signal(s) found
 [2026-03-16 09:25:01 UTC] MONITOR starting
 [2026-03-16 09:25:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 09:27:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 09:27:07 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5821
+[2026-03-16 09:27:14 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7022
+[2026-03-16 09:27:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 09:30:01 UTC] MONITOR starting
+[2026-03-16 09:30:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 09:30:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 09:32:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 09:32:13 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.582
+[2026-03-16 09:32:21 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7022
+[2026-03-16 09:32:21 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 09:35:01 UTC] MONITOR starting
+[2026-03-16 09:35:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 09:37:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 09:37:10 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5819
+[2026-03-16 09:37:16 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7019
+[2026-03-16 09:37:16 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 09:40:01 UTC] MONITOR starting
+[2026-03-16 09:40:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 09:42:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 09:42:08 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5822
+[2026-03-16 09:42:14 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7022
+[2026-03-16 09:42:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 09:45:01 UTC] MONITOR starting
+[2026-03-16 09:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 09:45:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 09:47:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 09:47:08 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5824
+[2026-03-16 09:47:14 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7025
+[2026-03-16 09:47:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 09:50:01 UTC] MONITOR starting
+[2026-03-16 09:50:08 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 09:52:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 09:52:09 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5825
+[2026-03-16 09:52:15 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7028
+[2026-03-16 09:52:15 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 09:55:02 UTC] MONITOR starting
+[2026-03-16 09:55:08 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 09:57:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 09:57:07 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5826
+[2026-03-16 09:57:13 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7027
+[2026-03-16 09:57:13 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 10:00:01 UTC] MONITOR starting
+[2026-03-16 10:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 10:00:10 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 10:02:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 10:02:07 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5824
+[2026-03-16 10:02:13 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7024
+[2026-03-16 10:02:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 10:05:01 UTC] MONITOR starting
+[2026-03-16 10:05:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 10:07:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 10:07:09 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5825
+[2026-03-16 10:07:16 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7026
+[2026-03-16 10:07:16 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 10:10:01 UTC] MONITOR starting
+[2026-03-16 10:10:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 10:12:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 10:12:07 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.583
+[2026-03-16 10:12:14 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7031
+[2026-03-16 10:12:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 10:15:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 10:15:01 UTC] MONITOR starting
+[2026-03-16 10:15:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 10:17:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 10:17:08 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5831
+[2026-03-16 10:17:15 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7033
+[2026-03-16 10:17:15 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 10:20:01 UTC] MONITOR starting
+[2026-03-16 10:20:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 10:22:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 10:22:09 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5833
+[2026-03-16 10:22:16 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7036
+[2026-03-16 10:22:16 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 10:25:01 UTC] MONITOR starting
+[2026-03-16 10:25:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 10:27:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 10:27:08 UTC] M5_SCALP NZDUSD: score=0.85/14.0 dir= conv= price=0.5835
+[2026-03-16 10:27:14 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7039
+[2026-03-16 10:27:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 10:30:01 UTC] MONITOR starting
+[2026-03-16 10:30:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 10:30:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 10:32:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 10:32:08 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5833
+[2026-03-16 10:32:14 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7037
+[2026-03-16 10:32:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 10:35:01 UTC] MONITOR starting
+[2026-03-16 10:35:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 10:37:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 10:37:10 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5834
+[2026-03-16 10:37:16 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7041
+[2026-03-16 10:37:16 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 10:40:01 UTC] MONITOR starting
+[2026-03-16 10:40:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 10:42:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 10:42:08 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5833
+[2026-03-16 10:42:14 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7042
+[2026-03-16 10:42:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 10:45:01 UTC] MONITOR starting
+[2026-03-16 10:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 10:45:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 10:47:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 10:47:08 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5834
+[2026-03-16 10:47:14 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7043
+[2026-03-16 10:47:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 10:50:01 UTC] MONITOR starting
+[2026-03-16 10:50:08 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 10:52:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 10:52:10 UTC] M5_SCALP NZDUSD: score=0.85/14.0 dir= conv= price=0.5838
+[2026-03-16 10:52:17 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7045
+[2026-03-16 10:52:17 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 10:55:01 UTC] MONITOR starting
+[2026-03-16 10:55:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 10:57:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 10:57:07 UTC] M5_SCALP NZDUSD: score=0.85/14.0 dir= conv= price=0.584
+[2026-03-16 10:57:14 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7049
+[2026-03-16 10:57:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 11:00:01 UTC] MONITOR starting
+[2026-03-16 11:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 11:00:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 11:02:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 11:02:07 UTC] M5_SCALP NZDUSD: score=1.06/14.0 dir= conv= price=0.584
+[2026-03-16 11:02:14 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.705
+[2026-03-16 11:02:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 11:05:01 UTC] MONITOR starting
+[2026-03-16 11:05:09 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 11:07:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 11:07:07 UTC] M5_SCALP NZDUSD: score=1.06/14.0 dir= conv= price=0.584
+[2026-03-16 11:07:16 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7049
+[2026-03-16 11:07:16 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 11:10:01 UTC] MONITOR starting
+[2026-03-16 11:10:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 11:12:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 11:12:09 UTC] M5_SCALP NZDUSD: score=1.06/14.0 dir= conv= price=0.5841
+[2026-03-16 11:12:15 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7051
+[2026-03-16 11:12:15 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 11:15:01 UTC] MONITOR starting
+[2026-03-16 11:15:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 11:15:08 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 11:17:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 11:17:07 UTC] M5_SCALP NZDUSD: score=0.85/14.0 dir= conv= price=0.5843
+[2026-03-16 11:17:13 UTC] M5_SCALP AUDUSD: score=0.85/14.0 dir= conv= price=0.7054
+[2026-03-16 11:17:13 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 11:20:01 UTC] MONITOR starting
+[2026-03-16 11:20:08 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 11:22:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 11:22:07 UTC] M5_SCALP NZDUSD: score=1.06/14.0 dir= conv= price=0.5843
+[2026-03-16 11:22:16 UTC] M5_SCALP AUDUSD: score=1.06/14.0 dir= conv= price=0.7053
+[2026-03-16 11:22:16 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 11:25:01 UTC] MONITOR starting
+[2026-03-16 11:25:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 11:27:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 11:27:07 UTC] M5_SCALP NZDUSD: score=2.34/14.0 dir= conv= price=0.5842
+[2026-03-16 11:27:14 UTC] M5_SCALP AUDUSD: score=2.34/14.0 dir= conv= price=0.7052
+[2026-03-16 11:27:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 11:30:01 UTC] MONITOR starting
+[2026-03-16 11:30:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 11:30:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 11:32:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 11:32:07 UTC] M5_SCALP NZDUSD: score=2.98/14.0 dir= conv= price=0.5842
+[2026-03-16 11:32:14 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.705
+[2026-03-16 11:32:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 11:35:01 UTC] MONITOR starting
+[2026-03-16 11:35:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 11:37:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 11:37:10 UTC] M5_SCALP NZDUSD: score=2.34/14.0 dir= conv= price=0.5842
+[2026-03-16 11:37:17 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.705
+[2026-03-16 11:37:17 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 11:40:01 UTC] MONITOR starting
+[2026-03-16 11:40:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 11:42:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 11:42:07 UTC] M5_SCALP NZDUSD: score=2.34/14.0 dir= conv= price=0.5844
+[2026-03-16 11:42:14 UTC] M5_SCALP AUDUSD: score=2.98/14.0 dir= conv= price=0.7052
+[2026-03-16 11:42:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 11:45:01 UTC] MONITOR starting
+[2026-03-16 11:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 11:45:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 11:47:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 11:47:07 UTC] M5_SCALP NZDUSD: score=2.34/14.0 dir= conv= price=0.5845
+[2026-03-16 11:47:14 UTC] M5_SCALP AUDUSD: score=2.98/14.0 dir= conv= price=0.7052
+[2026-03-16 11:47:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 11:50:01 UTC] MONITOR starting
+[2026-03-16 11:50:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 11:52:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 11:52:09 UTC] M5_SCALP NZDUSD: score=2.98/14.0 dir= conv= price=0.5843
+[2026-03-16 11:52:16 UTC] M5_SCALP AUDUSD: score=3.19/14.0 dir= conv= price=0.7051
+[2026-03-16 11:52:16 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 11:55:01 UTC] MONITOR starting
+[2026-03-16 11:55:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 11:57:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 11:57:07 UTC] M5_SCALP NZDUSD: score=3.19/14.0 dir= conv= price=0.5841
+[2026-03-16 11:57:14 UTC] M5_SCALP AUDUSD: score=0.0/14.0 dir= conv= price=0.7049
+[2026-03-16 11:57:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 12:00:01 UTC] MONITOR starting
+[2026-03-16 12:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 12:00:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 12:02:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 12:02:07 UTC] M5_SCALP NZDUSD: score=2.98/14.0 dir= conv= price=0.5843
+[2026-03-16 12:02:14 UTC] M5_SCALP AUDUSD: score=2.55/14.0 dir= conv= price=0.7052
+[2026-03-16 12:02:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 12:05:01 UTC] MONITOR starting
+[2026-03-16 12:05:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 12:07:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 12:07:10 UTC] M5_SCALP NZDUSD: score=2.34/14.0 dir= conv= price=0.5846
+[2026-03-16 12:07:16 UTC] M5_SCALP AUDUSD: score=1.06/14.0 dir= conv= price=0.7055
+[2026-03-16 12:07:16 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 12:10:01 UTC] MONITOR starting
+[2026-03-16 12:10:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 12:12:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 12:12:08 UTC] M5_SCALP NZDUSD: score=2.98/14.0 dir= conv= price=0.5845
+[2026-03-16 12:12:14 UTC] M5_SCALP AUDUSD: score=2.34/14.0 dir= conv= price=0.7055
+[2026-03-16 12:12:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 12:15:01 UTC] MONITOR starting
+[2026-03-16 12:15:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 12:15:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 12:17:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 12:17:08 UTC] M5_SCALP NZDUSD: score=2.98/14.0 dir= conv= price=0.5846
+[2026-03-16 12:17:14 UTC] M5_SCALP AUDUSD: score=2.34/14.0 dir= conv= price=0.7056
+[2026-03-16 12:17:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 12:20:01 UTC] MONITOR starting
+[2026-03-16 12:20:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 12:22:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 12:22:10 UTC] M5_SCALP NZDUSD: score=2.98/14.0 dir= conv= price=0.5846
+[2026-03-16 12:22:16 UTC] M5_SCALP AUDUSD: score=2.55/14.0 dir= conv= price=0.7053
+[2026-03-16 12:22:16 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 12:25:01 UTC] MONITOR starting
+[2026-03-16 12:25:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 12:27:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 12:27:11 UTC] M5_SCALP NZDUSD: score=1.06/14.0 dir= conv= price=0.5846
+[2026-03-16 12:27:17 UTC] M5_SCALP AUDUSD: score=1.91/14.0 dir= conv= price=0.7053
+[2026-03-16 12:27:17 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 12:30:01 UTC] MONITOR starting
+[2026-03-16 12:30:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 12:30:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 12:32:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 12:32:08 UTC] M5_SCALP NZDUSD: score=0.85/14.0 dir= conv= price=0.5848
+[2026-03-16 12:32:14 UTC] M5_SCALP AUDUSD: score=1.49/14.0 dir= conv= price=0.7058
+[2026-03-16 12:32:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 12:35:01 UTC] MONITOR starting
+[2026-03-16 12:35:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 12:37:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 12:37:10 UTC] M5_SCALP NZDUSD: score=1.49/14.0 dir= conv= price=0.5848
+[2026-03-16 12:37:16 UTC] M5_SCALP AUDUSD: score=2.34/14.0 dir= conv= price=0.7056
+[2026-03-16 12:37:16 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 12:40:01 UTC] MONITOR starting
+[2026-03-16 12:40:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 12:42:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 12:42:08 UTC] M5_SCALP NZDUSD: score=2.55/14.0 dir= conv= price=0.5845
+[2026-03-16 12:42:14 UTC] M5_SCALP AUDUSD: score=2.55/14.0 dir= conv= price=0.7054
+[2026-03-16 12:42:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 12:45:01 UTC] MONITOR starting
+[2026-03-16 12:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 12:45:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 12:47:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 12:47:09 UTC] M5_SCALP NZDUSD: score=2.98/14.0 dir= conv= price=0.5847
+[2026-03-16 12:47:15 UTC] M5_SCALP AUDUSD: score=2.98/14.0 dir= conv= price=0.7056
+[2026-03-16 12:47:15 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 12:50:01 UTC] MONITOR starting
+[2026-03-16 12:50:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 12:52:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 12:52:10 UTC] M5_SCALP NZDUSD: score=3.19/14.0 dir= conv= price=0.5845
+[2026-03-16 12:52:16 UTC] M5_SCALP AUDUSD: score=3.19/14.0 dir= conv= price=0.7054
+[2026-03-16 12:52:16 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 12:55:01 UTC] MONITOR starting
+[2026-03-16 12:55:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 12:57:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 12:57:08 UTC] M5_SCALP NZDUSD: score=1.49/14.0 dir= conv= price=0.5844
+[2026-03-16 12:57:14 UTC] M5_SCALP AUDUSD: score=0.85/14.0 dir= conv= price=0.7053
+[2026-03-16 12:57:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 13:00:01 UTC] MONITOR starting
+[2026-03-16 13:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 13:00:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 13:02:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 13:02:08 UTC] M5_SCALP NZDUSD: score=3.0/14.0 dir= conv= price=0.5845
+[2026-03-16 13:02:14 UTC] M5_SCALP AUDUSD: score=3.0/14.0 dir= conv= price=0.7054
+[2026-03-16 13:02:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 13:05:01 UTC] MONITOR starting
+[2026-03-16 13:05:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 13:07:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 13:07:10 UTC] M5_SCALP NZDUSD: score=3.75/14.0 dir= conv= price=0.5845
+[2026-03-16 13:07:16 UTC] M5_SCALP AUDUSD: score=3.0/14.0 dir= conv= price=0.7054
+[2026-03-16 13:07:16 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 13:10:01 UTC] MONITOR starting
+[2026-03-16 13:10:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 13:12:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 13:12:09 UTC] M5_SCALP NZDUSD: score=3.0/14.0 dir= conv= price=0.5841
+[2026-03-16 13:12:15 UTC] M5_SCALP AUDUSD: score=2.75/14.0 dir= conv= price=0.7051
+[2026-03-16 13:12:15 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 13:15:01 UTC] MONITOR starting
+[2026-03-16 13:15:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 13:15:09 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 13:17:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 13:17:08 UTC] M5_SCALP NZDUSD: score=1.75/14.0 dir= conv= price=0.5845
+[2026-03-16 13:17:14 UTC] M5_SCALP AUDUSD: score=3.0/14.0 dir= conv= price=0.7055
+[2026-03-16 13:17:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 13:20:01 UTC] MONITOR starting
+[2026-03-16 13:20:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 13:22:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 13:22:10 UTC] M5_SCALP NZDUSD: score=1.25/14.0 dir= conv= price=0.5843
+[2026-03-16 13:22:16 UTC] M5_SCALP AUDUSD: score=3.0/14.0 dir= conv= price=0.7054
+[2026-03-16 13:22:16 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 13:25:01 UTC] MONITOR starting
+[2026-03-16 13:25:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 13:27:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 13:27:08 UTC] M5_SCALP NZDUSD: score=1.0/14.0 dir= conv= price=0.5845
+[2026-03-16 13:27:14 UTC] M5_SCALP AUDUSD: score=3.5/14.0 dir= conv= price=0.7057
+[2026-03-16 13:27:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 13:30:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 13:30:01 UTC] MONITOR starting
+[2026-03-16 13:30:09 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 13:32:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 13:32:09 UTC] M5_SCALP NZDUSD: score=1.75/14.0 dir= conv= price=0.5848
+[2026-03-16 13:32:16 UTC] M5_SCALP AUDUSD: score=1.75/14.0 dir= conv= price=0.706
+[2026-03-16 13:32:16 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 13:35:01 UTC] MONITOR starting
+[2026-03-16 13:35:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 13:37:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 13:37:12 UTC] M5_SCALP NZDUSD: score=1.75/14.0 dir= conv= price=0.585
+[2026-03-16 13:37:19 UTC] M5_SCALP AUDUSD: score=1.75/14.0 dir= conv= price=0.7063
+[2026-03-16 13:37:19 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 13:40:01 UTC] MONITOR starting
+[2026-03-16 13:40:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 13:42:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 13:42:08 UTC] M5_SCALP NZDUSD: score=1.75/14.0 dir= conv= price=0.585
+[2026-03-16 13:42:14 UTC] M5_SCALP AUDUSD: score=1.75/14.0 dir= conv= price=0.7064
+[2026-03-16 13:42:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 13:45:01 UTC] MONITOR starting
+[2026-03-16 13:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 13:45:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 13:47:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 13:47:08 UTC] M5_SCALP NZDUSD: score=1.75/14.0 dir= conv= price=0.5854
+[2026-03-16 13:47:14 UTC] M5_SCALP AUDUSD: score=1.75/14.0 dir= conv= price=0.7068
+[2026-03-16 13:47:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 13:50:01 UTC] MONITOR starting
+[2026-03-16 13:50:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 13:52:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 13:52:10 UTC] M5_SCALP NZDUSD: score=1.0/14.0 dir= conv= price=0.5855
+[2026-03-16 13:52:16 UTC] M5_SCALP AUDUSD: score=1.75/14.0 dir= conv= price=0.7067
+[2026-03-16 13:52:16 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 13:55:01 UTC] MONITOR starting
+[2026-03-16 13:55:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 13:57:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 13:57:09 UTC] M5_SCALP NZDUSD: score=1.0/14.0 dir= conv= price=0.5858
+[2026-03-16 13:57:15 UTC] M5_SCALP AUDUSD: score=1.75/14.0 dir= conv= price=0.707
+[2026-03-16 13:57:15 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 14:00:01 UTC] MONITOR starting
+[2026-03-16 14:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 14:00:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 14:02:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 14:02:07 UTC] M5_SCALP NZDUSD: score=1.0/14.0 dir= conv= price=0.5859
+[2026-03-16 14:02:14 UTC] M5_SCALP AUDUSD: score=1.0/14.0 dir= conv= price=0.7073
+[2026-03-16 14:02:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 14:07:50 UTC] MONITOR starting
+[2026-03-16 14:07:56 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 14:07:56 UTC] M5 SCALP SCAN starting
+[2026-03-16 14:08:03 UTC] M5_SCALP NZDUSD: score=1.75/14.0 dir= conv= price=0.5856
+[2026-03-16 14:08:09 UTC] M5_SCALP AUDUSD: score=1.75/14.0 dir= conv= price=0.7072
+[2026-03-16 14:08:09 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 14:10:01 UTC] MONITOR starting
+[2026-03-16 14:10:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 14:12:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 14:12:09 UTC] M5_SCALP NZDUSD: score=1.75/14.0 dir= conv= price=0.5858
+[2026-03-16 14:12:15 UTC] M5_SCALP AUDUSD: score=1.75/14.0 dir= conv= price=0.7076
+[2026-03-16 14:12:15 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 14:15:01 UTC] MONITOR starting
+[2026-03-16 14:15:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 14:15:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 14:17:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 14:17:08 UTC] M5_SCALP NZDUSD: score=2.75/14.0 dir= conv= price=0.5856
+[2026-03-16 14:17:14 UTC] M5_SCALP AUDUSD: score=1.25/14.0 dir= conv= price=0.7071
+[2026-03-16 14:17:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 14:20:01 UTC] MONITOR starting
+[2026-03-16 14:20:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 14:22:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 14:22:10 UTC] M5_SCALP NZDUSD: score=1.25/14.0 dir= conv= price=0.5859
+[2026-03-16 14:22:16 UTC] M5_SCALP AUDUSD: score=1.25/14.0 dir= conv= price=0.7073
+[2026-03-16 14:22:16 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 14:25:01 UTC] MONITOR starting
+[2026-03-16 14:25:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 14:27:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 14:27:08 UTC] M5_SCALP NZDUSD: score=3.0/14.0 dir= conv= price=0.5855
+[2026-03-16 14:27:14 UTC] M5_SCALP AUDUSD: score=3.5/14.0 dir= conv= price=0.707
+[2026-03-16 14:27:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 14:56:31 UTC] M5 SCALP SCAN starting
+ERROR: Could not acquire lock 'trade_scanner' after 5s
+[2026-03-16 14:56:49 UTC] M5_SCALP NZDUSD: score=/ dir= conv= price=
+ERROR: Could not acquire lock 'trade_scanner' after 5s
+ERROR: Could not acquire lock 'trade_scanner' after 5s
+ERROR: Could not acquire lock 'trade_scanner' after 5s
+[2026-03-16 14:57:01 UTC] MONITOR starting
+[2026-03-16 14:57:06 UTC] M5_SCALP AUDUSD: score=/ dir= conv= price=
+[2026-03-16 14:57:06 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 14:57:06 UTC] M5 SCALP SCAN starting
+[2026-03-16 14:57:09 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 14:57:15 UTC] M5_SCALP NZDUSD: score=/ dir= conv= price=
+[2026-03-16 14:57:22 UTC] M5_SCALP AUDUSD: score=/ dir= conv= price=
+[2026-03-16 14:57:22 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 15:00:26 UTC] MONITOR starting
+[2026-03-16 15:00:26 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 15:00:32 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 15:02:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 15:02:18 UTC] M5_SCALP NZDUSD: score=1.75/14.0 dir= conv= price=0.5852
+[2026-03-16 15:02:27 UTC] M5_SCALP AUDUSD: score=1.75/14.0 dir= conv= price=0.7063
+[2026-03-16 15:02:27 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 15:05:01 UTC] MONITOR starting
+[2026-03-16 15:05:08 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 15:07:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 15:07:08 UTC] M5_SCALP NZDUSD: score=0.5/14.0 dir= conv= price=0.585
+[2026-03-16 15:07:17 UTC] M5_SCALP AUDUSD: score=-4.75/14.0 dir= conv= price=0.706
+[2026-03-16 15:07:17 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 15:10:01 UTC] MONITOR starting
+[2026-03-16 15:10:07 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 15:12:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 15:12:07 UTC] M5_SCALP NZDUSD: score=0.25/14.0 dir= conv= price=0.5851
+[2026-03-16 15:12:14 UTC] M5_SCALP AUDUSD: score=-5.5/14.0 dir= conv= price=0.7061
+[2026-03-16 15:12:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 15:15:41 UTC] MONITOR starting
+[2026-03-16 15:15:41 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 15:15:47 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 15:17:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 15:17:08 UTC] M5_SCALP NZDUSD: score=-2.0/14.0 dir= conv= price=0.5853
+[2026-03-16 15:17:14 UTC] M5_SCALP AUDUSD: score=-1.25/14.0 dir= conv= price=0.7063
+[2026-03-16 15:17:14 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 15:20:01 UTC] MONITOR starting
+[2026-03-16 15:20:09 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 15:22:12 UTC] M5 SCALP SCAN starting
+[2026-03-16 15:22:19 UTC] M5_SCALP NZDUSD: score=0.0/14.0 dir= conv= price=0.5854
+[2026-03-16 15:22:26 UTC] M5_SCALP AUDUSD: score=-1.25/14.0 dir= conv= price=0.7064
+[2026-03-16 15:22:26 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 15:25:01 UTC] MONITOR starting
+[2026-03-16 15:25:08 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 15:27:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 15:27:06 UTC] M5_SCALP NZDUSD: score=1.0/14.0 dir= conv= price=0.5852
+[2026-03-16 15:27:09 UTC] M5_SCALP AUDUSD: score=0.5/14.0 dir= conv= price=0.7061
+[2026-03-16 15:27:09 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 15:30:01 UTC] MONITOR starting
+[2026-03-16 15:30:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 15:30:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 15:32:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 15:32:04 UTC] M5_SCALP NZDUSD: score=1.0/14.0 dir= conv= price=0.5853
+[2026-03-16 15:32:07 UTC] M5_SCALP AUDUSD: score=-5.0/14.0 dir= conv= price=0.7062
+[2026-03-16 15:32:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 15:35:01 UTC] MONITOR starting
+[2026-03-16 15:35:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 15:37:01 UTC] M15_BB_BOUNCE: Feature flag disabled (bb_bounce_enabled=), exiting
+[2026-03-16 15:37:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 15:37:04 UTC] M5_SCALP NZDUSD: score=3.0/14.0 dir= conv= price=0.5854
+[2026-03-16 15:37:07 UTC] M5_SCALP AUDUSD: score=-5.0/14.0 dir= conv= price=0.7063
+[2026-03-16 15:37:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 15:40:01 UTC] MONITOR starting
+[2026-03-16 15:40:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 15:42:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 15:42:04 UTC] M5_SCALP NZDUSD: score=3.0/14.0 dir= conv= price=0.5854
+[2026-03-16 15:42:07 UTC] M5_SCALP AUDUSD: score=-3.0/14.0 dir= conv= price=0.7062
+[2026-03-16 15:42:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 15:45:01 UTC] MONITOR starting
+[2026-03-16 15:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 15:45:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 15:47:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 15:47:04 UTC] M5_SCALP NZDUSD: score=1.0/14.0 dir= conv= price=0.5852
+[2026-03-16 15:47:07 UTC] M5_SCALP AUDUSD: score=-2.75/14.0 dir= conv= price=0.7059
+[2026-03-16 15:47:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 15:50:01 UTC] MONITOR starting
+[2026-03-16 15:50:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 15:52:02 UTC] M15_BB_BOUNCE: Feature flag disabled (bb_bounce_enabled=), exiting
+[2026-03-16 15:52:02 UTC] M5 SCALP SCAN starting
+[2026-03-16 15:52:05 UTC] M5_SCALP NZDUSD: score=0.75/14.0 dir= conv= price=0.5848
+[2026-03-16 15:52:07 UTC] M5_SCALP AUDUSD: score=-1.75/14.0 dir= conv= price=0.7054
+[2026-03-16 15:52:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 15:55:01 UTC] MONITOR starting
+[2026-03-16 15:55:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 15:57:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 15:57:04 UTC] M5_SCALP NZDUSD: score=-3.75/14.0 dir= conv= price=0.5846
+[2026-03-16 15:57:07 UTC] M5_SCALP AUDUSD: score=-1.75/14.0 dir= conv= price=0.7053
+[2026-03-16 15:57:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 16:07:39 UTC] M5 SCALP SCAN starting
+[2026-03-16 16:07:49 UTC] M15_BB_BOUNCE: Feature flag disabled (bb_bounce_enabled=), exiting
+[2026-03-16 16:07:52 UTC] M5_SCALP NZDUSD: score=/ dir= conv= price=
+ERROR: Could not acquire lock 'trade_scanner' after 5s
+[2026-03-16 16:08:05 UTC] M5_SCALP AUDUSD: score=/ dir= conv= price=
+[2026-03-16 16:08:05 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 16:10:01 UTC] MONITOR starting
+[2026-03-16 16:10:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 16:12:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 16:12:05 UTC] M5_SCALP NZDUSD: score=-0.64/14.0 dir= conv= price=0.585
+[2026-03-16 16:12:08 UTC] M5_SCALP AUDUSD: score=-1.91/14.0 dir= conv= price=0.7058
+[2026-03-16 16:12:08 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 16:15:01 UTC] MONITOR starting
+[2026-03-16 16:15:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 16:15:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 16:17:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 16:17:04 UTC] M5_SCALP NZDUSD: score=-1.91/14.0 dir= conv= price=0.5849
+[2026-03-16 16:17:07 UTC] M5_SCALP AUDUSD: score=-2.34/14.0 dir= conv= price=0.7057
+[2026-03-16 16:17:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 16:20:01 UTC] MONITOR starting
+[2026-03-16 16:22:02 UTC] M15_BB_BOUNCE: Feature flag disabled (bb_bounce_enabled=), exiting
+[2026-03-16 16:22:02 UTC] M5 SCALP SCAN starting
+[2026-03-16 16:22:06 UTC] M5_SCALP NZDUSD: score=-1.49/14.0 dir= conv= price=0.5846
+[2026-03-16 16:22:11 UTC] M5_SCALP AUDUSD: score=-2.76/14.0 dir= conv= price=0.7052
+[2026-03-16 16:22:11 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 16:25:01 UTC] MONITOR starting
+[2026-03-16 16:25:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 16:26:43 UTC] M15 BB BOUNCE SCAN starting
+[2026-03-16 16:26:47 UTC] M15_BB_BOUNCE AUDUSD: score=0.0/14.0 dir= conv= price=0.7047
+[2026-03-16 16:26:47 UTC] M15 BB BOUNCE SCAN done — 0 signal(s) found
+[2026-03-16 16:27:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 16:27:03 UTC] M5_SCALP NZDUSD: score=-2.76/14.0 dir= conv= price=0.5841
+[2026-03-16 16:27:06 UTC] M5_SCALP AUDUSD: score=-3.4/14.0 dir= conv= price=0.7047
+[2026-03-16 16:27:06 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 16:30:01 UTC] MONITOR starting
+[2026-03-16 16:30:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 16:30:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 16:32:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 16:32:04 UTC] M5_SCALP NZDUSD: score=-1.49/14.0 dir= conv= price=0.5841
+[2026-03-16 16:32:07 UTC] M5_SCALP AUDUSD: score=-1.49/14.0 dir= conv= price=0.7047
+[2026-03-16 16:32:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 16:35:01 UTC] MONITOR starting
+[2026-03-16 16:35:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 16:37:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 16:37:04 UTC] M5_SCALP NZDUSD: score=-0.85/14.0 dir= conv= price=0.5841
+ERROR: Could not acquire lock 'trade_scanner' after 5s
+[2026-03-16 16:37:07 UTC] M5_SCALP AUDUSD: score=-0.85/14.0 dir= conv= price=0.7048
+[2026-03-16 16:37:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 16:40:01 UTC] MONITOR starting
+[2026-03-16 16:40:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 16:42:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 16:42:04 UTC] M5_SCALP NZDUSD: score=-1.91/14.0 dir= conv= price=0.5847
+[2026-03-16 16:42:07 UTC] M5_SCALP AUDUSD: score=-2.55/14.0 dir= conv= price=0.7055
+[2026-03-16 16:42:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 16:45:01 UTC] MONITOR starting
+[2026-03-16 16:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 16:45:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 16:47:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 16:47:04 UTC] M5_SCALP NZDUSD: score=-2.55/14.0 dir= conv= price=0.5846
+[2026-03-16 16:47:07 UTC] M5_SCALP AUDUSD: score=-2.55/14.0 dir= conv= price=0.7054
+[2026-03-16 16:47:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 16:50:01 UTC] MONITOR starting
+[2026-03-16 16:50:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 16:52:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 16:52:05 UTC] M5_SCALP NZDUSD: score=-2.55/14.0 dir= conv= price=0.5849
+ERROR: Could not acquire lock 'trade_scanner' after 5s
+[2026-03-16 16:52:09 UTC] M5_SCALP AUDUSD: score=-0.85/14.0 dir= conv= price=0.7057
+[2026-03-16 16:52:09 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 16:55:01 UTC] MONITOR starting
+[2026-03-16 16:55:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 16:57:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 16:57:04 UTC] M5_SCALP NZDUSD: score=-3.19/14.0 dir= conv= price=0.5849
+[2026-03-16 16:57:07 UTC] M5_SCALP AUDUSD: score=-1.49/14.0 dir= conv= price=0.7058
+[2026-03-16 16:57:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 17:00:01 UTC] MONITOR starting
+[2026-03-16 17:00:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-16 17:00:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 17:02:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 17:02:04 UTC] M5_SCALP NZDUSD: score=-2.76/14.0 dir= conv= price=0.585
+[2026-03-16 17:02:07 UTC] M5_SCALP AUDUSD: score=-2.76/14.0 dir= conv= price=0.7059
+[2026-03-16 17:02:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-16 17:04:01 UTC] M15 BB BOUNCE SCAN starting
+[2026-03-16 17:04:05 UTC] M15_BB_BOUNCE AUDUSD: score=0.0/14.0 dir= conv= price=0.706
+[2026-03-16 17:04:05 UTC] M15 BB BOUNCE SCAN done — 0 signal(s) found
+[2026-03-16 17:05:01 UTC] MONITOR starting
+[2026-03-16 17:05:04 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-16 17:07:01 UTC] M5 SCALP SCAN starting
+[2026-03-16 17:07:05 UTC] M5_SCALP NZDUSD: score=2.76/14.0 dir= conv= price=0.5854
+[2026-03-16 17:07:07 UTC] M5_SCALP AUDUSD: score=-2.34/14.0 dir= conv= price=0.7062
+[2026-03-16 17:07:07 UTC] M5 SCALP SCAN done — 0 signal(s) found

@@ -1,0 +1,3 @@
+timestamp,instrument,price,score,max_score,direction,conviction,bb_touch,rsi_extreme,bb_squeeze,session_quality
+2026-03-16_1626,AUDUSD,0.7047,0.0,14.0,,,0.0,0.0,0.0,1.0
+2026-03-16_1704,AUDUSD,0.706,0.0,14.0,,,0.0,0.0,0.0,1.0

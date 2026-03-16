@@ -257,6 +257,7 @@ class TelegramCommandHandler:
         journal_dir = Path(__file__).parent.parent.parent / "journal"
         strategies = [
             ("M5 Scalp", "scalp"),
+            ("M15 BB Bounce", "bb_bounce"),
             ("M15 Sensei", "sensei"),
             ("Intraday", "intraday"),
             ("Swing", "swing"),

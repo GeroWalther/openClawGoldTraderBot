@@ -15,6 +15,9 @@ SHELL=/bin/bash
 # M15 Sensei (BTC) — every 15 min, 24/7 (BTC trades all week)
 */15 * * * *  root  /app/cron/scan_sensei.sh >> /app/journal/cron.log 2>&1
 
+# M15 BB Bounce (AUDUSD) — every 15 min, 07-21 UTC, Mon-Fri
+4-59/15 7-21 * * 1-5  root  /app/cron/scan_bb_bounce.sh >> /app/journal/cron.log 2>&1
+
 # Trade monitor — every 5min during market hours, Mon-Fri
 */5 7-21 * * 1-5  root  /app/cron/monitor.sh >> /app/journal/cron.log 2>&1
 

@@ -123,7 +123,7 @@ for inst in "${SCALP_INSTRUMENTS[@]}"; do
             }" > /dev/null 2>&1 || true
 
             # Auto-trade: M5 scalp, MEDIUM+HIGH conviction
-            if ([ "$conviction" = "MEDIUM" ] || [ "$conviction" = "HIGH" ]) && ([ "$inst" = "NZDUSD" ] || [ "$inst" = "BTC" ]); then
+            if ([ "$conviction" = "MEDIUM" ] || [ "$conviction" = "HIGH" ]) && ([ "$inst" = "NZDUSD" ] || [ "$inst" = "AUDUSD" ] || [ "$inst" = "BTC" ]); then
                 # Same-direction debounce (defense-in-depth)
                 if ! check_debounce "$inst" "$direction"; then
                     debounce_info=$(check_debounce "$inst" "$direction" 2>&1 || true)

@@ -17,7 +17,7 @@ COPY app/ app/
 COPY cron/ cron/
 
 # Journal directories
-RUN mkdir -p journal/{intraday/scans,swing/scans,scalp/scans,daily/scans,monitors,summaries}
+RUN mkdir -p journal/{intraday/scans,swing/scans,scalp/scans,daily/scans,bb_bounce/scans,monitors,summaries}
 
 # Make cron scripts executable
 RUN chmod +x cron/*.sh

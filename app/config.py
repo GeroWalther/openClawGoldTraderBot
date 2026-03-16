@@ -75,11 +75,19 @@ class Settings(BaseSettings):
     m5_signal_threshold: float = 8.0
     m5_high_conviction_threshold: float = 11.0
 
-    # M5 Scalp BTC (separate flag from AUDUSD scalp)
+    # M5 Scalp BTC (separate flag + separate thresholds from FX)
     scalp_btc_enabled: bool = False
+    m5_btc_signal_threshold: float = 6.0
+    m5_btc_high_conviction_threshold: float = 9.0
+    m5_btc_atr_sl_multiplier: float = 1.5
 
     # M15 Sensei (BTC W/M pattern strategy)
     sensei_btc_enabled: bool = False
+
+    # M15 BB Bounce (range-specialist, trades when M5 scalp is quiet)
+    bb_bounce_enabled: bool = False
+    bb_bounce_signal_threshold: float = 8.0
+    bb_bounce_high_conviction_threshold: float = 11.0
 
     # App
     api_secret_key: str

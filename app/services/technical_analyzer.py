@@ -32,6 +32,13 @@ from app.services.m5_scalp_scoring import (
     M5_SIGNAL_THRESHOLD,
     M5ScalpScoringEngine,
 )
+from app.services.m15_bb_bounce_scoring import (
+    M15_BB_FACTOR_WEIGHTS,
+    M15_BB_HIGH_CONVICTION_THRESHOLD,
+    M15_BB_MAX_SCORE,
+    M15_BB_SIGNAL_THRESHOLD,
+    M15BBBounceScoringEngine,
+)
 from app.services.m15_sensei_scoring import (
     M15_SENSEI_FACTOR_WEIGHTS,
     M15_SENSEI_HIGH_CONVICTION_THRESHOLD,
@@ -199,6 +206,14 @@ class TechnicalAnalyzer:
         self._m5_scalp_scoring_engine = M5ScalpScoringEngine(
             signal_threshold=_settings.m5_signal_threshold,
             high_conviction_threshold=_settings.m5_high_conviction_threshold,
+        )
+        self._m5_btc_scalp_scoring_engine = M5ScalpScoringEngine(
+            signal_threshold=_settings.m5_btc_signal_threshold,
+            high_conviction_threshold=_settings.m5_btc_high_conviction_threshold,
+        )
+        self._m15_bb_bounce_scoring_engine = M15BBBounceScoringEngine(
+            signal_threshold=_settings.bb_bounce_signal_threshold,
+            high_conviction_threshold=_settings.bb_bounce_high_conviction_threshold,
         )
         self._m15_sensei_scoring_engine = M15SenseiScoringEngine()
         self._calendar_service = CalendarService()
@@ -395,6 +410,143 @@ class TechnicalAnalyzer:
 
         return result
 
+    async def analyze_m15_bb_bounce(self, instrument_key: str) -> dict:
+        """M15 BB Bounce analysis — range-specialist, trades when M5 scalp is quiet."""
+        key = instrument_key.upper()
+        cache_key = f"{key}_m15bb"
+        now = time.monotonic()
+
+        cached = self._cache.get(cache_key)
+        if cached:
+            data, ts = cached
+            if now - ts < 120:  # 2-minute cache
+                return data
+
+        if key not in INSTRUMENTS:
+            return {"error": f"Unknown instrument: {key}", "available": list(INSTRUMENTS)}
+
+        instrument = INSTRUMENTS[key]
+        result = await self._run_m15_bb_bounce_analysis(key, instrument)
+        self._cache[cache_key] = (result, time.monotonic())
+        return result
+
+    async def _run_m15_bb_bounce_analysis(self, key: str, instrument: InstrumentSpec) -> dict:
+        """Execute M15 BB Bounce analysis: fetch M15 data, compute indicators, score."""
+        warnings = []
+        loop = asyncio.get_event_loop()
+        symbol = instrument.yahoo_symbol
+
+        # Fetch M15 (5 days for BB computation) and H1 (for S/R levels)
+        m15_future = loop.run_in_executor(_executor, _fetch_ohlcv, symbol, "5d", "15m")
+        h1_future = loop.run_in_executor(_executor, _fetch_ohlcv, symbol, "1mo", "1h")
+
+        results = await asyncio.gather(m15_future, h1_future, return_exceptions=True)
+
+        m15_df = results[0] if not isinstance(results[0], Exception) else pd.DataFrame()
+        h1_df = results[1] if not isinstance(results[1], Exception) else pd.DataFrame()
+
+        if isinstance(results[0], Exception):
+            warnings.append(f"M15 fetch failed: {results[0]}")
+        if isinstance(results[1], Exception):
+            warnings.append(f"H1 fetch failed: {results[1]}")
+
+        if m15_df.empty:
+            return {"error": f"M15 data unavailable for {key}", "warnings": warnings}
+
+        # Compute indicators on M15
+        m15_block = None
+        if len(m15_df) >= 21:
+            try:
+                compute_indicators(m15_df)
+                m15_block = _build_timeframe_block(m15_df, include_sma=True)
+            except Exception as e:
+                warnings.append(f"M15 indicators failed: {e}")
+
+        if m15_block is None:
+            return {"error": f"M15 indicators unavailable for {key}", "warnings": warnings}
+
+        # Compute H1 indicators for S/R levels
+        h1_block = None
+        if not h1_df.empty and len(h1_df) >= 20:
+            try:
+                compute_indicators(h1_df)
+                h1_block = _build_timeframe_block(h1_df, include_sma=True)
+            except Exception as e:
+                warnings.append(f"H1 indicators failed: {e}")
+
+        # Current price from M15
+        m15_last = m15_df.iloc[-1]
+        current = float(m15_last["close"])
+        prev_close = float(m15_df["close"].iloc[-2]) if len(m15_df) >= 2 else current
+        change_pct = round((current - prev_close) / prev_close * 100, 2) if prev_close else 0
+        price_info = {
+            "current": round(current, 4 if current < 10 else 2),
+            "previous_close": round(prev_close, 4 if prev_close < 10 else 2),
+            "change_pct": change_pct,
+        }
+
+        # S/R levels from H1 pivot clustering
+        levels = {}
+        if not h1_df.empty:
+            try:
+                sr = compute_sr_levels(h1_df, pivot_range=2)
+                levels["resistance"] = [r["level"] for r in sr["resistance"]]
+                levels["support"] = [s["level"] for s in sr["support"]]
+                levels["sr_meta"] = sr
+            except Exception as e:
+                warnings.append(f"S/R computation failed: {e}")
+
+        # Scoring
+        m15_tail = m15_df.tail(6)
+        score_result = self._m15_bb_bounce_scoring_engine.score(
+            m15_tail, instrument.trading_sessions,
+        )
+        scoring = {
+            "total_score": score_result["total_score"],
+            "max_score": score_result["max_score"],
+            "direction": score_result["direction"],
+            "conviction": score_result["conviction"],
+            "factors": score_result["factors"],
+            "signal_type": "mean_reversion",
+        }
+
+        # Session info
+        session = _session_info(instrument)
+
+        # Summary
+        direction = scoring.get("direction", "NO TRADE")
+        conviction = scoring.get("conviction")
+        total = scoring.get("total_score", 0)
+
+        summary = (
+            f"{conviction or 'LOW'} conviction {direction or 'NO TRADE'}. "
+            f"BB Bounce M15. "
+            f"Score {total}/{scoring.get('max_score', 12)}."
+        )
+
+        result = {
+            "instrument": key,
+            "display_name": instrument.display_name,
+            "mode": "m15_bb_bounce",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "price": price_info,
+            "technicals": {},
+            "levels": levels,
+            "scoring": scoring,
+            "session": session,
+            "summary": summary,
+        }
+
+        if m15_block:
+            result["technicals"]["m15"] = m15_block
+        if h1_block:
+            result["technicals"]["h1"] = h1_block
+
+        if warnings:
+            result["warnings"] = warnings
+
+        return result
+
     async def analyze_m5_scalp(self, instrument_key: str) -> dict:
         """M5 scalp analysis using H1 trend gate and M5 entry signals."""
         key = instrument_key.upper()
@@ -502,8 +654,9 @@ class TechnicalAnalyzer:
                     round(float(low_20 - atr), 2),
                 ]
 
-        # Scoring
-        score_result = self._m5_scalp_scoring_engine.score(
+        # Scoring — use BTC-specific engine for BTC (lower thresholds, tighter SL)
+        engine = self._m5_btc_scalp_scoring_engine if key == "BTC" else self._m5_scalp_scoring_engine
+        score_result = engine.score(
             h1_row, m5_tail, instrument.trading_sessions,
         )
         scoring = {

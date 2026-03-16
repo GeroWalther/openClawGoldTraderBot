@@ -38,6 +38,7 @@ mkdir -p "$JOURNAL_DIR/intraday/scans"
 mkdir -p "$JOURNAL_DIR/swing/scans"
 mkdir -p "$JOURNAL_DIR/scalp/scans"
 mkdir -p "$JOURNAL_DIR/daily/scans"
+mkdir -p "$JOURNAL_DIR/bb_bounce/scans"
 mkdir -p "$JOURNAL_DIR/monitors"
 mkdir -p "$JOURNAL_DIR/summaries"
 
@@ -354,6 +355,21 @@ else:
     sd = round(sl_level - ref, 2)
     ld = round(ref - tp_level, 2)
 
+# M15 BB Bounce: SL=1.5*ATR, TP=2.0*ATR, MARKET order (mean-reversion)
+if timeframe == 'm15' and strategy == 'm15_bb_bounce':
+    m15_atr = float(d.get('technicals', {}).get('m15', {}).get('atr', 0) or 0)
+    if m15_atr > 0:
+        MIN_STOP_M15 = {'BTC': 250.0, 'XAUUSD': 3.0, 'AUDUSD': 0.0005, 'NZDUSD': 0.0005}
+        min_sd = MIN_STOP_M15.get(inst, 0)
+        digits = 5 if inst in ('AUDUSD','NZDUSD','EURUSD','GBPUSD') else 2
+        sd = round(max(m15_atr * 1.2, min_sd), digits)
+        ld = round(max(m15_atr * 2.5, min_sd * 2.0), digits)
+        payload['stop_distance'] = sd
+        payload['limit_distance'] = ld
+        payload['order_type'] = 'MARKET'
+        print(json.dumps(payload))
+    sys.exit()
+
 # M15 Sensei: SL=0.8*ATR, no TP (trail-only via trade monitor), MARKET order
 if timeframe == 'm15' and strategy == 'm15_sensei':
     m15_atr = float(d.get('technicals', {}).get('m15', {}).get('atr', 0) or 0)
@@ -374,7 +390,9 @@ if timeframe == 'm5':
         MIN_STOP_M5 = {'BTC': 250.0, 'XAUUSD': 3.0, 'AUDUSD': 0.0005, 'NZDUSD': 0.0005, 'EURUSD': 0.0005, 'GBPUSD': 0.0005}
         min_sd = MIN_STOP_M5.get(inst, 0)
         digits = 5 if inst in ('AUDUSD','NZDUSD','EURUSD','GBPUSD') else 2
-        sd = round(max(m5_atr * 2.0, min_sd), digits)
+        # BTC uses 1.5×ATR SL (tighter), FX uses 2.0×ATR
+        sl_mult = 1.5 if inst == 'BTC' else 2.0
+        sd = round(max(m5_atr * sl_mult, min_sd), digits)
         payload['stop_distance'] = sd
         payload['order_type'] = 'MARKET'
         print(json.dumps(payload))
