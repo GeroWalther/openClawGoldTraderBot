@@ -7055,3 +7055,71 @@ ERROR: Could not acquire lock 'trade_scanner' after 5s
 [2026-03-19 12:17:03 UTC] M5_SCALP NZDUSD: SKIP scan — already has open position
 [2026-03-19 12:17:07 UTC] M5_SCALP AUDUSD: score=-7.22/14.0 dir= conv= price=0.7035
 [2026-03-19 12:17:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-19 12:19:01 UTC] M15 BB BOUNCE SCAN starting
+[2026-03-19 12:19:05 UTC] M15_BB_BOUNCE AUDUSD: score=0.0/14.0 dir= conv= price=0.7038
+[2026-03-19 12:19:05 UTC] M15 BB BOUNCE SCAN done — 0 signal(s) found
+[2026-03-19 12:20:01 UTC] MONITOR starting
+[2026-03-19 12:20:03 UTC] MONITOR NZDUSD: dir=SELL pnl=0.45 pct_to_tp=0.0% action=ratchet_trail
+[2026-03-19 12:20:04 UTC] MONITOR NZDUSD: Ratchet SL to 0.581030 (1R reached, locking 0.5R, current 1.0R)
+[2026-03-19 12:20:08 UTC] MONITOR NZDUSD: Ratchet result=modified
+[2026-03-19 12:20:08 UTC] MONITOR done
+[2026-03-19 12:22:01 UTC] M5 SCALP SCAN starting
+[2026-03-19 12:22:03 UTC] M5_SCALP NZDUSD: SKIP scan — already has open position
+[2026-03-19 12:22:08 UTC] M5_SCALP AUDUSD: score=-7.22/14.0 dir= conv= price=0.7033
+[2026-03-19 12:22:08 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-19 12:25:01 UTC] MONITOR starting
+[2026-03-19 12:25:03 UTC] MONITOR NZDUSD: dir=SELL pnl=0.81 pct_to_tp=0.0% action=ratchet_trail
+[2026-03-19 12:25:04 UTC] MONITOR NZDUSD: Ratchet SL to 0.581030 (1R reached, locking 0.5R, current 1.9R)
+[2026-03-19 12:25:09 UTC] MONITOR NZDUSD: Ratchet result=modified
+[2026-03-19 12:25:09 UTC] MONITOR done
+[2026-03-19 12:27:01 UTC] M5 SCALP SCAN starting
+[2026-03-19 12:27:03 UTC] M5_SCALP NZDUSD: SKIP scan — already has open position
+[2026-03-19 12:27:07 UTC] M5_SCALP AUDUSD: score=-5.1/14.0 dir= conv= price=0.702
+[2026-03-19 12:27:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-19 12:30:01 UTC] MONITOR starting
+[2026-03-19 12:30:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-19 12:30:04 UTC] MONITOR NZDUSD: dir=SELL pnl=1.1 pct_to_tp=0.0% action=ratchet_trail
+[2026-03-19 12:30:04 UTC] MONITOR NZDUSD: Ratchet SL to 0.580780 (2R reached, locking 1.0R, current 2.5R)
+[2026-03-19 12:30:08 UTC] MONITOR NZDUSD: Ratchet result=modified
+[2026-03-19 12:30:08 UTC] MONITOR done
+[2026-03-19 12:32:01 UTC] M5 SCALP SCAN starting
+[2026-03-19 12:32:03 UTC] M5_SCALP NZDUSD: SKIP scan — already has open position
+[2026-03-19 12:32:07 UTC] M5_SCALP AUDUSD: score=-5.1/14.0 dir= conv= price=0.7015
+[2026-03-19 12:32:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-19 12:34:01 UTC] M15 BB BOUNCE SCAN starting
+[2026-03-19 12:34:04 UTC] M15_BB_BOUNCE AUDUSD: score=0.0/14.0 dir= conv= price=0.702
+[2026-03-19 12:34:04 UTC] M15 BB BOUNCE SCAN done — 0 signal(s) found
+[2026-03-19 12:35:01 UTC] MONITOR starting
+[2026-03-19 12:35:03 UTC] MONITOR NZDUSD: dir=SELL pnl=0.92 pct_to_tp=0.0% action=ratchet_trail
+[2026-03-19 12:35:04 UTC] MONITOR NZDUSD: Ratchet SL to 0.580780 (2R reached, locking 1.0R, current 2.1R)
+[2026-03-19 12:35:08 UTC] MONITOR NZDUSD: Ratchet result=modified
+[2026-03-19 12:35:08 UTC] MONITOR done
+[2026-03-19 12:37:01 UTC] M5 SCALP SCAN starting
+[2026-03-19 12:37:03 UTC] M5_SCALP NZDUSD: SKIP scan — already has open position
+[2026-03-19 12:37:07 UTC] M5_SCALP AUDUSD: score=-5.1/14.0 dir= conv= price=0.7019
+[2026-03-19 12:37:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-19 12:40:01 UTC] MONITOR starting
+[2026-03-19 12:40:03 UTC] MONITOR NZDUSD: dir=SELL pnl=1.02 pct_to_tp=0.0% action=ratchet_trail
+[2026-03-19 12:40:03 UTC] MONITOR NZDUSD: Ratchet SL to 0.580780 (2R reached, locking 1.0R, current 2.3R)
+[2026-03-19 12:40:08 UTC] MONITOR NZDUSD: Ratchet result=modified
+[2026-03-19 12:40:08 UTC] MONITOR done
+[2026-03-19 12:42:01 UTC] M5 SCALP SCAN starting
+[2026-03-19 12:42:03 UTC] M5_SCALP NZDUSD: SKIP scan — already has open position
+[2026-03-19 12:42:07 UTC] M5_SCALP AUDUSD: score=-5.74/14.0 dir= conv= price=0.702
+[2026-03-19 12:42:07 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-19 12:45:01 UTC] M15_SENSEI: Feature flag disabled (sensei_btc_enabled=false), exiting
+[2026-03-19 12:45:01 UTC] MONITOR starting
+[2026-03-19 12:45:03 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-19 12:47:01 UTC] M5 SCALP SCAN starting
+[2026-03-19 12:47:04 UTC] M5_SCALP NZDUSD: score=-6.59/14.0 dir= conv= price=0.5806
+[2026-03-19 12:47:08 UTC] M5_SCALP AUDUSD: score=-5.74/14.0 dir= conv= price=0.702
+[2026-03-19 12:47:08 UTC] M5 SCALP SCAN done — 0 signal(s) found
+[2026-03-19 12:49:01 UTC] M15 BB BOUNCE SCAN starting
+[2026-03-19 12:49:03 UTC] M15_BB_BOUNCE AUDUSD: score=0.0/14.0 dir= conv= price=0.7017
+[2026-03-19 12:49:03 UTC] M15 BB BOUNCE SCAN done — 0 signal(s) found
+[2026-03-19 12:50:01 UTC] MONITOR starting
+[2026-03-19 12:50:03 UTC] MONITOR: No open positions or pending orders — skipping
+[2026-03-19 12:52:01 UTC] M5 SCALP SCAN starting
+[2026-03-19 12:52:05 UTC] M5_SCALP NZDUSD: score=-7.22/14.0 dir= conv= price=0.5807
+[2026-03-19 12:52:08 UTC] M5_SCALP AUDUSD: score=-5.74/14.0 dir= conv= price=0.7018
+[2026-03-19 12:52:08 UTC] M5 SCALP SCAN done — 0 signal(s) found

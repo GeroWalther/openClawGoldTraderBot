@@ -1,8 +1,6 @@
-"""Backtest NZDUSD M5 Scalp — exact live setup with ratchet SL exit.
+"""Compare current ratchet (0.5R lock at 1R) vs Option B (BE at 1R, 0.5R lock at 2R).
 
-€150 account, 3% risk, MAX_POSITION_SIZE=1000, min stop 5 pips,
-ratchet SL: tighten by 0.5×sl_dist each 1R of profit (floor-based).
-Signal threshold=6, 12-bar same-direction debounce.
+Runs both variants on NZDUSD + AUDUSD M5 Scalp with identical signals.
 """
 
 import sys, os, math
@@ -18,25 +16,19 @@ from app.services.indicators import compute_indicators, compute_scalp_indicators
 from app.services.m5_scalp_scoring import M5ScalpScoringEngine
 
 
-COST_PER_RT = 0.00012  # ~1.2 pip spread + slippage
+COST_PER_RT = 0.00012
 ICM_MIN_SIZE = 1000
 MAX_POSITION_SIZE = 1000
-MIN_STOP = 0.0005      # 5 pips minimum
+MIN_STOP = 0.0005
 SIGNAL_THRESHOLD = 6.0
 RISK_PCT = 3.0
 INITIAL_BALANCE = 150.0
 DEBOUNCE_BARS = 12
 
 
-def _ratchet_lock(level):
-    """0.2R at 1R, +0.7R/level to 3R, +1.0R/level from 4R."""
-    if level <= 0: return 0.0
-    if level == 1: return 0.2
-    if level <= 3: return 0.2 + (level - 1) * 0.7
-    return 0.2 + 2 * 0.7 + (level - 3) * 1.0  # 1.6 + (level-3)*1.0
-
-
-def backtest(m5_df, h1_df, max_pos_size=None):
+def backtest(m5_df, h1_df, mode="current", lock_at_1r=0.5):
+    """mode: 'current' = lock_at_1r lock at 1R, 'optionB' = lock_at_1r at 1R with offset.
+    lock_at_1r: fraction of sl_dist to lock at 1R (0=BE, 0.5=current, 0.2=slight profit)."""
     engine = M5ScalpScoringEngine(signal_threshold=SIGNAL_THRESHOLD)
     compute_indicators(m5_df)
     compute_scalp_indicators(m5_df)
@@ -47,7 +39,6 @@ def backtest(m5_df, h1_df, max_pos_size=None):
     peak = INITIAL_BALANCE
     max_dd = 0
     trades = []
-    equity_curve = [INITIAL_BALANCE]
     in_trade = False
     last_bar = -DEBOUNCE_BARS - 1
     last_dir = None
@@ -57,18 +48,21 @@ def backtest(m5_df, h1_df, max_pos_size=None):
         if in_trade:
             bh, bl = m5_df["high"].iloc[i], m5_df["low"].iloc[i]
 
-            # Check SL hit
             sl_hit = False
             if trade_dir == "BUY":
                 if bl <= sl:
                     pnl = (sl - entry) * size - COST_PER_RT * size
                     sl_hit = True
                 else:
-                    # Ratchet: 0.2R at 1R, +0.7R/level to 3R, +1.0R/level from 4R
                     profit_r = (bh - entry) / sl_dist
                     ratchet_level = max(0, int(math.floor(profit_r)))
                     if ratchet_level >= 1 and ratchet_level > current_ratchet:
-                        new_sl = entry + _ratchet_lock(ratchet_level) * sl_dist
+                        # At 1R: lock lock_at_1r × sl_dist
+                        # At 2R+: lock_at_1r + (ratchet_level-1) * 0.5 × sl_dist
+                        if ratchet_level == 1:
+                            new_sl = entry + lock_at_1r * sl_dist
+                        else:
+                            new_sl = entry + (lock_at_1r + (ratchet_level - 1) * 0.5) * sl_dist
                         if new_sl > sl:
                             sl = new_sl
                             current_ratchet = ratchet_level
@@ -80,7 +74,10 @@ def backtest(m5_df, h1_df, max_pos_size=None):
                     profit_r = (entry - bl) / sl_dist
                     ratchet_level = max(0, int(math.floor(profit_r)))
                     if ratchet_level >= 1 and ratchet_level > current_ratchet:
-                        new_sl = entry - _ratchet_lock(ratchet_level) * sl_dist
+                        if ratchet_level == 1:
+                            new_sl = entry - lock_at_1r * sl_dist
+                        else:
+                            new_sl = entry - (lock_at_1r + (ratchet_level - 1) * 0.5) * sl_dist
                         if new_sl < sl:
                             sl = new_sl
                             current_ratchet = ratchet_level
@@ -101,7 +98,6 @@ def backtest(m5_df, h1_df, max_pos_size=None):
             dd = (peak - balance) / peak * 100 if peak > 0 else 0
             if dd > max_dd:
                 max_dd = dd
-            equity_curve.append(balance)
 
         if not in_trade:
             atr = m5_df["atr"].iloc[i]
@@ -121,7 +117,6 @@ def backtest(m5_df, h1_df, max_pos_size=None):
                 continue
             direction = result["direction"]
 
-            # Same-direction debounce
             if (i - last_bar) < DEBOUNCE_BARS and last_dir == direction:
                 continue
 
@@ -134,27 +129,23 @@ def backtest(m5_df, h1_df, max_pos_size=None):
             else:
                 sl = entry + sl_dist
 
-            # Position sizing: risk-based, capped by MAX_POSITION_SIZE
             risk_amt = balance * RISK_PCT / 100
             size = risk_amt / sl_dist if sl_dist > 0 else 0
             size = max(round(size / 1000) * 1000, ICM_MIN_SIZE)
-            cap = max_pos_size if max_pos_size is not None else MAX_POSITION_SIZE
-            if cap > 0:
-                size = min(size, cap)
+            size = min(size, MAX_POSITION_SIZE)
 
-            # Skip if risk too high for balance
             actual_risk = size * sl_dist
             if actual_risk > balance * 0.5:
                 continue
-
             if size <= 0:
                 continue
+
             in_trade = True
             last_bar = i
             last_dir = direction
             current_ratchet = 0
 
-    return trades, balance, lowest_balance, max_dd, equity_curve
+    return trades, balance, lowest_balance, max_dd
 
 
 def print_results(label, trades, balance, lowest, max_dd, months):
@@ -174,38 +165,54 @@ def print_results(label, trades, balance, lowest, max_dd, months):
     avg_win = w_pnl / len(wins) if wins else 0
     avg_loss = abs(sum(t["pnl"] for t in losses)) / len(losses) if losses else 0
 
-    # Avg ratchet level for winners
     winner_ratchets = [t["ratchet_level"] for t in wins]
     avg_ratchet = np.mean(winner_ratchets) if winner_ratchets else 0
+    max_ratchet = max(winner_ratchets) if winner_ratchets else 0
+
+    # Count winners at each ratchet level
+    ratchet_dist = {}
+    for t in trades:
+        rl = t["ratchet_level"]
+        if rl not in ratchet_dist:
+            ratchet_dist[rl] = {"wins": 0, "losses": 0}
+        if t["pnl"] > 0:
+            ratchet_dist[rl]["wins"] += 1
+        else:
+            ratchet_dist[rl]["losses"] += 1
 
     print(f"\n{'=' * 60}")
     print(f"  {label}")
     print(f"{'=' * 60}")
-    print(f"  Trades:       {len(trades)} ({len(wins)}W / {len(losses)}L)")
-    print(f"  Win Rate:     {wr:.1f}%")
-    print(f"  Profit Factor:{pf:.2f}")
-    print(f"  Avg Win:      €{avg_win:.4f}  (avg ratchet level: {avg_ratchet:.1f}R)")
-    print(f"  Avg Loss:     €{avg_loss:.4f}")
-    print(f"  Final Balance:€{balance:.2f} (from €{INITIAL_BALANCE:.0f})")
-    print(f"  Lowest Balance:€{lowest:.2f}")
-    print(f"  Return:       {ret:+.1f}%")
-    print(f"  Monthly:      {monthly:+.1f}%/month")
-    print(f"  Max Drawdown: {max_dd:.1f}%")
-    print(f"  Trades/day:   {len(trades) / (months * 21):.1f}")
+    print(f"  Trades:        {len(trades)} ({len(wins)}W / {len(losses)}L)")
+    print(f"  Win Rate:      {wr:.1f}%")
+    print(f"  Profit Factor: {pf:.2f}")
+    print(f"  Avg Win:       EUR {avg_win:.4f}  (avg ratchet: {avg_ratchet:.1f}R, max: {max_ratchet}R)")
+    print(f"  Avg Loss:      EUR {avg_loss:.4f}")
+    print(f"  Final Balance: EUR {balance:.2f} (from EUR {INITIAL_BALANCE:.0f})")
+    print(f"  Lowest Balance:EUR {lowest:.2f}")
+    print(f"  Return:        {ret:+.1f}%")
+    print(f"  Monthly:       {monthly:+.1f}%/month")
+    print(f"  Max Drawdown:  {max_dd:.1f}%")
+    print(f"  Trades/day:    {len(trades) / (months * 21):.1f}")
 
-    # Last 10 trades
+    print(f"\n  Ratchet distribution:")
+    for rl in sorted(ratchet_dist.keys()):
+        d = ratchet_dist[rl]
+        total = d["wins"] + d["losses"]
+        print(f"    {rl}R: {total} trades ({d['wins']}W / {d['losses']}L)")
+
     print(f"\n  Last 10 trades:")
     for t in trades[-10:]:
-        emoji = "W" if t["pnl"] > 0 else "L"
+        tag = "W" if t["pnl"] > 0 else "L"
         r_info = f" (ratchet {t['ratchet_level']}R)" if t["ratchet_level"] > 0 else ""
-        print(f"    [{emoji}] {t['dir']} entry={t['entry']:.5f} exit={t['exit']:.5f} "
-              f"pnl=€{t['pnl']:+.4f} size={t['size']:.0f}{r_info}")
+        print(f"    [{tag}] {t['dir']} entry={t['entry']:.5f} exit={t['exit']:.5f} "
+              f"pnl=EUR {t['pnl']:+.4f} size={t['size']:.0f}{r_info}")
 
 
-def run():
-    print("Downloading NZDUSD data...")
-    m5_df = yf.download("NZDUSD=X", period="60d", interval="5m", progress=False)
-    h1_df = yf.download("NZDUSD=X", period="2y", interval="1h", progress=False)
+def run_pair(symbol, label):
+    print(f"\nDownloading {symbol} data...")
+    m5_df = yf.download(symbol, period="60d", interval="5m", progress=False)
+    h1_df = yf.download(symbol, period="2y", interval="1h", progress=False)
 
     for df in [m5_df, h1_df]:
         if isinstance(df.columns, pd.MultiIndex):
@@ -216,17 +223,47 @@ def run():
     months = max(days / 30, 0.5)
 
     print(f"Data: {len(m5_df)} M5 bars ({days} days, {months:.1f} months)")
-    print(f"Setup: €{INITIAL_BALANCE} account, {RISK_PCT}% risk, "
-          f"MAX_POSITION_SIZE={MAX_POSITION_SIZE}, threshold={SIGNAL_THRESHOLD}")
 
-    # Run with current live settings
-    trades, balance, lowest, max_dd, eq = backtest(m5_df.copy(), h1_df.copy())
-    print_results("LIVE SETUP (ratchet SL, 1000 cap)", trades, balance, lowest, max_dd, months)
+    # Test different lock-at-1R levels
+    levels = [
+        (0.5, "CURRENT (0.5R lock at 1R)"),
+        (0.0, "BE at 1R"),
+        (0.1, "0.1R lock at 1R"),
+        (0.2, "0.2R lock at 1R"),
+        (0.3, "0.3R lock at 1R"),
+    ]
 
-    # Also test without position cap (what we'd get with proper sizing)
-    trades2, balance2, lowest2, max_dd2, eq2 = backtest(m5_df.copy(), h1_df.copy(), max_pos_size=0)
-    print_results("UNCAPPED (ratchet SL, risk-based sizing)", trades2, balance2, lowest2, max_dd2, months)
+    results = []
+    for lock, desc in levels:
+        t, b, l, d = backtest(m5_df.copy(), h1_df.copy(), lock_at_1r=lock)
+        print_results(f"{label} — {desc}", t, b, l, d, months)
+        ret = (b - INITIAL_BALANCE) / INITIAL_BALANCE * 100
+        wins = [x for x in t if x["pnl"] > 0]
+        losses = [x for x in t if x["pnl"] <= 0]
+        w_pnl = sum(x["pnl"] for x in wins) if wins else 0
+        l_pnl = abs(sum(x["pnl"] for x in losses)) if losses else 0.01
+        pf = w_pnl / l_pnl
+        results.append((lock, desc, ret, d, pf, len(t)))
+
+    # Summary table
+    print(f"\n{'=' * 70}")
+    print(f"  {label} — SUMMARY")
+    print(f"{'=' * 70}")
+    print(f"  {'Lock@1R':>8}  {'Return':>8}  {'MaxDD':>6}  {'PF':>5}  {'Trades':>6}")
+    print(f"  {'-'*8}  {'-'*8}  {'-'*6}  {'-'*5}  {'-'*6}")
+    for lock, desc, ret, dd, pf, cnt in results:
+        print(f"  {lock:>7.1f}R  {ret:>+7.1f}%  {dd:>5.1f}%  {pf:>5.2f}  {cnt:>6}")
+
+
+def main():
+    print("=" * 60)
+    print("  RATCHET COMPARISON: Lock level at 1R sweep")
+    print("  Testing: 0R (BE), 0.1R, 0.2R, 0.3R, 0.5R (current)")
+    print("=" * 60)
+
+    run_pair("NZDUSD=X", "NZDUSD")
+    run_pair("AUDUSD=X", "AUDUSD")
 
 
 if __name__ == "__main__":
-    run()
+    main()

@@ -242,36 +242,46 @@ else:
 # Ratchet level = floor of profit R (only positive)
 ratchet_level = max(0, int(math.floor(profit_r)))
 
-# Calculate new SL: entry + ratchet_level × 0.5 × sl_dist
+# Calculate new SL: 0.2R at 1R, +0.7R/level to 3R, +1.0R/level from 4R
+def calc_lock(level):
+    if level <= 0: return 0.0
+    if level == 1: return 0.2
+    if level <= 3: return 0.2 + (level - 1) * 0.7
+    return 0.2 + 2 * 0.7 + (level - 3) * 1.0
+
 if ratchet_level > last_level and ratchet_level >= 1:
+    lock = calc_lock(ratchet_level)
     if direction == 'BUY':
-        new_sl = entry_price + ratchet_level * 0.5 * sl_dist
+        new_sl = entry_price + lock * sl_dist
         should_move = new_sl > current_sl
     else:
-        new_sl = entry_price - ratchet_level * 0.5 * sl_dist
+        new_sl = entry_price - lock * sl_dist
         should_move = new_sl < current_sl
 
     if should_move and abs(new_sl - current_sl) > 1e-7:
         state['last_ratchet_level'] = ratchet_level
         with open('$state_file', 'w') as f:
             json.dump(state, f, indent=2)
-        locked_r = ratchet_level * 0.5
+        locked_r = calc_lock(ratchet_level)
         print(f'TRAIL|{new_sl:.6f}|{ratchet_level}|{locked_r:.1f}|{profit_r:.1f}')
     else:
-        print(f'HOLD|{current_sl:.6f}|{last_level}|{last_level * 0.5:.1f}|{profit_r:.1f}')
+        locked_r = calc_lock(last_level)
+        print(f'HOLD|{current_sl:.6f}|{last_level}|{locked_r:.1f}|{profit_r:.1f}')
 elif last_level >= 1:
     # Verify broker SL matches expected ratchet level — re-apply if drifted
+    lock = calc_lock(last_level)
     if direction == 'BUY':
-        expected_sl = entry_price + last_level * 0.5 * sl_dist
+        expected_sl = entry_price + lock * sl_dist
         sl_drifted = current_sl < expected_sl - 1e-5
     else:
-        expected_sl = entry_price - last_level * 0.5 * sl_dist
+        expected_sl = entry_price - lock * sl_dist
         sl_drifted = current_sl > expected_sl + 1e-5
     if sl_drifted:
-        locked_r = last_level * 0.5
+        locked_r = calc_lock(last_level)
         print(f'TRAIL|{expected_sl:.6f}|{last_level}|{locked_r:.1f}|{profit_r:.1f}')
     else:
-        print(f'HOLD|{current_sl:.6f}|{last_level}|{last_level * 0.5:.1f}|{profit_r:.1f}')
+        locked_r = calc_lock(last_level)
+        print(f'HOLD|{current_sl:.6f}|{last_level}|{locked_r:.1f}|{profit_r:.1f}')
 else:
     print(f'HOLD|{current_sl:.6f}|{last_level}|{last_level * 0.5:.1f}|{profit_r:.1f}')
 " 2>/dev/null || echo "ERROR")

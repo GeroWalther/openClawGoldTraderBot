@@ -3,5 +3,5 @@
   "direction": "SELL",
   "entry_price": 0.58128,
   "sl_dist": 0.0005,
-  "last_ratchet_level": 0
+  "last_ratchet_level": 2
 }
