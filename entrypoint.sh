@@ -18,6 +18,9 @@ SHELL=/bin/bash
 # M15 BB Bounce (AUDUSD) — every 15 min, 07-21 UTC, Mon-Fri
 4-59/15 7-21 * * 1-5  root  /app/cron/scan_bb_bounce.sh >> /app/journal/cron.log 2>&1
 
+# NY ORB (NZDUSD) — every 5 min, 13-16 UTC, Mon-Fri (NY open window)
+3-59/5 13-16 * * 1-5  root  /app/cron/scan_ny_orb.sh >> /app/journal/cron.log 2>&1
+
 # Trade monitor — every 5min during market hours, Mon-Fri
 */5 7-21 * * 1-5  root  /app/cron/monitor.sh >> /app/journal/cron.log 2>&1
 

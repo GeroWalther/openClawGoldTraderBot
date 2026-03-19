@@ -1,3 +1,6 @@
 date,account_balance,daily_pnl,trades_closed,wins,losses,open_positions,unrealized_pnl,intraday_signals,swing_signals,scalp_signals
 2026-03-11,149.5,-4.34,4,1,3,1,-0.04,0,0,10
 2026-03-12,156.08,8.07,6,3,3,1,0.16,0,0,20
+2026-03-16,155.61,0.00,0,0,0,0,0.00,0,0,1
+2026-03-17,144.96,-0.82,4,2,2,0,0.00,0,0,5
+2026-03-18,143.28,-2.02,3,0,3,0,0.00,2,0,0

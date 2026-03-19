@@ -32,6 +32,11 @@ from app.services.m5_scalp_scoring import (
     M5_SIGNAL_THRESHOLD,
     M5ScalpScoringEngine,
 )
+from app.services.ny_orb_scoring import (
+    NYORBScoringEngine,
+    identify_opening_range,
+    _ny_open_utc,
+)
 from app.services.m15_bb_bounce_scoring import (
     M15_BB_FACTOR_WEIGHTS,
     M15_BB_HIGH_CONVICTION_THRESHOLD,
@@ -215,6 +220,7 @@ class TechnicalAnalyzer:
             signal_threshold=_settings.bb_bounce_signal_threshold,
             high_conviction_threshold=_settings.bb_bounce_high_conviction_threshold,
         )
+        self._ny_orb_scoring_engine = NYORBScoringEngine(tp_sl_ratio=2.0)
         self._m15_sensei_scoring_engine = M15SenseiScoringEngine()
         self._calendar_service = CalendarService()
         self._news_service = NewsService()
@@ -710,6 +716,145 @@ class TechnicalAnalyzer:
             result["technicals"]["h1"] = h1_block
         if m5_block:
             result["technicals"]["m5"] = m5_block
+
+        if warnings:
+            result["warnings"] = warnings
+
+        return result
+
+    async def analyze_ny_orb(self, instrument_key: str) -> dict:
+        """NY Opening Range Breakout analysis on M5 data."""
+        key = instrument_key.upper()
+        cache_key = f"{key}_nyorb"
+        now = time.monotonic()
+
+        cached = self._cache.get(cache_key)
+        if cached:
+            data, ts = cached
+            if now - ts < 60:  # 1-minute cache
+                return data
+
+        if key not in INSTRUMENTS:
+            return {"error": f"Unknown instrument: {key}", "available": list(INSTRUMENTS)}
+
+        instrument = INSTRUMENTS[key]
+        result = await self._run_ny_orb_analysis(key, instrument)
+        self._cache[cache_key] = (result, time.monotonic())
+        return result
+
+    async def _run_ny_orb_analysis(self, key: str, instrument: InstrumentSpec) -> dict:
+        """Execute NY ORB analysis: fetch M5 data, identify range, score breakout."""
+        warnings = []
+        loop = asyncio.get_event_loop()
+        symbol = instrument.yahoo_symbol
+
+        # Fetch M5 (5 days)
+        m5_future = loop.run_in_executor(_executor, _fetch_ohlcv, symbol, "5d", "5m")
+        m5_df = await m5_future
+
+        if isinstance(m5_df, Exception) or m5_df.empty:
+            return {"error": f"M5 data unavailable for {key}", "warnings": warnings}
+
+        if len(m5_df) < 21:
+            return {"error": f"Insufficient M5 data for {key}", "warnings": warnings}
+
+        # Compute indicators (need ATR)
+        compute_indicators(m5_df)
+
+        # Current price
+        m5_last = m5_df.iloc[-1]
+        current = float(m5_last["close"])
+        prev_close = float(m5_df["close"].iloc[-2]) if len(m5_df) >= 2 else current
+        change_pct = round((current - prev_close) / prev_close * 100, 2) if prev_close else 0
+        price_info = {
+            "current": round(current, 5 if current < 10 else 2),
+            "previous_close": round(prev_close, 5 if prev_close < 10 else 2),
+            "change_pct": change_pct,
+        }
+
+        # Get current bar time
+        now_utc = datetime.now(timezone.utc)
+
+        # Identify today's opening range
+        opening_range = identify_opening_range(m5_df, now_utc)
+
+        range_info = {}
+        if opening_range is not None:
+            digits = 5 if current < 10 else 2
+            range_info = {
+                "range_high": round(float(opening_range["range_high"]), digits),
+                "range_low": round(float(opening_range["range_low"]), digits),
+                "range_size": round(float(opening_range["range_size"]), digits),
+            }
+
+        # Score the current bar for breakout
+        scoring = {
+            "total_score": 0.0,
+            "max_score": 10.0,
+            "direction": None,
+            "conviction": None,
+            "signal": None,
+            "factors": {},
+            "signal_type": "ny_orb",
+            "sl_dist": 0.0,
+            "tp_dist": 0.0,
+        }
+
+        atr = float(m5_last.get("atr", 0) or 0)
+        if opening_range is not None and atr > 0:
+            prev_row = m5_df.iloc[-2] if len(m5_df) >= 2 else None
+            result = self._ny_orb_scoring_engine.score_bar(
+                m5_row=m5_last,
+                m5_prev=prev_row,
+                opening_range=opening_range,
+                atr=atr,
+                bar_time=now_utc,
+            )
+            scoring.update({
+                "total_score": result["score"],
+                "direction": result["direction"],
+                "conviction": result["conviction"],
+                "signal": result["signal"],
+                "sl_dist": result["sl_dist"],
+                "tp_dist": result["tp_dist"],
+                "factors": {
+                    "range_atr_ratio": round(opening_range["range_size"] / atr, 2) if atr > 0 else 0,
+                    "signal_type": result["signal"] or "none",
+                },
+            })
+
+        # M5 technicals block
+        m5_block = _build_timeframe_block(m5_df, include_sma=True)
+
+        # Session info
+        session = _session_info(instrument)
+
+        direction = scoring.get("direction", "NO TRADE")
+        conviction = scoring.get("conviction")
+        signal = scoring.get("signal", "none")
+        total = scoring.get("total_score", 0)
+
+        summary = (
+            f"NY ORB: {conviction or 'NO'} conviction {direction or 'NO TRADE'}. "
+            f"Signal: {signal or 'none'}. "
+            f"Score {total}/10."
+        )
+        if range_info:
+            summary += f" Range: {range_info['range_low']}-{range_info['range_high']} (size {range_info['range_size']})."
+
+        result = {
+            "instrument": key,
+            "display_name": instrument.display_name,
+            "mode": "ny_orb",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "price": price_info,
+            "technicals": {"m5": m5_block} if m5_block else {},
+            "opening_range": range_info,
+            "levels": {},
+            "scoring": scoring,
+            "session": session,
+            "summary": summary,
+        }
 
         if warnings:
             result["warnings"] = warnings

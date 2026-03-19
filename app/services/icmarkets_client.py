@@ -1208,7 +1208,46 @@ class ICMarketsClient:
             request.takeProfit = old_tp
 
         msg_id = self._next_msg_id()
-        await self._send_request(request, client_msg_id=msg_id)
+        response = await self._send_request(request, client_msg_id=msg_id)
+        logger.info(
+            "AmendPositionSLTP response for position %s: %s",
+            pos["positionId"],
+            response,
+        )
+
+        # Verify the SL/TP was actually set on the broker
+        await asyncio.sleep(1)  # brief pause for broker to process
+        updated = await self.get_open_positions(instrument_key=instrument_key)
+        updated_pos = [p for p in updated if p["direction"] == direction]
+        if updated_pos:
+            actual_sl = updated_pos[0].get("stopLoss")
+            actual_tp = updated_pos[0].get("takeProfit")
+            if new_sl is not None and actual_sl is not None:
+                if abs(actual_sl - new_sl) > 1e-5:
+                    logger.error(
+                        "SL MISMATCH after amend! Requested %.6f but broker has %.6f — retrying",
+                        new_sl, actual_sl,
+                    )
+                    # Retry the amend once
+                    retry_req = Req()
+                    retry_req.ctidTraderAccountId = self._account_id
+                    retry_req.positionId = pos["positionId"]
+                    retry_req.stopLoss = new_sl
+                    if new_tp is not None:
+                        retry_req.takeProfit = new_tp
+                    elif old_tp:
+                        retry_req.takeProfit = old_tp
+                    retry_id = self._next_msg_id()
+                    retry_resp = await self._send_request(retry_req, client_msg_id=retry_id)
+                    logger.info("SL amend retry response: %s", retry_resp)
+                else:
+                    logger.info("SL verified on broker: %.6f", actual_sl)
+            if new_tp is not None and actual_tp is not None:
+                if abs(actual_tp - new_tp) > 1e-5:
+                    logger.error(
+                        "TP MISMATCH after amend! Requested %.6f but broker has %.6f",
+                        new_tp, actual_tp,
+                    )
 
         return {
             "old_sl": old_sl,

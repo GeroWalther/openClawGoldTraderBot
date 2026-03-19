@@ -8,6 +8,7 @@ import yfinance as yf
 from app.instruments import InstrumentSpec, get_instrument
 from app.services.intraday_scoring import IntradayScoringEngine
 from app.services.m5_scalp_scoring import M5ScalpScoringEngine
+from app.services.ny_orb_scoring import NYORBScoringEngine, identify_opening_range, _ny_open_utc
 from app.services.scoring_engine import ScoringEngine
 
 logger = logging.getLogger(__name__)
@@ -55,6 +56,14 @@ class Backtester:
     ) -> dict:
         """Run a backtest and return results."""
         instrument = get_instrument(instrument_key)
+
+        # NY Opening Range Breakout strategy
+        if strategy == "ny_orb":
+            return self._run_ny_orb_backtest(
+                instrument_key, instrument, period,
+                initial_balance, risk_percent,
+                max_trades, start_date, end_date,
+            )
 
         # M5 scalp strategy uses different data and signal generation
         if strategy == "m5_scalp":
@@ -239,6 +248,142 @@ class Backtester:
 
             last_signal_idx = i
             last_signal_dir = direction
+
+        return signals
+
+    def _run_ny_orb_backtest(
+        self,
+        instrument_key: str,
+        instrument: InstrumentSpec,
+        period: str,
+        initial_balance: float,
+        risk_percent: float,
+        max_trades: int | None,
+        start_date: str | None,
+        end_date: str | None,
+    ) -> dict:
+        """Run NY Opening Range Breakout backtest on M5 data."""
+        from app.services.indicators import compute_indicators, compute_scalp_indicators
+
+        # Fetch M5 data
+        m5_df = self._fetch_data(
+            instrument, period, start_date=start_date, end_date=end_date, interval="5m",
+        )
+        if m5_df is None or len(m5_df) < 60:
+            return {"error": f"Insufficient M5 data for {instrument_key} ({period})"}
+
+        # Compute indicators (need ATR)
+        compute_indicators(m5_df)
+
+        # Fetch FX conversion rate
+        fx_map = self._fetch_fx_series(instrument, period, start_date, end_date)
+
+        # Generate NY ORB signals
+        signals = self._ny_orb_signals(m5_df, instrument)
+
+        # Simulate — use per-signal SL/TP (no ATR multiplier fallback)
+        trades, equity_curve = self._simulate(
+            m5_df, signals, instrument,
+            initial_balance=initial_balance,
+            risk_percent=risk_percent,
+            atr_sl_mult=1.0,   # Fallback only
+            atr_tp_mult=2.0,   # Fallback only
+            session_filter=False,  # ORB handles its own session logic
+            partial_tp=False,  # Clean 2:1 TP
+            max_trades=max_trades,
+            fx_map=fx_map,
+        )
+
+        return self._compile_results(
+            instrument_key, "ny_orb", period,
+            initial_balance, trades, equity_curve,
+        )
+
+    def _ny_orb_signals(
+        self, m5_df: pd.DataFrame, instrument: InstrumentSpec,
+    ) -> list[dict]:
+        """Generate NY ORB signals: one breakout entry per day per direction."""
+        engine = NYORBScoringEngine(tp_sl_ratio=2.0)
+        signals = []
+
+        # Group M5 bars by trading day
+        day_ranges: dict[str, dict] = {}  # date_str -> opening range
+        day_signaled: dict[str, set] = {}  # date_str -> set of directions already signaled
+
+        warmup = 20  # Need ATR
+
+        for i in range(warmup, len(m5_df)):
+            row = m5_df.iloc[i]
+            dt = row.get("date")
+            if dt is None:
+                dt = m5_df.index[i]
+            if not hasattr(dt, "hour"):
+                continue
+
+            if pd.isna(row.get("atr")) or row.get("atr", 0) <= 0:
+                continue
+
+            # Normalize to UTC
+            if dt.tzinfo is not None:
+                dt_utc = dt.astimezone(datetime.now(timezone.utc).tzinfo)
+            else:
+                dt_utc = dt.replace(tzinfo=timezone.utc)
+
+            day_key = str(dt_utc.date())
+
+            # Skip weekends
+            if dt_utc.weekday() >= 5:
+                continue
+
+            # Identify opening range for this day if not yet done
+            if day_key not in day_ranges:
+                orng = identify_opening_range(m5_df, dt_utc)
+                if orng is not None:
+                    day_ranges[day_key] = orng
+                    day_signaled[day_key] = set()
+                else:
+                    day_ranges[day_key] = None  # Mark as attempted
+
+            orng = day_ranges.get(day_key)
+            if orng is None:
+                continue
+
+            # Only scan bars after the opening range
+            if i <= orng["range_end_idx"]:
+                continue
+
+            # Get previous bar for false breakout detection
+            prev_row = m5_df.iloc[i - 1] if i > 0 else None
+
+            result = engine.score_bar(
+                m5_row=row,
+                m5_prev=prev_row,
+                opening_range=orng,
+                atr=float(row["atr"]),
+                bar_time=dt_utc,
+            )
+
+            direction = result["direction"]
+            if direction is None:
+                continue
+
+            # One signal per direction per day
+            if direction in day_signaled.get(day_key, set()):
+                continue
+
+            day_signaled.setdefault(day_key, set()).add(direction)
+
+            signals.append({
+                "index": i,
+                "direction": direction,
+                "conviction": result["conviction"] or "MEDIUM",
+                "price": row["close"],
+                "atr": float(row["atr"]),
+                "score": result["score"],
+                "sl_dist": result["sl_dist"],
+                "tp_dist": result["tp_dist"],
+                "signal_type": result["signal"],
+            })
 
         return signals
 

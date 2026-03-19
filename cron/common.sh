@@ -39,6 +39,7 @@ mkdir -p "$JOURNAL_DIR/swing/scans"
 mkdir -p "$JOURNAL_DIR/scalp/scans"
 mkdir -p "$JOURNAL_DIR/daily/scans"
 mkdir -p "$JOURNAL_DIR/bb_bounce/scans"
+mkdir -p "$JOURNAL_DIR/ny_orb/scans"
 mkdir -p "$JOURNAL_DIR/monitors"
 mkdir -p "$JOURNAL_DIR/summaries"
 

@@ -259,6 +259,19 @@ if ratchet_level > last_level and ratchet_level >= 1:
         print(f'TRAIL|{new_sl:.6f}|{ratchet_level}|{locked_r:.1f}|{profit_r:.1f}')
     else:
         print(f'HOLD|{current_sl:.6f}|{last_level}|{last_level * 0.5:.1f}|{profit_r:.1f}')
+elif last_level >= 1:
+    # Verify broker SL matches expected ratchet level — re-apply if drifted
+    if direction == 'BUY':
+        expected_sl = entry_price + last_level * 0.5 * sl_dist
+        sl_drifted = current_sl < expected_sl - 1e-5
+    else:
+        expected_sl = entry_price - last_level * 0.5 * sl_dist
+        sl_drifted = current_sl > expected_sl + 1e-5
+    if sl_drifted:
+        locked_r = last_level * 0.5
+        print(f'TRAIL|{expected_sl:.6f}|{last_level}|{locked_r:.1f}|{profit_r:.1f}')
+    else:
+        print(f'HOLD|{current_sl:.6f}|{last_level}|{last_level * 0.5:.1f}|{profit_r:.1f}')
 else:
     print(f'HOLD|{current_sl:.6f}|{last_level}|{last_level * 0.5:.1f}|{profit_r:.1f}')
 " 2>/dev/null || echo "ERROR")

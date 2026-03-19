@@ -58,6 +58,24 @@ async def analyze_instrument_m5_scalp(
     return result
 
 
+@router.get("/{instrument}/nyorb")
+async def analyze_instrument_ny_orb(
+    instrument: str,
+    x_api_key: str = Header(...),
+    settings: Settings = Depends(get_settings),
+    analyzer: TechnicalAnalyzer = Depends(get_technical_analyzer),
+):
+    """NY Opening Range Breakout analysis on M5 data."""
+    if x_api_key != settings.api_secret_key:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
+    result = await analyzer.analyze_ny_orb(instrument)
+    if "error" in result and "available" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+
+    return result
+
+
 @router.get("/{instrument}/m15sensei")
 async def analyze_instrument_m15_sensei(
     instrument: str,

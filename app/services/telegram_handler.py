@@ -258,9 +258,7 @@ class TelegramCommandHandler:
         strategies = [
             ("M5 Scalp", "scalp"),
             ("M15 BB Bounce", "bb_bounce"),
-            ("M15 Sensei", "sensei"),
-            ("Intraday", "intraday"),
-            ("Swing", "swing"),
+            ("NY ORB", "ny_orb"),
         ]
 
         lines: list[str] = ["LAST SIGNALS", "─" * 16]
