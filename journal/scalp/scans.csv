@@ -1398,3 +1398,5 @@ timestamp,instrument,price,score,max_score,direction,conviction,h1_trend,m5_ema9
 2026-03-19_1157,AUDUSD,0.704,-6.8,14.0,,,bearish,,,1.0
 2026-03-19_1202,AUDUSD,0.7039,-7.22,14.0,,,bearish,,,1.0
 2026-03-19_1207,AUDUSD,0.7034,-7.01,14.0,,,bearish,,,1.0
+2026-03-19_1212,AUDUSD,0.7038,-6.8,14.0,,,bearish,,,1.0
+2026-03-19_1217,AUDUSD,0.7035,-7.22,14.0,,,bearish,,,1.0

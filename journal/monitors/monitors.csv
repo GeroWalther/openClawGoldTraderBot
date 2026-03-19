@@ -237,3 +237,5 @@ timestamp,instrument,direction,size,entry,current,pnl,stop_loss,take_profit,pct_
 2026-03-19_0810,AUDUSD,SELL,-1000.0,0.70346,0.70264,0.72,0,0,0.0,ratchet_trail
 2026-03-19_1200,NZDUSD,SELL,-1000.0,0.58128,0.581515,-0.2,0,0,0.0,ratchet_trail
 2026-03-19_1205,NZDUSD,SELL,-1000.0,0.58128,0.581045,0.2,0,0,0.0,ratchet_trail
+2026-03-19_1210,NZDUSD,SELL,-1000.0,0.58128,0.581225,0.05,0,0,0.0,ratchet_trail
+2026-03-19_1215,NZDUSD,SELL,-1000.0,0.58128,0.5808450000000001,0.38,0,0,0.0,ratchet_trail
