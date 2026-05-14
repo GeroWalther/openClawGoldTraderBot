@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "BTCUSD",
+  "order_type": "LIMIT",
+  "entry_price": 74150,
+  "stop_loss": 73700,
+  "take_profit": 75757,
+  "stop_distance": 450,
+  "limit_distance": 1607,
+  "risk_reward": 3.57,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "H1 EMA reclaim now CONFIRMED — completed H1 bar (11:00 UTC) closed at 74,207, above H1 EMA 74,135. Prior PASS was correct (10:00 bar closed 73,889 below EMA). Current bar holding above at 74,199. H1 RSI 51.63 crossed above 50. M15 confirms: price 74,199 above M15 EMA 74,087, RSI 54.91 — both trigger conditions met. M15 higher lows ascending (73,822 → 73,858 → 73,892 → 73,959 → 73,983 → 74,069 → 74,079) showing steady buying pressure. D1 trend strongest in universe (+16%). Limit entry at 74,150 (H1 EMA zone) — current bar already dipped to 74,079 so fill is realistic. SL below 73,707 H1 recovery swing low (1.32× H1 ATR of 340). Target 75,757 is prior H4 swing high with clear air. Conviction MEDIUM not HIGH: H1 action was choppy with two failed bounces before this confirmed reclaim, and stop at 73,700 could be tagged by a retest of deeper structure before the move plays out.",
+  "invalidation": "H1 close below 73,700 kills the recovery thesis. Cancel limit if not filled within 4h. If filled, exit immediately on any H1 close below entry.",
+  "pine_verification": "No Pine scripts injected — setup verified via raw OHLCV and indicator readings. M15 higher-low structure and H1 EMA reclaim confirmed from bar data.",
+  "strategy": "ai_pullback"
+}

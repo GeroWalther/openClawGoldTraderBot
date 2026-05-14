@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "No M15 bounce confirmation at 0.7163 support. Scanner required M15 close above 0.71700 — not met. Price at 0.71670 is 3.2 pips below M15 EMA (0.71702) and 9.7 pips below H1 EMA (0.71767). M15 RSI at 34.98 shows active bearish momentum, not recovery. Last completed M15 bar closed at its low (0.71648) — bearish, not a reversal candle. H1 shows 4 consecutive lower-close bars (0.71884 → 0.71833 → 0.71747 → 0.71692) with the current open bar printing a new low at 0.71642. This is an active selloff into support, not a confirmed bounce from it. The key level 0.7163 has been touched (low 0.71642 dipped slightly below) but there is zero bullish follow-through — no hammer, no engulfing, no RSI divergence. This mirrors yesterday's 5 AUDUSD evaluations (journal ids 4-10) where the same pattern played out: price at support, no confirmation, correct to PASS. Wait for a completed M15 bar closing above 0.71700 with RSI turning above 50 before re-evaluating.",
+  "re_verification": "Checked M15 and H1 at 10:38 UTC. Pullback to support is live but unconfirmed — no bullish reversal candle, RSI bearish, price below both EMAs."
+}

@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "NZDUSD",
+  "reasoning": "Scanner's explicit confirmation trigger ('H1 bullish reversal candle closing above 0.5931') has NOT fired AND the live H1 bar is making a fresh LOW at 0.59232 — tagging the 0.5923 H4 range floor to the pip. Verified H1 at 09:40 UTC: live 09:00 bar is O 0.59298 / H 0.5931 / L 0.59232 / C 0.59247 — RED bar still extending lower, NOT a reversal candle. Last closed H1 bar (08:00 UTC) was a small green doji (close 0.59298) that failed to close above 0.5931 trigger. H1 RSI 32.66 (essentially flat vs scanner's 32.36 — no upward turn), H1 EMA20 0.59377 (price 13 pips below). Per scanner_confirmation_trigger_precheck this is auto-WAIT/PASS — and this is now the 5th consecutive NZDUSD PASS today on this same setup (journals #121, #122, #123, #124 all skipped citing trigger not fired). Worse: the fresh tag of 0.59232 raises range-breakdown risk — if this H1 bar closes below 0.5923 the entire range_extreme_fade thesis is invalidated (setup_played_out_vs_pending_taxonomy). Wait for bar close per live_bar_rejection_wait_for_close.",
+  "re_verification": "H1 verified at 09:40 UTC. Trigger not fired, live bar making fresh low at H4 range floor."
+}

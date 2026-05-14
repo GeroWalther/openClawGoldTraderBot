@@ -1,0 +1,16 @@
+{
+  "action": "SELL",
+  "instrument": "GBPUSD",
+  "order_type": "MARKET",
+  "entry_price": 1.35100,
+  "stop_loss": 1.35360,
+  "take_profit": 1.34580,
+  "stop_distance": 0.00260,
+  "limit_distance": 0.00520,
+  "risk_reward": 2.0,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "GBPUSD trending_down across D1/H4/H1. Price 1.35100 below H1 EMA 1.35131, RSI 44.99. Clear lower-high sequence on H1 (1.35330 → 1.35276 → 1.35182). Last bar rejected EMA from 1.35182 high and made fresh low at 1.34950. SL 1.35360 above last 20-bar H1 swing high (26 pips, 1.5x ATR). TP 1.34580 toward D1 regime support 1.3485 extension.",
+  "invalidation": "H1 close above 1.35360.",
+  "strategy": "ai_lower_high_entry"
+}

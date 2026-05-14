@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "Verified H1 at 14:39 UTC: price 75519, EMA20 75140, RSI 59.18. Setup thesis is intact (D1 uptrend, H1 EMA test held with low 75076 → bounce to 75797), but two hard-stop issues: (1) Price is already 270–420 points above the pullback entry zone 75100–75250 and printing a strong green bar — limit-fill probability low, and entering at market 75519 with SL 73700 gives R:R of only 1.57 (< 1:2 minimum). (2) Structural stop at 73700 is 1800+ points from current price = ~5.2× H1 ATR (350), which violates the 3× ATR ceiling. A tighter ATR-conforming SL (~74470) would sit above the swing low 73753 and be a premature stop — a classic whipsaw trap. The setup is real but the geometry does not line up: pullback entry already missed, and structural SL too wide for current ATR regime. Better to wait for either a genuine re-test of 75100–75250 zone or a confirmed H1 close above 75800 with tighter continuation setup.",
+  "re_verification": "H1 bar 14:00 UTC: O 75301, H 75797, L 75076, C 75519. RSI 59.18, EMA20 75140. Setup valid but entry zone passed and SL/ATR ratio fails."
+}

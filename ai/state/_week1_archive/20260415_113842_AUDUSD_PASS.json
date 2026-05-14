@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "Setup trigger NOT met — 3rd evaluation today, same result. Price at 0.71366 remains below M15 EMA (0.71386) and M15 RSI at 48.34 is below 50. Scanner required both M15 RSI >50 AND M15 close above M15 EMA — neither condition satisfied. Last 4 completed M15 closes: 0.71406, 0.71377, 0.71386, 0.71364 — price drifting lower, not recovering. The prior H1 bar (10:00 UTC) printed a bearish rejection candle with a 18.4-pip wick (high 0.71480 to low 0.71296), showing sellers active at highs. Current H1 bar trading below H1 EMA (0.71376) at 0.71372. The pullback is not bouncing — it is deepening. No bullish confirmation candle has formed on any evaluation today.",
+  "re_verification": "Checked M15 and H1 at 11:37 UTC. M15 EMA 0.71386, RSI 48.34. H1 EMA 0.71376, RSI 61.90. Price 0.71366. Entry trigger conditions remain unmet."
+}

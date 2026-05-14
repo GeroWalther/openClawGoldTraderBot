@@ -1,0 +1,7 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Entry window missed. Scanner entry zone 4848-4858 required a dip to EMA. That dip happened (17:00 UTC H1 low 4853.79, within 3pts of EMA 4850.75) and has already bounced — price is now 4865.48, ~7pts above zone top and climbing. A market fill here gives R:R = (4891-4865.48)/(4865.48-4838) = 25.5/27.5 = 0.93 — fails 2:1. A limit at 4855 works on paper (RR~2.3) but requires a 10pt retrace in 2h 52min into NY close; with Friday weekend gap risk and H1 RSI at 66.85 (already extended), the probability of both (a) getting filled and (b) reaching 4891 before 20:55 UTC forced close is low. Target 4891 = session high rejected ~5 hours ago, a known resistance. The trend is real and the setup was valid — we simply did not engage when it was in zone. Another dip may come Sunday open; chase does not pay here.",
+  "re_verification": "XAUUSD H1 checked at 18:08 UTC. Last 12 H1 bars confirm: 12:00 breakout bar closed 4846.52, 13:00 pushed to session high 4891.54 then closed 4880.40, subsequent bars 4873→4867→4867→4862 (17:00 dipped to 4853.79). Current 18:00 bar opened 4862.59, trading 4865.48, making a higher low vs 17:00. EMA 4850.75, RSI 66.85. Trend intact, but price now back above entry zone with limited session time remaining.",
+  "strategy": "ai_pullback_to_ema"
+}

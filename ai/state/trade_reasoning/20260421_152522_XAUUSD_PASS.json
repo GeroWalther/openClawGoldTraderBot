@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Setup trigger NOT met. Scanner required a rally to the 4769-4785 EMA zone with a bearish reversal candle. Verified H1 at 15:24 UTC: price 4749.62, H1 EMA20 4772.03, H1 RSI 33.40 (deteriorated from scanner's 36 — more oversold, not less). Prior H1 bar was a massive sell-off (open 4779 → low 4723.77 tagging the 4723 support), current live bar is only a weak +10pt bounce. Price is 20-35 pts BELOW the entry zone — the required rally has not happened; instead a new lower low printed. Shorting at 4749 with SL 4803 gives stop=54pts, target=105pts, R:R=1.94 — fails 1:2 minimum. Plus: regime playbook explicitly warns 'H1 RSI 26 deeply oversold — wait for a bounce/consolidation before shorting, not right now'. No bearish reversal candle to trigger the setup. Chasing a short into oversold with no trigger confirmation is exactly the pattern the insights caution against.",
+  "re_verification": "H1 verified 15:24 UTC. Price 4749.62, EMA20 4772.03, RSI 33.40. Live bar range 4727.85-4757.83. Price is below entry zone, not in it. Setup's required rally-to-EMA and bearish candle have not occurred. Wait for price to rally into 4769-4785 with a clear bearish reversal candle before re-evaluating."
+}

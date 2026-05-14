@@ -1,0 +1,16 @@
+{
+  "action": "SELL",
+  "instrument": "GBPUSD",
+  "order_type": "LIMIT",
+  "entry_price": 1.3520,
+  "stop_loss": 1.3555,
+  "take_profit": 1.3450,
+  "stop_distance": 0.0035,
+  "limit_distance": 0.0070,
+  "risk_reward": 2.0,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "H1/D1 downtrend intact, bounce from 1.34846 low (scanner's 1.3485 support held) now retracing toward H1 EMA cluster ~1.3512-1.3522. Current price 1.35072, RSI 47.26 recovering from oversold. LIMIT SELL at 1.3520 (upper end of EMA zone) for clean fade entry. SL 1.3555 above D1 EMA (35 pips, structural). TP 1.3450 below 1.3485 swing low (70 pips). R:R 2.0.",
+  "invalidation": "H1 close above 1.3555 (above D1 EMA).",
+  "strategy": "ai_lower_high_entry"
+}

@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "GBPUSD",
+  "reasoning": "Three compounding issues. (1) Scanner's H1 breakout confirmation has NOT printed — current H1 bar (07:00 UTC) is still live with ~7 min remaining; last CLOSED H1 bar was 06:00 UTC at 1.34643, BELOW the 1.3470 trigger. (2) Prior failed breakout precedent: 01:00 UTC H1 closed 1.34728 (above trigger) and the very next bar opened 1.34728, slammed to 1.34590, closed 1.34605 — a decisive failed breakout only 6 hours ago at the exact same level. Entering a second attempt without a closed confirmation bar ignores the precedent. (3) H1 RSI 47.40 still below 50 on the relevant (H1) timeframe despite M15 showing 62 — the scanner's own thesis framework needs H1 momentum, and it isn't there yet. Per insight scanner_confirmation_trigger_precheck, this is a WAIT: if current H1 closes above 1.3470 with RSI reclaiming 50, re-scan; otherwise the squeeze continues or resolves lower.",
+  "re_verification": "Checked H1 GBPUSD (OANDA) at 07:53 UTC. Live H1 bar (07:00 UTC): O 1.34642, H 1.34762, L 1.34604, current 1.34738. H1 EMA20 1.34680, H1 RSI 47.40. Last closed H1 bar (06:00 UTC): 1.34643 — below trigger. Prior failed breakout bar (02:00 UTC): rejected 1.34728 → 1.34590 close 1.34605."
+}

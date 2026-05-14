@@ -1,0 +1,16 @@
+{
+  "action": "SELL",
+  "instrument": "GBPUSD",
+  "order_type": "MARKET",
+  "entry_price": 1.35150,
+  "stop_loss": 1.35350,
+  "take_profit": 1.34200,
+  "stop_distance": 0.00200,
+  "limit_distance": 0.00950,
+  "risk_reward": 4.75,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "Lower-high rejection confirmed: current H1 bar tagged 1.35209 (just under EMA zone 1.35202-1.35254) and rolled over to 1.35149, now closing below H1 EMA 1.35161. RSI H1 44.37 bearish. Lower high at 1.35276 vs prior swing. SL 1.35350 above lower-high swing + buffer (20 pips, meets minimum). TP at playbook target 1.3420 below 1.3485 breakdown level.",
+  "invalidation": "H1 close above 1.35350.",
+  "strategy": "ai_lower_high_entry"
+}

@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "R:R fails from current price. Price 0.71670, stop 0.71500 = 17 pips risk; target 0.71970 = 30 pips reward; R:R = 1.76, below 2:1 minimum. Additionally, H1 EMA (0.71712) still not reclaimed — price sits 4.2 pips below and H1 RSI at 49.32 (below 50) shows no bullish momentum. Journal confirms this is the 9th AUDUSD evaluation today with the identical touch-and-fade pattern at the H1 EMA — today's last completed H1 bar wicked to 0.71782 then sold off 170 pips to close 0.71627, and the current bar rallied to 0.71722 (tagging EMA) but already faded back to 0.71670. That is distribution at the EMA, not accumulation. Only 1 hour left in NY session — insufficient runway for 30-pip move, and holding into Asian session adds risk without edge. The setup keeps re-appearing because price is pinned under the EMA; taking it today means fighting that fade.",
+  "re_verification": "Checked AUDUSD H1 at 15:54 UTC. H1 EMA20 = 0.71712, price 0.71670, H1 RSI 49.32. Current H1 bar high 0.71722 tagged EMA then faded. R:R < 2:1 disqualifies."
+}

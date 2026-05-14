@@ -1,0 +1,16 @@
+{
+  "action": "SELL",
+  "instrument": "GBPUSD",
+  "order_type": "MARKET",
+  "entry_price": 1.35130,
+  "stop_loss": 1.35530,
+  "take_profit": 1.34000,
+  "stop_distance": 0.00400,
+  "limit_distance": 0.01130,
+  "risk_reward": 2.83,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "Pullback to H1 EMA sell. Current 1.35130 just rejected H1 EMA 1.35164 — last 2 H1 bars probed 1.35208-1.35210 and closed at 1.35116-1.35118, clear ceiling. RSI 45.08 bearish, price below D1/H4/H1 EMAs. SL 1.35530 above H4 EMA cluster (40 pips, 2.85x ATR H1). TP 1.34000 at D1 support, 113 pips, 2.83:1.",
+  "invalidation": "H1 close above 1.35488 (H4 EMA).",
+  "strategy": "ai_pullback_to_ema"
+}

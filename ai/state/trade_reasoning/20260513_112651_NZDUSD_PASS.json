@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "NZDUSD",
+  "reasoning": "9th stacked NZDUSD range_extreme_fade BUY scan today (#121, #122, #124-#131 all SKIPPED on same basis). Multiple stacked hard-stops fire deterministically: (1) SCANNER SELF-RATED LOW CONFIDENCE — system rule mandates PASS on low conviction, full stop. (2) RSI<50 INVALIDATION per rsi_below_50_invalidates_pullback_long — verified RSI 39.68 (chart MA 0.59296, last bar close 0.59282), well below the 50 threshold; momentum still in flush mode, no bounce thesis valid. (3) DUPLICATE per scanner_confirmation_trigger_precheck — scanner's explicit 'H1 bullish reversal candle closing above 0.5931' has STILL not fired on a closed H1 bar; the 09:00 UTC hammer closed at 0.59303 (BELOW 0.5931) and subsequent bars have made lower lows (0.59232 floor tagged twice). (4) CHRONIC LEAK — same setup, same direction, same zone, same RSI<50 condition stacked through 9 verifications today. Auto-PASS without committing capital on a low-conviction, structurally unconfirmed thesis.",
+  "re_verification": "Chart NZDUSD at 11:26 UTC: RSI 39.68 (below 50), EMA 0.59296, last bar close 0.59282. Scanner's bullish confirmation trigger remains unfired; price drifting lower not recovering."
+}

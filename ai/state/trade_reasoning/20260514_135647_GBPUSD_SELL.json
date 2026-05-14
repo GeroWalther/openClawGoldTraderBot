@@ -1,0 +1,16 @@
+{
+  "action": "SELL",
+  "instrument": "GBPUSD",
+  "order_type": "LIMIT",
+  "entry_price": 1.35080,
+  "stop_loss": 1.35400,
+  "take_profit": 1.34200,
+  "stop_distance": 0.00320,
+  "limit_distance": 0.00880,
+  "risk_reward": 2.75,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "H1 EMA at 1.35055, RSI 39.37 — both confirm bearish momentum. Current bar tagged 1.35072 then sold to 1.34969 (rejection from EMA zone). LIMIT at 1.3508 inside scanner zone 1.3505-1.3512 and within 0.5x ATR of current 1.35004. SL 1.3540 above 1.3533 resistance cluster (32 pips). TP 1.3420 at H1 support extension (88 pips). R:R 2.75.",
+  "invalidation": "H1 close above 1.3540.",
+  "strategy": "ai_pullback_to_ema"
+}

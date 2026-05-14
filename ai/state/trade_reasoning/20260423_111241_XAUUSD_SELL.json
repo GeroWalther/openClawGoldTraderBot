@@ -1,0 +1,17 @@
+{
+  "action": "SELL",
+  "instrument": "XAUUSD",
+  "order_type": "LIMIT",
+  "entry_price": 4706.00,
+  "stop_loss": 4732.00,
+  "take_profit": 4640.00,
+  "stop_distance": 26.00,
+  "limit_distance": 66.00,
+  "risk_reward": 2.54,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "Multi-TF bearish alignment with regime trending_down high confidence — playbook is literally 'sell rallies to H1 EMA (~4706)'. D1 price 4697 below EMA 4749, H4 price below EMA 4726 with RSI 35.98, H1 price 4698.5 below EMA 4706.5 with RSI 37.50. Bar -3 rallied to 4725.12 and printed a decisive $22 bear engulfing (high 4725.12 → close 4703.45), confirming supply at the EMA zone. Subsequent bars continued lower (low 4684.27). Using resting SELL LIMIT at 4706 (at H1 EMA) per scanner_verification_delay_window insight — preferred execution for fast-moving commodities over market-on-verification. SL 4732 structurally above 4725.12 swing high + H4 EMA 4726.56 with 6.88pt buffer (0.49× H1 ATR 14). Stop distance 26pt meets XAUUSD 25pt minimum, 1.86× H1 ATR (within 3× max). TP 4640 is regime-documented extension support (first support 4668 fails 1:2 RR at only 1.46). Insights review: not ranging (regime trending_down), RSI gate N/A for short thesis, SL meets min stop table, XAUUSD is in instruments_in_play not avoid list.",
+  "invalidation": "H1 close above 4725 forms new higher high and kills downtrend thesis. Cancel limit if not filled within 6 hours — momentum stale after that window on this H1 structure.",
+  "pine_verification": null,
+  "strategy": "ai_pullback_to_ema"
+}

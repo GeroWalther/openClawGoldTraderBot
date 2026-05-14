@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Setup deteriorating, not confirming. (1) Current H1 bar (20:00 UTC) is BEARISH: O 4854.65 → wicked to 4844.87 → currently 4849.54, below H1 EMA (4850.20) — this is price slicing through the EMA, not bouncing from it. No M15 bullish reversal candle. H1 RSI 59.47 and declining. (2) Target 4891 is the cycle high from the 14:00 UTC bar (O 4846.53 → H 4891.54 → C 4880.40), freshly rejected 6 hours ago with sellers defending on every test since (15:00: 4885.53, 16:00: 4880.70) — first retest of freshly-rejected swing high is the exact disqualifier applied in journal id 68 only 42 minutes ago at 19:40 UTC. (3) Friday 20:23 UTC — gold cash session closes 21:00 UTC (~37 minutes). No time for 40pt move; a limit fill immediately carries weekend gap risk on a $140 account with intraday hold_style. (4) M15 low (4844.87) is only 3.87pt above proposed SL 4841 — effectively already testing stop territory while bar is still open. R:R claim of 4.0 assumes an entry that isn't triggering and a target that won't print today.",
+  "re_verification": "Checked H1 at 2026-04-17 20:23 UTC. Price 4849.54 BELOW EMA 4850.20, current bar bearish closing near session low. Setup invalidated — same pattern disqualified 42 min ago (journal id 68)."
+}

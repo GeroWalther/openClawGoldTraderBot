@@ -1,0 +1,5 @@
+{
+  "action": "PASS",
+  "instrument": "GBPUSD",
+  "reasoning": "Price at 1.35203 is below entry zone 1.3532-1.3545; rally to H4 EMA resistance with bearish rejection candle has not occurred yet."
+}

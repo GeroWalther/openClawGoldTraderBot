@@ -1,0 +1,5 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "Price at 79644 is below the 79700-79800 entry zone and the H1 EMA reclaim trigger has not fired — bar tagged 79779 but closed at 79579 (failed EMA reclaim), H1 RSI weak at 40.16."
+}

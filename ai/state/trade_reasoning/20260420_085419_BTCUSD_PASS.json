@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "Setup deteriorated further since scanner ran. H1 RSI now 46.16 (scanner had 47, earlier skipped trade at 08:24 had 49.23) — momentum weakening, well below 50. Current H1 bar dropped from open 74867 to close 74707, low 74647 ALREADY BROKE through EMA20/key_level at 74650/74661. Prior bar printed a massive 744-point rejection wick from 75590 back to 74846 — aggressive supply confirmed overhead. Scanner's explicit trigger conditions (H1 close back above EMA OR M15 momentum candle through 74,900) are NOT met — current bar is closing BELOW EMA. Entering now is fading weakening momentum into proven supply. Same instrument was correctly skipped 30 min ago under better conditions; conditions are now worse.",
+  "re_verification": "Checked H1 at 08:53 UTC. Current bar: O 74867 / H 75028 / L 74647 / C 74707. EMA20 H1 = 74650 (price testing from above, low broke it). RSI H1 = 46.16 (declining, below 50). Scanner's entry trigger conditions unmet. Setup invalidated."
+}

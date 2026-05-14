@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Setup is structurally compromised. (1) Scanner target 4664 was already tagged in the prior H1 bar on 132k volume (3x average) and bounced $45 — support just proved itself; shorting into a level that just absorbed that much buying is low-probability. (2) Current price 4713.50 is BELOW the 4718-4729 entry zone — market entry gives RR 1.17, fails 1:2 minimum. (3) Live H1 bar tagged 4722.24 inside the zone and retraced to 4713, but no CLOSED bearish rejection candle has printed yet; scanner explicitly required confirmation. (4) A limit at 4725 would give RR 2.03 (marginal) but needs a $12 rally back into zone after being just rejected from it, then target a level that just printed the highest-volume bounce of the day. Risk/reward is not asymmetric enough to override the structural warning from the 4664 buy spike.",
+  "re_verification": "Checked H1 at 18:25 UTC. Price 4713.50, H1 EMA 4719.37, H1 RSI 46.14. Prior H1 bar (17:00 UTC close): spiked low to 4664.38 — the scanner's target — on 132,113 volume vs avg 43k, then reversed to close 4709.67. Current live bar high 4722.24 inside entry zone, current retracement to 4713.50, no confirmed close. Structural setup invalidated by target already being tested with heavy demand."
+}

@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "Scanner's explicit trigger — confirmed bullish M15 close above 0.71730 — is not met. Last three closed M15 bars (10:30: 0.71718, 10:45: 0.71708, 11:00: 0.71694) are in a descending sequence, below both trigger and M15 EMA (0.71720). The 11:00 M15 bar wicked to 0.71672, piercing H1 EMA (0.71700) and coming within 8 pips of proposed SL (0.71664) — pullback is deeper than a healthy retracement (0.71826→0.71672 = 73% retrace of the 06:00→09:00 rally). Current M15 bar still open; price 0.71715 sits BELOW M15 EMA with RSI only 52.16 — no momentum confirmation. While H1 trend is intact and R:R geometry is favorable, the same 'touch-and-fade at EMA' pattern has produced 44 consecutive NO_TRADE outcomes in this instrument across recent journal. Scanner explicitly said 'do not chase' — disciplined pass until a clean bullish M15 close above 0.71730 prints.",
+  "re_verification": "H1 11:00 UTC open bar: O 0.71710, H 0.71722, L 0.71672, last 0.71716. H1 EMA 0.71700, RSI 54.46. M15 EMA 0.71720, RSI 52.16. Last 3 closed M15 closes 0.71718/0.71708/0.71694 — lower lows, lower closes. No bullish engulfing or hammer printed at the EMA. Trigger invalidated."
+}

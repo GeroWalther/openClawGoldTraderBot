@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "Pullback-to-EMA structure improved (H1 low 77052 tagged EMA 77111 and bounced +321pt to 77373, RSI 65), but two disqualifiers remain. (1) Price is 173pt above entry zone top (77200); market fill at 77373 gives R:R to realistic first target 78384 = 1011/973 = 1.04, failing 2:1. Reaching 80000 requires breaking 78384, the cycle high freshly rejected only ~4 hours ago (16:00 UTC H1: H 78384 → C 77907) — first retest of freshly-rejected swing high is the exact disqualifier applied in journal ids 54/55/56/61/62 for this instrument today. (2) Current H1 bar still open with ~20min left; no confirmed bullish close above EMA. A limit at 77200 would give RR 3.50 to 80000 but still requires 78384 break on first test, and bar could fade into close. Friday 19:40 UTC + H4 RSI 70 overbought warning + $140 account = conservative stance warranted.",
+  "re_verification": "Checked H1 at 19:40 UTC. Price 77373, EMA 77111, RSI 65.41. Current H1 bar still open: O 77208 → L 77052 → currently 77373. Prior H1 (18:00) closed 77211 (bearish). 78384 cycle high rejected 4h ago still untested."
+}

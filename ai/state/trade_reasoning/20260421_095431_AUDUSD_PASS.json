@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "Setup's own explicit trigger conditions are NOT met and momentum has deteriorated further. Scanner required (a) a bullish H1 candle close AND (b) H1 RSI reclaim above 40. Verified at 09:54 UTC: current H1 bar is RED (open 0.71554 -> close 0.71518, making a new lower low at 0.7149 below the prior bar's wick-rejection candle). H1 RSI at 37.88 is BELOW both the 40 trigger and the 50 threshold flagged by the rsi_below_50_invalidates_pullback_long insight. Price 0.71518 is still below H1 EMA20 0.71614 — no EMA reclaim. The 0.71436 wick rejection was not confirmed; instead the next bar rolled over. Per accumulated insights, RSI<50 at verification on a pullback-long setup = INVALIDATED, not WAIT. Waiting for confirmation is the correct play; entering now is catching the knife.",
+  "re_verification": "AUDUSD H1 at 2026-04-21 09:54 UTC: price 0.71518, EMA20 0.71614 (price -0.00096 below EMA), RSI 37.88. Current H1 bar red, made new lower low 0.7149. Zero bullish confirmation. Scanner's own trigger conditions unmet."
+}

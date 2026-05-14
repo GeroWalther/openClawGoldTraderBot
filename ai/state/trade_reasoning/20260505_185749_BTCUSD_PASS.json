@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "Setup played out and price now above documented entry zone — chase risk. Pullback already bounced on bar -1 (low 81199, close 81278 right at EMA 81254); live bar 0 rallied +192pt to 81493, 13pt above scanner's 81480 upper bound. Market entry violates scanner's explicit 'not a chase at current price' guidance. SL math forced to mandatory $1200 minimum (80293) gives R:R 2.92 but the stop is 5.7× H1 ATR (210) — exceeds the 3× ATR sanity threshold per sl_distance_vs_atr_sanity_check insight, indicating wrong-timeframe execution. Regime resistance 81714 only 221pt above current price = immediate ceiling before any path to 85000 target. H1 RSI 66.44 elevated, regime explicitly instructed 'size down and wait for clean H1 pullback before entering.' Limit at 81350 (mid-zone) requires a 143pt dip during active bounce — low fill probability per journal #10 precedent on identical post-bounce setup. Wait for either (a) a deeper retracement back into 81268-81400 for a proper limit fill or (b) a clean H1 close above 81714 with retest.",
+  "re_verification": "Verified BTCUSD H1 at 18:56 UTC. Price 81493, EMA20 81254, RSI 66.44. Bar -1 closed 81278 (pullback executed at EMA). Bar 0 live: O 81301 H 81602 L 81301 C 81493. Setup thesis intact but entry window has closed."
+}

@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Duplicate-exposure hard-stop. Pending SELL LIMIT order #34270168 already exists for XAUUSD at 4557.0 (size 1.0, SL 4584, TP 4501) — submitted at 10:26 UTC, 44 minutes ago. Current scanner proposal is the SAME setup at the SAME zone (entry 4550-4560, SL 4578, TP 4501) and would create duplicate committed exposure on fill. Per system rule 'already have a position in this instrument? PASS', a working limit order at the identical level for the identical direction counts as existing exposure. Journal #57 (10:39 UTC) already documented this exact reasoning for the prior duplicate scan today; this is the second re-issue of the same leak.",
+  "re_verification": "No MCP verification run — duplicate-order hard-stop is deterministic and short-circuits further analysis. Existing pending order already covers the entire 4550-4560 zone with structurally sound SL/TP."
+}

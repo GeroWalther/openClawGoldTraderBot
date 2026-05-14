@@ -1,0 +1,5 @@
+{
+  "action": "PASS",
+  "instrument": "NZDUSD",
+  "reasoning": "Already have an open BUY position on NZDUSD (1000 units @ 0.59216) — no stacking same-direction entries."
+}

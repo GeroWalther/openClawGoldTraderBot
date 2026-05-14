@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "BTCUSD",
+  "order_type": "LIMIT",
+  "entry_price": 74750,
+  "stop_loss": 74330,
+  "take_profit": 76120,
+  "stop_distance": 420,
+  "limit_distance": 1370,
+  "risk_reward": 3.26,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "All three TFs (D1/H4/H1) fully aligned bullish with HIGH regime confidence. H1 EMA 74429 confirmed reclaimed (prior bar closed 75019). Price spiked to 75317 (H4 resistance), pulled back to 74548 (held 119 pts above H1 EMA), now recovering with M15 higher lows (74548→74664→74763) and M15 RSI 61.85 showing bullish momentum. M15 EMA 74733 acting as support. Limit entry at 74750 targets M15 EMA retest — structural entry, not chasing. Stop at 74330 is below H4 EMA (74337) and below the 19:00 H1 bar low (74376) — clean invalidation level. Stop distance 420 pts = 0.83× H1 ATR (506), tight but structural. Target 76120 is D1 range high with clear air above 75317. BTC 24/7 market, no session liquidity concern. MEDIUM conviction: setup is structurally clean but entering after proven rejection at 75317 resistance — need that level to break for target.",
+  "invalidation": "H1 close below 74330 kills thesis. Cancel limit if not filled within 4 hours (by 01:00 UTC Apr 16).",
+  "pine_verification": "none — indicators verified via MCP direct read",
+  "strategy": "ai_sr_bounce_with_trend"
+}

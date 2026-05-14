@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "Pullback already played out. Last 3 H1 bars tested the 75700-76000 zone (lows 75734/75757/75726) and bounced cleanly — current live bar is up +254pts from open with RSI reclaimed to 53.92. Price 76176 is above the entry zone. Market entry gives R:R 1.40 (fail). A limit at 75850 would give R:R 2.03 but requires another 326pt dip (0.68x H1 ATR) during an active bounce — low fill probability, and a fill at that point would represent a failed bounce / different thesis than the original pullback-entry setup. Per insight rr_below_2_hard_stop_even_if_thesis_valid, this is the same pattern as yesterday's BTCUSD 14:39 skip: thesis-correct but the move has already started. Chasing the already-played pullback is a rule break. Better setups: wait for a resistance break above 76500 with confirmation, or a fresh deeper pullback to a new structural level.",
+  "re_verification": "Checked H1 BTCUSD at 14:26 UTC. Price 76176, EMA20 76181, RSI 53.92. Live bar range 75726-76319 — zone already tested and bounced. Scanner's 75700-76000 entry zone no longer actionable without post-bounce re-test (low probability)."
+}

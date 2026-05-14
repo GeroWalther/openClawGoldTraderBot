@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "XAUUSD",
+  "order_type": "LIMIT",
+  "entry_price": 4820.00,
+  "stop_loss": 4805.00,
+  "take_profit": 4871.00,
+  "stop_distance": 15.00,
+  "limit_distance": 51.00,
+  "risk_reward": 3.40,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "H1 13:00 UTC bar confirmed as textbook hammer (O 4811.69, L 4808.57, C 4828.92) bouncing from H1 EMA zone (4817.82) and H4 EMA (~4808). All three TFs aligned bullish — D1 above EMA 4750, H4 above EMA 4808, H1 above EMA 4818. H1 RSI 57.24 healthy, no overbought risk. Current H1 bar pulling back from 4830 — M15 already dipped to 4820.37 this bar, targeting fill near H1 EMA. Limit at 4820 catches the M15 pullback into the EMA zone (4818-4820) where the setup was originally designed to trigger. Stop at 4805 below the 12:00 bar low (4807.03) and 13:00 hammer low (4808.57) — break below invalidates the higher-low sequence (4795→4807→4808). Target 4871 is next resistance with clear air. Conviction MEDIUM: scanner confidence medium, bounce already covered 1× H1 ATR from trigger bar, entry requires limit fill rather than confirmed continuation.",
+  "invalidation": "H1 close below 4810 kills the hammer thesis. Cancel limit if not filled within 4 hours (by 18:00 UTC).",
+  "pine_verification": "No Pine script verification — levels confirmed via raw OHLCV data and visible EMA/RSI studies.",
+  "strategy": "ai_pullback"
+}

@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Duplicate-exposure hard-stop. Pending SELL LIMIT order #34270168 already exists for XAUUSD at 4557.0 (size 1.0, SL 4584, TP 4501), submitted 10:26 UTC ~7h57m ago and still working. Current scanner proposal is the SAME instrument, SAME direction, SAME thesis (sr_bounce_with_trend short), and SAME zone (entry 4562-4566, SL 4588, TP 4501) and would create duplicate committed exposure on fill. Per system rule 'already have a position in this instrument? PASS', a working limit order at the identical level/direction counts as existing exposure. This is the 6th identical PASS for this same setup today (journals #57, #58, #60, #61, #62) — scanner is repeatedly re-issuing the same XAUUSD short while the original limit order sits pending. Until the original order fills, expires, or is cancelled, all subsequent XAUUSD short scans must auto-PASS. Additionally, account NetLiq is only $140 with the existing $1.0 lot already a sizable risk relative to balance — second concurrent gold short would be reckless even without the duplicate rule.",
+  "re_verification": "Skipped full TV re-verification — duplicate-exposure rule fires deterministically before momentum/structure analysis is needed. Pending order list confirmed via positions context: order #34270168 still in pending_order status at 18:23 UTC."
+}

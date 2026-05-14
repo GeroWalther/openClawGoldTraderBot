@@ -1,0 +1,16 @@
+{
+  "action": "BUY",
+  "instrument": "GBPUSD",
+  "order_type": "MARKET",
+  "entry_price": 1.34046,
+  "stop_loss": 1.3375,
+  "take_profit": 1.3500,
+  "stop_distance": 0.00296,
+  "limit_distance": 0.00954,
+  "risk_reward": 3.22,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "Exhaustion reversal long at D1 intraday support 1.3395 after 140-pip news-driven sell-off. M15 hammer tagged 1.3395 exactly and closed 1.34046, followed by two consolidation bars holding 1.3400-1.3406. RSI 22.01 still extreme oversold. SL at 1.3375 (20 pips below support, 30-pip stop meets GBPUSD minimum). TP at 1.3500 H4 EMA zone = 95 pips, 3.2:1 R:R. Partial-size aggressive entry on M15 structure ahead of H1 confirmation above 1.3440.",
+  "invalidation": "H1 close below 1.3375 (breaks support and SL).",
+  "strategy": "ai_exhaustion_reversal"
+}

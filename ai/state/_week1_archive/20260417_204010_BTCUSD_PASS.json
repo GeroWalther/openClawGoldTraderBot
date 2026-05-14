@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "Four disqualifiers. (1) Scanner's own trigger — M15 bullish close above 77385 — is NOT met. M15 EMA at 77,391, current price 77,255 is BELOW it; M15 RSI 49.77 (below 50, no bullish momentum). (2) Current H1 bar (20:00 UTC) is BEARISH: O 77,452 → H 77,674 → faded to L 77,201 → C 77,255. The 19:00 hammer bounce already failed — current bar gave back 419pt of the rally. M15 sequence shows distribution: 77,674 → 77,577 → 77,429 → 77,255, classic lower-highs fade. (3) Target 78,384 is the cycle high from 16:00 UTC freshly rejected ~5h ago (O 77,835 → H 78,384 → C 77,907) — same first-retest-of-fresh-rejection disqualifier applied in journal ids 54, 55, 56, 61, 70. (4) Stop at 76,980 = 275pt risk vs H1 ATR 568 = 0.48× ATR — below 0.5× ATR minimum (unreasonably tight, would be stopped on routine noise).",
+  "re_verification": "Checked H1 + M15 at 20:39 UTC. Pullback-to-EMA structure exists (H1 EMA 77,152, price above it) but M15 confirmation absent — opposite of required. Current H1 is bearish and fading from 77,674 high. Setup deteriorating in real time."
+}

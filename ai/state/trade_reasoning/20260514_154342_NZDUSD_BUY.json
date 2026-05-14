@@ -1,0 +1,16 @@
+{
+  "action": "BUY",
+  "instrument": "NZDUSD",
+  "order_type": "MARKET",
+  "entry_price": 0.59198,
+  "stop_loss": 0.59000,
+  "take_profit": 0.59660,
+  "stop_distance": 0.00198,
+  "limit_distance": 0.00462,
+  "risk_reward": 2.33,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "Range floor fade at 0.5919-0.5920. Price 0.59198 in entry zone. Last two H1 bars wicked to 0.59176/0.59184 then recovered above 0.5919 — support holding despite probes. H1 RSI 34.39 oversold (down from 38 at scan), aligned with bounce thesis. EMA 0.59230 sits just above as first target. SL at 0.5900 below range extreme (20 pips, ~2.6x ATR, above min). TP at 0.5966 range top (46 pips). R:R 2.33.",
+  "invalidation": "H1 close below 0.5900.",
+  "strategy": "ai_range_extreme_fade"
+}

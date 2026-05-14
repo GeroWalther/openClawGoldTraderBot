@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "GBPUSD",
+  "reasoning": "Setup confirmation not fired and live bar deteriorating. Verified H1 at 11:55 UTC: live 11:00 UTC bar is making a FRESH LOWER LOW at 1.34994 (below the scanner's hammer close 1.35073), with no bullish reversal candle printed. The 10:00 UTC 'hammer' the scanner cited closed RED with lower wick 13.4 pips vs body 10.8 pips — fails the 2:1 hammer geometry; scanner's claimed 24/11 pip ratio doesn't match the actual bar (O 1.35181/H 1.35218/L 1.34939/C 1.35073). H1 RSI 33.71 has DECAYED from scanner's 32.98 — no recovery, floor still under pressure. H1 EMA20 1.35209 is 15 pips above price — trend filter unreclaimed. Per scanner_confirmation_trigger_precheck and live_bar_rejection_wait_for_close, the required H1 bullish close holding above 1.34994 has not fired. Same structural pattern that drove 9 stacked NZDUSD range-floor skips today (journals #121-#132). Range-fade math would only work after a confirmed bullish H1 close and RSI turn — wait for the print.",
+  "re_verification": "Verified H1 OANDA:GBPUSD at 2026-05-13 11:55 UTC. Price 1.35058, RSI 33.71, EMA20 1.35209. Live bar low 1.34994 (fresh LL vs prior close 1.35073). Hammer geometry rejected."
+}

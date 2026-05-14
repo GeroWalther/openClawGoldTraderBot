@@ -1,0 +1,16 @@
+{
+  "action": "SELL",
+  "instrument": "GBPUSD",
+  "order_type": "MARKET",
+  "entry_price": 1.35169,
+  "stop_loss": 1.35380,
+  "take_profit": 1.34500,
+  "stop_distance": 0.00211,
+  "limit_distance": 0.00669,
+  "risk_reward": 3.17,
+  "conviction": "HIGH",
+  "hold_style": "intraday",
+  "reasoning": "GBPUSD trending down on D1/H4/H1, all EMAs aligned bearish since 1.3658 peak. London session printed two consecutive lower-high rejections at H1 EMA 1.35226 with swing high capped at 1.35326. Current H1 bar opened at 1.35274, tagged 1.35276, then dropped to 1.35124 — classic EMA rejection. RSI 45.08 bearish. Entry market at 1.35169 in setup zone. SL above swing high at 1.35380 (21 pips, above 20-pip minimum). TP at regime S/R 1.3450 for 3.17 R:R.",
+  "invalidation": "H1 close above 1.35326 swing high, or any close back above D1 EMA 1.3549.",
+  "strategy": "ai_lower_high_entry"
+}

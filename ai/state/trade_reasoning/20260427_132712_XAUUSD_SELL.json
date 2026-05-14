@@ -1,0 +1,17 @@
+{
+  "action": "SELL",
+  "instrument": "XAUUSD",
+  "order_type": "LIMIT",
+  "entry_price": 4705.00,
+  "stop_loss": 4732.00,
+  "take_profit": 4630.00,
+  "stop_distance": 27.00,
+  "limit_distance": 75.00,
+  "risk_reward": 2.78,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "XAUUSD HIGH-confidence trending_down regime (D1/H4/H1 all bearish, 720pt sell-off from 5419 peak). Closed 12:00 UTC H1 bar already fired scanner's bearish rejection trigger: tagged 4712.66 (EMA zone) and closed -5.7pt at 4699.43 with 13pt upper wick on 35.5k volume — classic supply rejection. Current live H1 (13:00 UTC) extending bearish: high 4703.68 (failed to even retest EMA), close 4699.60, RSI 45.75 declining from scanner's 47.32 (mirror-confirms short via rsi_below_50 insight). LIMIT placed at 4705 to capture mean-reversion retest to the proven supply zone — preferred over chasing market entry below the zone (which would degrade R:R to 2.18). SL 4732 sits 2pt above M15 50-bar swing high 4729.97 (+0.25 ATR buffer) and below D1 EMA invalidation 4733. TP 4630 is regime-documented support; nearer support 4658 (H1 range floor) has not been tested in the last 10 H1 bars per OHLCV check, so scanner_tp_must_clear_proven_support insight does not block. Stop 27pt = 2.87x H1 ATR, just under the 3x guard; above 25pt XAUUSD minimum.",
+  "invalidation": "H1 close above 4733 (D1 EMA reclaim) kills bearish thesis. Cancel if not filled within 4h — limit retest of EMA zone is time-sensitive given declining momentum.",
+  "pine_verification": null,
+  "strategy": "ai_sr_bounce_with_trend"
+}

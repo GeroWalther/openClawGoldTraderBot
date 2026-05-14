@@ -1,0 +1,16 @@
+{
+  "action": "BUY",
+  "instrument": "GBPUSD",
+  "order_type": "MARKET",
+  "entry_price": 1.35132,
+  "stop_loss": 1.34770,
+  "take_profit": 1.36141,
+  "stop_distance": 0.00362,
+  "limit_distance": 0.01009,
+  "risk_reward": 2.79,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "Confirmed hold of 1.34846 support: prior H1 wicked exactly to 1.34846 then closed strong at 1.35142. Current price 1.35132 inside entry zone 1.3507-1.3522. H1 RSI 42.24 neutral with room to rally. SL 1.34770 sits 7.6 pips below key level (36.2 pip stop, above 20-pip minimum). TP at range resistance 1.36141. R:R 2.79. Regime playbook explicitly authorizes re-buy on confirmed hold — condition met.",
+  "invalidation": "H1 close below 1.34846.",
+  "strategy": "ai_sr_bounce_with_trend"
+}

@@ -1,0 +1,16 @@
+{
+  "action": "SELL",
+  "instrument": "GBPUSD",
+  "order_type": "MARKET",
+  "entry_price": 1.35144,
+  "stop_loss": 1.35430,
+  "take_profit": 1.34500,
+  "stop_distance": 0.00286,
+  "limit_distance": 0.00644,
+  "risk_reward": 2.25,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "GBPUSD trending down on D1/H4/H1 — price below EMA on all TFs. Pullback-to-EMA SELL signal triggered: price rallied into entry zone 1.3517-1.3525 (high 1.35210), printed bearish rejection bar (close 1.35116 below EMA 1.35156), and is now resuming downside at 1.35144. SL 1.3543 above invalidation 1.3540 (28.6 pips, ~1.9× ATR). TP 1.3450 between scanner's TP1 (1.3485) and D1 support (1.3400) for clean 2.25:1 R:R.",
+  "invalidation": "H1 close above 1.3540.",
+  "strategy": "ai_pullback_to_ema"
+}

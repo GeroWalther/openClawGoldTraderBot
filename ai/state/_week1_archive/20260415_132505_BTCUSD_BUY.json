@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "BTCUSD",
+  "order_type": "LIMIT",
+  "entry_price": 74200.00,
+  "stop_loss": 73450.00,
+  "take_profit": 76120.00,
+  "stop_distance": 750.00,
+  "limit_distance": 1920.00,
+  "risk_reward": 2.56,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "H1 pullback to EMA20 in confirmed D1/H4/H1 uptrend. H1 EMA reclaim confirmed (prior bar closed 74,305 > EMA 74,175). M15 trigger conditions now met: RSI 56.33 >50 and last completed M15 bar closed 74,343 > M15 EMA 74,236. Using LIMIT at 74,200 (near H1 EMA 74,175) rather than market because M15 shows repeated spike-and-fade pattern — 3 instances today of price pushing 74,350-74,491 then selling off to 74,200-74,280 zone. Current M15 bar fading from 74,340 to 74,292 suggests another dip is likely. SL at 73,450 below H1 swing low 73,528 — clean structural invalidation. Target 76,120 is prior H1 high with clear air. Stop distance 750 pts = 2.14× H1 ATR (350) — within acceptable range. Conviction MEDIUM: trend structure and M15 trigger are valid, but this is our 3rd evaluation of the same setup today and M15 choppiness (not a clean bounce) warrants smaller size.",
+  "invalidation": "H1 close below 73,450 kills thesis. Cancel limit if not filled within 4 hours (by 17:30 UTC).",
+  "pine_verification": "No Pine script verification performed — indicators visually confirmed via study values.",
+  "strategy": "ai_pullback"
+}

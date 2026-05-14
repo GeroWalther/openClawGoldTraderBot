@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "Setup not confirmed — same failure pattern as 13 prior AUDUSD passes today. Price 0.71608 is 3.3 pips BELOW H1 EMA (0.71641), not reclaimed. H1 RSI 45.60 (below 50, declining from scanner's reported 47) shows no bullish momentum. Last 6 H1 bars show lower highs with 5 closes under the EMA: 0.71723→0.71627→0.71694→0.71590→0.71568→0.71577 — distribution at the EMA, not a pullback holding. Scanner admits M15 recovery is a 'gradual grind' lacking sharpness, which is itself a soft trigger. Session timing is terminal: 19:53 UTC, London closed, NY in final hour — zero liquidity for a 36-pip move to 0.71970 target before rollover. Account is $140; cannot afford chop-trap entries during thin-liquidity windows.",
+  "re_verification": "H1 checked at 19:53 UTC. Price 0.71608 below EMA 0.71641, RSI 45.60 bearish. H1 structure shows 5 consecutive bearish/sideways closes below EMA. No M15 bullish engulfing or reclaim. Identical setup has failed 13+ times today — Pattern of failed reclaims is dominant. Late NY session leaves no room for 60-pip spread between stop and target to play out."
+}

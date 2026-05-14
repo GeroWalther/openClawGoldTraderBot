@@ -1,0 +1,16 @@
+{
+  "action": "BUY",
+  "instrument": "NZDUSD",
+  "order_type": "MARKET",
+  "entry_price": 0.59262,
+  "stop_loss": 0.59110,
+  "take_profit": 0.59660,
+  "stop_distance": 0.00152,
+  "limit_distance": 0.00398,
+  "risk_reward": 2.62,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "Range extreme fade at 0.5919 H1 support per regime playbook. Current H1 bar tagged 0.59194 then rallied to 0.59302 — bullish rejection at the level. Prior H1 bar wicked to 0.5919 (false break). H1 RSI 44 with room to rally toward range top. SL at 0.59110 sits 15.2 pips below entry, beyond M15 invalidation at 0.5913 with buffer. TP at 0.5966 range top per playbook gives 2.62:1 R:R.",
+  "invalidation": "M15 close below 0.5913 / H1 close below 0.5919 support.",
+  "strategy": "ai_range_extreme_fade"
+}

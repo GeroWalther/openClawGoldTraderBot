@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "NZDUSD",
+  "reasoning": "Duplicate of journal #125 (15 min ago) — same NZDUSD H1 range_extreme_fade BUY at 0.5923. Re-verified 09:56 UTC: live H1 09:00 bar still RED and unclosed (O 0.59298 / H 0.5931 / L 0.59232 / C 0.59282, ~4 min to close), tagged 0.5923 floor to the pip but no bullish reversal close. H1 RSI 34.53 (below 50, per rsi_below_50_invalidates_pullback_long). H1 EMA20 0.59384 (price 10pt below). Scanner's explicit confirmation trigger ('H1 bullish reversal candle closing above 0.5931') has NOT fired per scanner_confirmation_trigger_precheck and live_bar_rejection_wait_for_close. Today's 5th NZDUSD skip on this same level — wait for confirmed H1 close before re-evaluating.",
+  "re_verification": "H1 09:00 bar live, red, fresh low 0.59232. RSI 34.53. EMA20 0.59384. Confirmation trigger pending."
+}

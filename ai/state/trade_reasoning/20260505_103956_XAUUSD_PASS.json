@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Duplicate-exposure hard-stop. Pending SELL LIMIT order #34270168 for XAUUSD already exists at 4557.0 (size 1.0, SL 4584, TP 4501) — submitted 12 minutes ago at 10:26 UTC. The current scanner proposal is the SAME setup at the SAME zone (entry 4555-4559, SL 4582, TP 4501) and would create a duplicate position on fill. Per system rule 'already have a position in this instrument? PASS.', a working limit order at the identical level for the identical direction counts as existing committed exposure. Adding a second order would double size on a $140 account where 1 lot already represents extreme risk ($2,700 SL distance). Setup itself is verifiable and reasonable: price 4552.52, RSI 50.65, EMA20 4547.36, last 3 H1 bars all rejected the 4558-4560 zone (highs 4558.46 / 4559.57 / 4560.44), regime playbook explicitly endorses 'sell rallies toward H4 EMA ~4554'. The pending order will work this thesis without duplication. No new action required.",
+  "re_verification": "OANDA XAUUSD H1 verified at 10:38 UTC. Price 4552.52, H1 RSI 50.65, H1 EMA20 4547.36. Last 4 H1 bars confirm 4558-4560 rejection (highs 4558.46/4559.57/4560.44/4557.15). Setup thesis intact — but already covered by working limit order #34270168."
+}

@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "5th evaluation of same setup today — still no M15 trigger confirmation. Price at 0.71386 sitting exactly at M15 EMA (0.71383) and H1 EMA (0.71386) but failing to break above convincingly. Last 6 completed M15 bars: 0.71386, 0.71364, 0.71370, 0.71408, 0.71360, 0.71378 — repeated failed reclaims of 0.71400. Current M15 bar at 0.71386 is neutral, RSI 50.24 shows zero bullish momentum. The current H1 bar (12:00 UTC) opened at 0.71402 and has already printed a low of 0.71340, selling off 6.2 pips — another bearish candle developing into the EMA. This is the same choppy consolidation pattern seen in the last 4 PASS decisions. Scanner required M15 close above 0.71400 — not happening. No edge.",
+  "re_verification": "Checked H1 and M15 at 12:39 UTC. H1: price 0.71396, EMA 0.71386, RSI 63.27. M15: price 0.71386, EMA 0.71383, RSI 50.24. No bullish trigger candle formed."
+}

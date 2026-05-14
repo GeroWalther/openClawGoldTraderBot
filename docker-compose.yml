@@ -13,6 +13,9 @@ services:
       - ./.env:/app/.env:ro
     environment:
       - DATABASE_URL=sqlite+aiosqlite:///./data/trades.db
+      # TRADING_MODE: "classic" = in-container fixed-strategy cron pipeline
+      #               "ai"      = host-side AI orchestrator runs scans; container only monitors
+      - TRADING_MODE=${TRADING_MODE:-classic}
 
 volumes:
   trader-data:

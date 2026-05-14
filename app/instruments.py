@@ -56,6 +56,7 @@ INSTRUMENTS: dict[str, InstrumentSpec] = {
             TradingSession("London", 7, 16),
             TradingSession("New York", 13, 21),
         ),
+        broker="icmarkets",
     ),
     "MES": InstrumentSpec(
         key="MES",

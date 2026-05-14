@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "Setup thesis was correct but the pullback already played out. Verified at 14:38 UTC: price 0.71836 (live H1 bar, +85 pips green), RSI 61.55 (healthy, well above 50), EMA20 0.71680. Prior H1 closed at 0.71750 confirming EMA reclaim — exactly as scanner predicted. Problem: price is now 12-19 pips ABOVE the 0.7165-0.7172 entry zone, extending strongly. Math: (1) Market entry at 0.71836 with SL 0.71440 and TP 0.72220 = stop 39.6 pips, target 38.4 pips, R:R 0.97 — fails 1:2 minimum. (2) Limit at 0.7170 would yield R:R 2.0 but requires a 13-pip retrace during an active bounce with RSI 61 — very low fill probability, and a fill there during a failed bounce changes the thesis. This is the BTCUSD 14:39 pattern from the insights: thesis-correct but chasing an already-played move, triggering rr_below_2_hard_stop_even_if_thesis_valid. Wait for either a fresh pullback to EMA (with RSI holding 50+) or a clean breakout above 0.7222.",
+  "re_verification": "AUDUSD H1 at 14:38 UTC: price 0.71836, EMA20 0.71680, RSI 61.55. Bullish momentum confirmed (unlike morning skips), but entry zone 0.7165-0.7172 now 12-19 pips below price. Live bar high 0.71842 — price moving AWAY from entry."
+}

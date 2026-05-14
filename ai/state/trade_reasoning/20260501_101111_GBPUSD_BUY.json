@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "GBPUSD",
+  "order_type": "LIMIT",
+  "entry_price": 1.35994,
+  "stop_loss": 1.35780,
+  "take_profit": 1.36500,
+  "stop_distance": 0.00214,
+  "limit_distance": 0.00506,
+  "risk_reward": 2.36,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "H1 pullback to EMA20 (1.36008) executed cleanly within the regime's exact stated entry zone (~1.3599). Live H1 bar 10:00 UTC opened 1.35931, wicked to 1.35920 (just below EMA), now back at 1.36030 — bullish rejection candle off EMA confluence with H1 RSI 61.75 (above 50 invalidation gate per rsi_below_50_invalidates_pullback_long, healthy not overbought). D1 trend intact above 1.35355 EMA, H4 above 1.35709 EMA, regime trending_up medium confidence with explicit BUY-only playbook. Limit at 1.35994 (scanner entry) preserves R:R 2.36; chasing market at 1.36030 would collapse to 1.88 and fail the gate. SL 1.3578 = 21.4 pips, just below regime support 1.3587 with buffer, above the 20-pip GBPUSD minimum stop. TP 1.3650 is the next regime-documented resistance tier above the 50-bar high breakout level 1.36228.",
+  "invalidation": "H1 close below 1.3578 kills thesis. Cancel limit if not filled within 4h or if H1 RSI prints below 50 before fill.",
+  "pine_verification": null,
+  "strategy": "ai_pullback_to_ema"
+}

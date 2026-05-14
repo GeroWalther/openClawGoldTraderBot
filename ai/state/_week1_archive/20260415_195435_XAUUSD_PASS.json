@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Session timing and failed EMA reclaim kill this trade. At 19:53 UTC, London is closed and NY is in its final hour — no liquidity for a 73-point move to 4871. Price at 4799.66 remains below H1 EMA 4804.37 and repeatedly fails to reclaim it. Last M15 bar printed a bearish rejection from 4803 (O:4802.96→C:4797.03), and the bar before that briefly closed at 4803.06 but was immediately sold off. M15 RSI 46.25 and H1 RSI 46.03 both show zero bullish momentum — no confirmation of trend continuation. H1 bars since the 4787 bounce are making lower highs (4812→4808→4803) and the last completed H1 bar closed at 4792.64, breaking below 4800. The scanner's trigger condition — M15 close above 4803 — has failed repeatedly across the last 8 M15 bars. This is the 3rd XAUUSD evaluation today with the same result: price consolidating weakly below the EMA, not bouncing from it. The D1 thesis (pullback to 4787 support in uptrend) is structurally valid, but with no session time remaining and no M15 trigger, entering now is chasing into thin liquidity.",
+  "re_verification": "Checked H1 and M15 at 19:53 UTC via TradingView MCP. H1 EMA 4804.37, price 4799.66. M15 EMA 4799.25, RSI 46.25. No bullish trigger candle formed."
+}

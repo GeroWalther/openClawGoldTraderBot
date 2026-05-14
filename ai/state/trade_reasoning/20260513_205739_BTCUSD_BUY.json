@@ -1,0 +1,16 @@
+{
+  "action": "BUY",
+  "instrument": "BTCUSD",
+  "order_type": "MARKET",
+  "entry_price": 79661,
+  "stop_loss": 78450,
+  "take_profit": 82833,
+  "stop_distance": 1211,
+  "limit_distance": 3172,
+  "risk_reward": 2.62,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "D1 78,704 support held with climax volume spike (247 vs ~30 avg). H1 higher-low structure intact: 78,704 -> 79,065 -> 79,378 -> 79,596. Last 5 H1 closes 78,788/79,065/79,489/79,579/79,614/79,661 — clean stair-step recovery. RSI 40.48 turning up from oversold, price reclaiming EMA 79,706. Entry at market 79,661 (within zone 79,650-79,850). SL 78,450 sits ~250 below absolute low (0.25x recent range buffer), meets BTC $1,200 minimum. TP at D1 resistance 82,833 gives 2.62R.",
+  "invalidation": "H1 close below 78,704.",
+  "strategy": "ai_key_level_rejection"
+}

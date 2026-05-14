@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "H1 EMA reclaim now confirmed (11:00 bar closed 74207 > EMA 74167), and trend structure is valid with higher lows from 73528. However, price at 74385 has moved beyond the scanner's entry zone (74150-74320). With structural stop at 73450 (below key 73528 support), risk is 935 pts for reward of 1735 pts — R:R of 1.86:1, below the 2:1 minimum. Scanner itself noted 'ideal entry was the 73528 bounce — current entry is chasing slightly' and price has extended further since. A limit order at 74170 (EMA area) would restore R:R to 2.7:1 but there is no guarantee of a pullback — current bar is rallying with higher lows accelerating. Will re-evaluate if price pulls back to the 74150-74200 EMA zone.",
+  "re_verification": "Checked H1 at 12:41 UTC. EMA(20) 74167, RSI 54.01, price 74385. Last 4 H1 closes: 74041, 73889, 74207, 74394 (current open). V-bounce from 73528 confirmed, EMA reclaim confirmed, but entry window has passed at current price."
+}

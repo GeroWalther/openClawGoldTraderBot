@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "GBPUSD",
+  "reasoning": "7th stacked GBPUSD BUY scan today, deterministic auto-PASS per chronic pattern (journals #97, #100, #101, #102, #103, #104). TP 1.3700 FAILS scanner_tp_must_clear_proven_intraday_support — 1.36536 was tagged and rejected TWICE within last 5h (15:00 UTC H1 high 1.36536/close 1.36497, 16:00 UTC lower high 1.36500/close 1.36412) on volume = freshly-proven intraday resistance. Honest nearest TP is 1.36500. R:R math at honest TP: best-case limit at zone bottom 1.3620 / SL 1.3597 / honest TP 1.36500 = 23pt stop / 30pt target = 1.30 R:R; market entry at 1.3619 = 22pt stop / 31pt target = 1.41 R:R. Both fail mandatory 1:2.",
+  "re_verification": "Skipped per pending_order_one_line_discipline (applied to chronic GBPUSD leak). 6 identical prior auto-PASSes today on the same structural failure — verbose MCP verification would burn decision budget on a deterministic outcome."
+}

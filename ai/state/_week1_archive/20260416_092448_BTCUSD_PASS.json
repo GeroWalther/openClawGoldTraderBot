@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "Bounce from H4 EMA zone (74,530 low) is structurally valid with higher lows forming on M15 (74,530 → 74,544 → 74,581 → 74,642 → 74,749), and current open M15 bar is strongly bullish at 74,909. However, the last COMPLETED M15 bar closed at 74,764 — still 33 pts below M15 EMA (74,797). No closed M15 bar has reclaimed M15 EMA yet. Current H1 bar (09:00 UTC) is also still open with 37 min remaining. Price action is improving rapidly and this is the closest to a valid trigger we've seen on BTCUSD, but entering on an open bar that hasn't confirmed above EMA is the same trap flagged in prior passes. Need one confirmed M15 close above 74,797 to validate the bounce momentum. If the current M15 bar (09:15 UTC) closes above 74,800, the next evaluation should trigger.",
+  "re_verification": "Checked H1 + M15 at 09:22 UTC. H1 EMA 74,835, RSI 55.95. M15 EMA 74,797, RSI 52.56. Price 74,889 on open bars only — last completed M15 close was 74,764 (below EMA). Bounce from 74,530 is real but M15 closed-bar confirmation pending."
+}

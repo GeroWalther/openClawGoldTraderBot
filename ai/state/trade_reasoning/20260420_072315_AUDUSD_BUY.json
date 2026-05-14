@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "AUDUSD",
+  "order_type": "LIMIT",
+  "entry_price": 0.71590,
+  "stop_loss": 0.71400,
+  "take_profit": 0.72200,
+  "stop_distance": 0.00190,
+  "limit_distance": 0.00610,
+  "risk_reward": 3.21,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "D1 uptrend intact (price above rising EMA, RSI 62). H1 pulled back to EMA 0.71558, printed swing low 0.71422, then two-bar bullish recovery to 0.71648. H1 RSI now 51.23 — crossed above 50 satisfying scanner's momentum-confirmation caveat. Current live bar is pushing above entry zone, so LIMIT at 0.71590 targets a shallow pullback near EMA for better RR without chasing. SL 0.71400 sits ~22 pips below swing low 0.71422 with 0.25×ATR buffer (ATR_H1 0.0009). Stop distance 19 pips meets AUDUSD minimum (15 pips). TP 0.72200 is stated D1 resistance — first meaningful obstacle overhead with clean air between here and there. RR 3.21 is strong.",
+  "invalidation": "H1 close below 0.71420 kills thesis (loses swing low). Cancel limit if unfilled within 4h or if H1 RSI rolls back below 48.",
+  "pine_verification": null,
+  "strategy": "ai_pullback_to_ema"
+}

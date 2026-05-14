@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "Trigger condition NOT met and setup actively invalidating. Scanner required M15 bullish close above 0.7160 before entry — current price 0.71536 is 6.4 pips BELOW trigger and falling. Current H1 bar (17:00 UTC, open) is bearish: O 0.71591 → printing new session low of 0.71522 (below the prior bar's 0.71532 low), currently 0.71536 — active selling, not a bounce. Prior H1 (16:00 UTC) closed 0.71590 after wicking to 0.71532, itself a bearish rejection. H1 EMA at 0.71661 is 12.5 pips above price (unrecovered). H1 RSI at 39.57 (declined from 40.18 when scanner ran) — bearish momentum, not the recovery the setup requires. This is the same failed-EMA-reclaim pattern flagged in 30+ AUDUSD journal entries over the past 2 sessions. Session timing also adverse: 17:37 UTC, post-London, liquidity thinning into NY close. The 0.7150 support is being tested aggressively (0.71522 low is only 2.2 pips above the structural level) with no bounce signal.",
+  "re_verification": "AUDUSD H1 checked at 2026-04-16 17:37 UTC. Price 0.71536, H1 EMA 0.71661, H1 RSI 39.57. Current bar making fresh lows (0.71522), no M15 close >0.7160. Setup invalid."
+}

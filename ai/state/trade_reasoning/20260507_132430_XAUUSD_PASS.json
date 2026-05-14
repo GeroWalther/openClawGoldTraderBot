@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "OPPOSITE-DIRECTION EXPOSURE CONFLICT — pending SELL LIMIT order #34270168 still working on XAUUSD at 4557 (SL 4584, TP 4501). Per system rule 'already have a position in this instrument? PASS' and consistent journal precedent (#73 just 14 min ago, #70, #67 — all XAUUSD BUY proposals auto-PASSED on this exact basis). A BUY fill at 4733-4738 with SL 4697 creates contradictory committed exposure on the same instrument. Auto-PASS without verbose verification per duplicate-exposure pattern.",
+  "re_verification": "Skipped full MCP verification — deterministic exposure-conflict gate fires before thesis re-verification."
+}

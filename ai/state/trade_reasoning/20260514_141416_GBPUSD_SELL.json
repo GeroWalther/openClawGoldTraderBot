@@ -1,0 +1,16 @@
+{
+  "action": "SELL",
+  "instrument": "GBPUSD",
+  "order_type": "MARKET",
+  "entry_price": 1.35077,
+  "stop_loss": 1.35300,
+  "take_profit": 1.34200,
+  "stop_distance": 0.00223,
+  "limit_distance": 0.00877,
+  "risk_reward": 3.93,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "GBPUSD trending down on D1/H4/H1. Last completed H1 bar tested EMA at 1.35104 then collapsed to 1.34892 (clean rejection). Current price 1.35077 bouncing into H1 EMA confluence (1.35097) — sell-the-rip into resistance. RSI H1 44.90 below 50 and declining. SL at 1.35300 above prior swing high cluster (1.35326/1.35276/1.35104) with ATR buffer. TP at 1.34200 regime support. 22 pip stop, 88 pip target.",
+  "invalidation": "H1 close above 1.35300, or break of structure above 1.35326 swing high.",
+  "strategy": "ai_sr_bounce_with_trend"
+}

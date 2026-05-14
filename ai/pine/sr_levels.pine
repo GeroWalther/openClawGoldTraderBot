@@ -1,0 +1,119 @@
+//@version=5
+indicator("Krabbe: S/R Levels (Pivot Clusters)", overlay=true)
+
+// AI injects this to get exact S/R levels quantitatively.
+// Uses pivot clustering: pivots within X% of each other form a zone.
+
+leftBars = input.int(10, "Pivot Left Bars")
+rightBars = input.int(5, "Pivot Right Bars")
+cluster_tolerance_pct = input.float(0.3, "Cluster Tolerance %", minval=0.1, maxval=2.0)
+max_levels_per_side = input.int(5, "Max Levels Per Side")
+lookback_bars = input.int(300, "Lookback Bars")
+
+ph = ta.pivothigh(high, leftBars, rightBars)
+pl = ta.pivotlow(low, leftBars, rightBars)
+
+var float[] resistance_levels = array.new_float(0)
+var float[] support_levels = array.new_float(0)
+
+// Collect pivots
+if not na(ph)
+    array.push(resistance_levels, ph)
+if not na(pl)
+    array.push(support_levels, pl)
+
+// Keep only recent (last lookback_bars)
+if array.size(resistance_levels) > 100
+    array.shift(resistance_levels)
+if array.size(support_levels) > 100
+    array.shift(support_levels)
+
+f_cluster(arr, is_resistance) =>
+    n = array.size(arr)
+    result = array.new_float(0)
+    if n > 0
+        sorted = array.copy(arr)
+        array.sort(sorted, is_resistance ? order.descending : order.ascending)
+
+        var float current_cluster_sum = 0.0
+        var int current_cluster_count = 0
+        var float current_cluster_base = 0.0
+
+        for i = 0 to array.size(sorted) - 1
+            val = array.get(sorted, i)
+            if current_cluster_count == 0
+                current_cluster_base := val
+                current_cluster_sum := val
+                current_cluster_count := 1
+            else
+                tol = current_cluster_base * (cluster_tolerance_pct / 100)
+                if math.abs(val - current_cluster_base) <= tol
+                    current_cluster_sum += val
+                    current_cluster_count += 1
+                else
+                    // Finish cluster
+                    array.push(result, current_cluster_sum / current_cluster_count)
+                    current_cluster_base := val
+                    current_cluster_sum := val
+                    current_cluster_count := 1
+
+        if current_cluster_count > 0
+            array.push(result, current_cluster_sum / current_cluster_count)
+    result
+
+r_clusters = f_cluster(resistance_levels, true)
+s_clusters = f_cluster(support_levels, false)
+
+// Plot nearest N levels
+current = close
+var line[] r_lines = array.new_line(0)
+var line[] s_lines = array.new_line(0)
+
+if barstate.islast
+    for ln in r_lines
+        line.delete(ln)
+    for ln in s_lines
+        line.delete(ln)
+    array.clear(r_lines)
+    array.clear(s_lines)
+
+    count_r = 0
+    for i = 0 to array.size(r_clusters) - 1
+        if count_r >= max_levels_per_side
+            break
+        lvl = array.get(r_clusters, i)
+        if lvl > current
+            ln = line.new(bar_index - 50, lvl, bar_index, lvl, color=color.red, width=2)
+            array.push(r_lines, ln)
+            count_r += 1
+
+    count_s = 0
+    for i = 0 to array.size(s_clusters) - 1
+        if count_s >= max_levels_per_side
+            break
+        lvl = array.get(s_clusters, i)
+        if lvl < current
+            ln = line.new(bar_index - 50, lvl, bar_index, lvl, color=color.green, width=2)
+            array.push(s_lines, ln)
+            count_s += 1
+
+// Table output for AI
+var table srTable = table.new(position.top_right, 2, 11, bgcolor=color.new(color.black, 70))
+if barstate.islast
+    table.cell(srTable, 0, 0, "Level", text_color=color.white)
+    table.cell(srTable, 1, 0, "Price", text_color=color.white)
+
+    row = 1
+    for i = 0 to math.min(array.size(r_clusters) - 1, max_levels_per_side - 1)
+        lvl = array.get(r_clusters, i)
+        if lvl > current
+            table.cell(srTable, 0, row, "R" + str.tostring(row), text_color=color.red)
+            table.cell(srTable, 1, row, str.tostring(lvl, format.mintick), text_color=color.red)
+            row += 1
+
+    for i = 0 to math.min(array.size(s_clusters) - 1, max_levels_per_side - 1)
+        lvl = array.get(s_clusters, i)
+        if lvl < current and row < 11
+            table.cell(srTable, 0, row, "S" + str.tostring(row - max_levels_per_side - 1), text_color=color.green)
+            table.cell(srTable, 1, row, str.tostring(lvl, format.mintick), text_color=color.green)
+            row += 1

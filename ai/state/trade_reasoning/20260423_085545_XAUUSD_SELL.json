@@ -1,0 +1,17 @@
+{
+  "action": "SELL",
+  "instrument": "XAUUSD",
+  "order_type": "LIMIT",
+  "entry_price": 4713.00,
+  "stop_loss": 4740.00,
+  "take_profit": 4640.00,
+  "stop_distance": 27.00,
+  "limit_distance": 73.00,
+  "risk_reward": 2.70,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "Multi-timeframe bearish alignment confirmed: D1 -7.48% over 50 bars below D1 EMA 4752, H4 RSI 39.3 below H4 EMA 4734, H1 RSI 39.24 below H1 EMA 4715.24. Live H1 bar (08:00 UTC) rallied to 4725.11 into EMA resistance zone and rejected hard — currently closing at 4705.39 (-14 from open). This is the exact 'sell rallies into 4716-4734 zone' setup from regime playbook. Entry 4713 is a resting limit just below H1 EMA (price must bounce back into resistance to fill — if it doesn't, trade missed but thesis still intact). SL 4740 sits above H4 EMA 4734 top-of-zone with 6pt buffer — 27pt stop distance exceeds XAUUSD 25pt minimum and is ~1.1x H1 ATR. TP 4640 is documented H4 structural support per regime key_levels (4668 is closer but would give R:R 1.67, fails 1:2 gate). R:R 2.70 is clean. Price at H1 low with RSI 39 means shorting at market would be late entry into extended move — limit at pullback is correct per scanner_verification_delay_window insight.",
+  "invalidation": "H1 close above 4734 (H4 EMA zone top) kills thesis. Cancel if not filled within 4h (by ~13:00 UTC).",
+  "pine_verification": null,
+  "strategy": "ai_sr_bounce_with_trend"
+}

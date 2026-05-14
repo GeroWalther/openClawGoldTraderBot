@@ -131,8 +131,30 @@ class TelegramCommandHandler:
                 unit = spec.size_unit if spec else "lots"
                 size_fmt = f"{abs(pos['size']):.4f}" if abs(pos['size']) < 1 else f"{abs(pos['size']):.2f}"
                 pnl = pos.get("unrealized_pnl")
+                pnl_usd = pos.get("unrealized_pnl_usd")
                 current = pos.get("current_price")
-                pnl_str = f"{pnl:+.2f}{cs}" if pnl is not None else "N/A"
+
+                # Fallback: try a direct price lookup if position didn't include price
+                if current is None and self.icm:
+                    try:
+                        price_data = await self.icm.get_price(pos["instrument"])
+                        is_buy = pos["direction"] == "BUY"
+                        current = price_data.get("bid" if is_buy else "ask") or price_data.get("last")
+                        if current and current > 0 and pos.get("avg_cost"):
+                            mult = spec.multiplier if spec else 1
+                            if is_buy:
+                                raw = (current - pos["avg_cost"]) * abs(pos["size"]) * mult
+                            else:
+                                raw = (pos["avg_cost"] - current) * abs(pos["size"]) * mult
+                            pnl_usd = round(raw, 2)
+                            pnl = round(self.icm.usd_to_eur(raw), 2)
+                    except Exception:
+                        pass
+
+                if pnl is not None and pnl_usd is not None:
+                    pnl_str = f"{pnl_usd:+.2f}$ (~{pnl:+.2f}{cs})"
+                else:
+                    pnl_str = "N/A"
                 price_str = f"{current:.5f}" if current else "N/A"
                 lines.append(
                     f"{pos['direction']} {name}\n"
@@ -151,7 +173,8 @@ class TelegramCommandHandler:
                             locked = (trade.stop_loss - trade.entry_price) * trade.size * mult
                         else:
                             locked = (trade.entry_price - trade.stop_loss) * trade.size * mult
-                        sl_line += f"\n  Locks in: {locked:+.2f}{cs} if SL hit"
+                        locked_eur = self.icm.usd_to_eur(locked) if self.icm else locked
+                        sl_line += f"\n  Locks in: {locked:+.2f}$ (~{locked_eur:+.2f}{cs}) if SL hit"
                     lines.append(sl_line)
         else:
             lines.append("No open positions")
@@ -257,7 +280,6 @@ class TelegramCommandHandler:
         journal_dir = Path(__file__).parent.parent.parent / "journal"
         strategies = [
             ("M5 Scalp", "scalp"),
-            ("M15 BB Bounce", "bb_bounce"),
             ("NY ORB", "ny_orb"),
         ]
 
@@ -346,8 +368,10 @@ class TelegramCommandHandler:
                         pnl = (close_price - trade.entry_price) * size * mult
                     else:
                         pnl = (trade.entry_price - close_price) * size * mult
+                if pnl is None:
+                    pnl = 0.0  # Never store None — ensures P&L always displays
                 trade.status = TradeStatus.CLOSED
-                trade.pnl = pnl
+                trade.pnl = round(pnl, 2)
                 trade.closed_at = datetime.now(timezone.utc)
                 await session.commit()
 

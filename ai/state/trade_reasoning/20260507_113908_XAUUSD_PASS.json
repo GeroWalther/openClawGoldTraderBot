@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "OPPOSITE-DIRECTION EXPOSURE CONFLICT — pending SELL LIMIT order #34270168 already working on XAUUSD at 4557 (SL 4584, TP 4501) since 2026-05-05. Per system rule 'already have a position in this instrument? PASS' and consistent journal precedents #67 and #70 (both 2026-05-06 BUY proposals on XAUUSD skipped on this exact basis), a working limit order in the opposite direction creates contradictory committed exposure. If this BUY fills then gets stopped at 4698 and price continues lower toward 4557, the SELL LIMIT would also fill, producing offsetting opposing positions on a $140 account. Setup itself is technically clean (verified H1 at 11:38 UTC: price 4736.97, EMA20 4725.82, RSI 66.90; live H1 bar tagged EMA at 4727.305 and bounced — pullback structure intact, R:R math 2.29 to 4800 with 31pt stop would otherwise qualify), but the pending opposite-direction order is a hard-stop. Until #34270168 is cancelled or filled, no XAUUSD BUY can be submitted.",
+  "re_verification": "TVC:GOLD H1 at 2026-05-07 11:38 UTC: price 4736.97, H1 EMA20 4725.82, H1 RSI 66.90 (rising). Live H1 bar O 4735.93 / H 4737.22 / L 4727.305 / C 4736.97 — EMA test confirmed, bullish bounce in progress. Setup mechanics valid; blocked solely by opposite-direction pending order conflict on same instrument."
+}

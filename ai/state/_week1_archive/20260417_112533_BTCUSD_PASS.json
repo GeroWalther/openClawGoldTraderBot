@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "R:R fails from current price and target is a fresh rejection level. Current price 75478, stop 74900 = 578pt risk; target 76372 = 894pt reward; R:R = 1.55, below 2:1 minimum. Target 76372 is the exact cycle high from 09:00 UTC that was violently rejected by a -1248pt distribution candle only 1-2 hours ago. First retest of freshly-rejected swing high is low-probability — sellers typically defend it. While the current 11:00 H1 bar is constructive (price 75478 above H1 EMA 75278, RSI 57.86 back above 50, tight 220pt range), this is the FIRST bounce off the distribution candle, not a confirmed trend continuation — same disqualifiers flagged in journal IDs 50, 51, 52. Even at a deeper limit entry at 75300 (R:R 2.68), the ask is for price to retrace further into weakness and then rally through a violently rejected high — asymmetric the wrong way. No edge here. Wait for either (a) a clean consolidation and break above 76372, or (b) a deeper retrace to H4 EMA ~74927 with reversal signal.",
+  "re_verification": "H1 verified at 11:24 UTC. Current bar O75315/H75498/L75278/C75478. H1 EMA 75278, RSI 57.86. Bounce structurally valid but target unrealistic on first test."
+}

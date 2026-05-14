@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "No M15 bullish confirmation. Price at 74,677 is 112 pts below M15 EMA (74,789) and 144 pts below H1 EMA (74,821) — both declining. The 08:15 UTC 'reversal' bar (74544→74709) is already giving back gains: current M15 bar (08:30) is bearish (O 74706 → C 74677, low 74660). M15 RSI 42.46 shows continued bearish momentum, not the recovery the setup requires. H1 confirms: two consecutive bearish bars — prior H1 (07:00) sold off 338 pts from 75055 to 74717, current H1 (08:00) printing 74677 with a low of 74530. This is active selling through the EMA zone, not a bounce from it. Regime classifies BTCUSD as ranging with playbook 'buy near 73000-73500, skip the middle' — current price at 74,677 is mid-range, not at a fade-worthy extreme. Entering here offers no structural edge.",
+  "re_verification": "Checked M15 and H1 at 08:38 UTC. M15 EMA 74789, H1 EMA 74821, price 74677. No bullish reversal confirmation on any timeframe."
+}

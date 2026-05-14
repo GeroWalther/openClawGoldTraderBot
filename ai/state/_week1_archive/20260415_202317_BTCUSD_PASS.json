@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "Setup NOT triggered — price hasn't reached the entry zone. Current price 74668 is still 168 pts above the top of the 74300–74500 entry zone and 281 pts above H1 EMA (74387). The pullback from the 75317 spike is still in progress: last 3 M15 bars show accelerating selling (75019 → 74696 → 74668) with lower highs and lower lows — no stabilization yet. M15 RSI 57.38 is declining, not showing bullish recovery. No bullish reversal candle (engulfing/hammer) has formed on M15 or H1. The current H1 bar (20:00 UTC) is only 22 minutes old, opened at 75031 and has sold off 370 pts with a low of 74548 — still printing. Scanner explicitly required 'H1 candle to tag 74300–74500 zone AND print bullish reversal before entry' — neither condition met. Setup remains valid structurally (H1 EMA 74387, RSI 56.63, D1 uptrend intact) but entry is premature. Re-evaluate if price reaches 74300–74500 and prints a confirming candle.",
+  "re_verification": "Checked H1 and M15 at 20:22 UTC. H1 EMA 74387, RSI 56.63. M15 EMA 74650, RSI 57.38. Price 74668 pulling back but above entry zone. No trigger candle."
+}

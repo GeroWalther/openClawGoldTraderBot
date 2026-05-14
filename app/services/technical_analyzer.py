@@ -309,6 +309,10 @@ class TechnicalAnalyzer:
         if m15_df.empty:
             return {"error": f"M15 data unavailable for {key}", "warnings": warnings}
 
+        # Drop incomplete current candle (same fix as M5 scalp)
+        if len(m15_df) > 1:
+            m15_df = m15_df.iloc[:-1]
+
         # Compute indicators on H1 (need SMA100 for trend filter)
         h1_row = None
         h1_block = None
@@ -459,6 +463,10 @@ class TechnicalAnalyzer:
         if m15_df.empty:
             return {"error": f"M15 data unavailable for {key}", "warnings": warnings}
 
+        # Drop incomplete current candle
+        if len(m15_df) > 1:
+            m15_df = m15_df.iloc[:-1]
+
         # Compute indicators on M15
         m15_block = None
         if len(m15_df) >= 21:
@@ -597,6 +605,13 @@ class TechnicalAnalyzer:
             return {"error": f"H1 data unavailable for {key}", "warnings": warnings}
         if m5_df.empty:
             return {"error": f"M5 data unavailable for {key}", "warnings": warnings}
+
+        # Drop the last M5 row — yfinance includes the current incomplete candle
+        # whose OHLC values change as ticks arrive. Computing EMA/RSI on a
+        # half-formed bar produces phantom signals that don't exist once the
+        # candle closes. This is the root cause of the live-vs-backtest gap.
+        if len(m5_df) > 1:
+            m5_df = m5_df.iloc[:-1]
 
         # Compute indicators on H1
         h1_row = None
@@ -758,6 +773,10 @@ class TechnicalAnalyzer:
         if len(m5_df) < 21:
             return {"error": f"Insufficient M5 data for {key}", "warnings": warnings}
 
+        # Drop incomplete current candle
+        if len(m5_df) > 1:
+            m5_df = m5_df.iloc[:-1]
+
         # Compute indicators (need ATR)
         compute_indicators(m5_df)
 
@@ -883,6 +902,10 @@ class TechnicalAnalyzer:
 
         if h1_df.empty:
             return {"error": f"H1 data unavailable for {key}", "warnings": warnings}
+
+        # Drop incomplete current candles
+        if len(m15_df) > 1:
+            m15_df = m15_df.iloc[:-1]
 
         # Compute indicators
         h1_row = None

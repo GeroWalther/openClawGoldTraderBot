@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "Setup invalidated on re-verification. Scanner claimed 'price holding above H1 EMA (74,400), M15 RSI crossed 50 (50.63), three recovery bars from 73,920' — all reversed. Current state: price 74,305 is BELOW H1 EMA (74,374) and BELOW M15 EMA (74,316). H1 RSI 47.43 and M15 RSI 47.88 — both below 50 and declining, not the bullish flip the setup requires. Current H1 bar (18:00 UTC) opened 74,358, wicked to 74,537 but is fading to its own low at 74,305 — active selling, not a pullback holding. Last 2 M15 bars show fading momentum: 74,403 close → 74,338 → 74,305 current, making lower highs (74,420 → 74,457 → 74,537... then selling). This is the same touch-and-fade pattern flagged in 10+ prior BTCUSD evaluations today (journal IDs 8,11,12,13,22–27,38). No M15 bullish confirmation, EMAs lost. When in doubt, PASS.",
+  "re_verification": "Checked H1 and M15 at 18:08 UTC. H1: price 74,305 vs EMA 74,374 (69pt below), RSI 47.43. M15: price 74,305 vs EMA 74,316, RSI 47.88. Both timeframes failing to hold EMA reclaim. Setup premise broken."
+}

@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "Fourth AUDUSD evaluation today — identical pattern to prior three passes. Price at 0.71728 remains 2.0 pips below H1 EMA (0.71748), failing to reclaim it. M15 RSI at 47.38 is below 50, showing no bullish momentum. The 12:45 UTC M15 bar peaked at 0.71752 (touching H1 EMA) but closed at 0.71723 — yet another rejection. The 12:00 UTC M15 bar also rejected from 0.71746 down to 0.71679. This is the third consecutive M15 attempt at the H1 EMA zone that gets sold — distribution, not accumulation. Scanner itself flagged 'no confirmed M15 bullish reversal candle yet at EMA' and required a bullish M15 close above 0.71750 — no such bar exists. Setup remains in 'watch for trigger' state with no trigger fired.",
+  "re_verification": "Checked H1 and M15 at 13:08 UTC. H1 EMA 0.71748, price 0.71728. M15 EMA 0.71719, RSI 47.38. No M15 close above 0.71750. Pattern unchanged from pass #31 at 12:54 UTC."
+}

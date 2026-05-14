@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Duplicate-exposure hard-stop. Pending SELL LIMIT order #34270168 already exists for XAUUSD at 4557.0 (size 1.0, SL 4584, TP 4501), submitted at 10:26 UTC ~6.5 hours ago. Current scanner proposal is the SAME setup, SAME direction, SAME zone (entry 4555-4563, SL 4588, TP 4501) and would create duplicate committed exposure on fill. Per system rule 'already have a position in this instrument? PASS', a working limit order at the identical level/direction counts as existing exposure. This is the 4th journal entry today (#57, #58, #60, now this) skipping for the identical reason — the existing pending order fully covers the current scanner thesis with materially identical parameters (SL within 4pts, TP identical, entry within 2pts of mid-zone). Adding a second order would double risk on a single thesis. No need to re-verify TradingView state — duplicate-exposure check is deterministic and fires before any market analysis.",
+  "re_verification": "Skipped per duplicate-exposure deterministic precheck. Existing pending SELL LIMIT 4557.0 / SL 4584 / TP 4501 already represents this thesis. If user wants to modify the existing order's parameters, that is a manage operation, not a new entry."
+}

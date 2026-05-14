@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "GBPUSD",
+  "reasoning": "Setup trigger condition NOT met. The scanner explicitly required a bullish M15 reversal candle (pin bar or engulfing) at the EMA zone before entry — none has formed. M15 RSI at 43.62 shows continued bearish momentum on the trigger timeframe. Current M15 candle is bearish (O 1.35634 → C 1.35604), price at 1.35604 below both M15 EMA (1.35627) and H1 EMA (1.35632). Price action in the last 6 M15 bars is choppy with no directional conviction — repeated wicks both ways in the 1.3556–1.3567 range. Additionally, GBPUSD is flagged as news-sensitive and UK/US economic releases cannot be verified for the next 2 hours. No edge without the trigger.",
+  "re_verification": "Checked H1 and M15 at 08:37 UTC. H1: price 1.35597, EMA 1.35632, RSI 54.64 — still below EMA. M15: price 1.35604, EMA 1.35627, RSI 43.62 — no reversal candle, bearish momentum persists. Swing low 1.35557 still holding but not yet tested with a bounce signal."
+}

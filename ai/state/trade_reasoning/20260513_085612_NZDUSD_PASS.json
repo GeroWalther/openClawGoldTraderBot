@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "NZDUSD",
+  "reasoning": "Scanner's explicit confirmation trigger ('M15 close back above 0.5930') has NOT fired. Verified M15 at 08:55 UTC: most recent CLOSED M15 bar (08:30 UTC) closed at 0.59291 — BELOW 0.5930 trigger — AND printed a fresh M15 low at 0.59286 (the very low the scanner cited as the stop-hunt). The next M15 bar (08:45 UTC) is still live (10 min in), currently at 0.5931 with high only 0.59316 — has not produced a decisive close-above. Per scanner_confirmation_trigger_precheck this is auto-WAIT/PASS, not entry. Additionally: (1) M15 RSI 33.63 still oversold and DECAYED from prior bars — momentum hasn't turned; (2) Price 0.5931 sits BELOW the EMA20 at 0.59342 — no trend-filter reclaim; (3) This is the 4th identical NZDUSD scan today (journals #121 at 07:56, #122 at 08:10, #123 at 08:40) all correctly skipped on the same 'confirmation not fired + fresh lows' reasoning. No material change in 15 minutes since the last skip. Setup is still 'pending' not 'invalidated' — H1 has not closed below 0.5912 — but entry without the confirmation candle is a chase against fresh lows.",
+  "re_verification": "Checked NZDUSD M15 at 08:55 UTC. Last closed M15 = 0.59291 (below 0.5930 trigger). Live bar at 0.5931 not yet closed. RSI 33.63. Required confirmation candle absent."
+}

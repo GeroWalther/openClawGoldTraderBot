@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "GBPUSD",
+  "reasoning": "6th stacked GBPUSD BUY scan today, deterministic auto-PASS per chronic pattern (journals #100, #101, #102, #103, #97). TP 1.3700 FAILS scanner_tp_must_clear_proven_intraday_support — 1.36536 tagged and rejected TWICE within last 4.5h (15:00 UTC H1 high 1.36536/close 1.36497, 16:00 UTC lower high 1.36500/close 1.36412) on volume = freshly-proven intraday resistance. Honest nearest TP is 1.36500. R:R math at honest TP: best-case limit at zone bottom 1.3620 / SL 1.3600 (20-pip minimum) / honest TP 1.36500 = 20pt stop / 30pt target = 1.50 R:R. Market entry at 1.36244 worse. Scanner's own H4 EMA SL at 1.3614 would give 10.4-pip stop, BELOW GBPUSD 20-pip minimum. FAILS mandatory 1:2 R:R at every entry. Setup's own M15 reversal trigger also not yet confirmed.",
+  "re_verification": "Skipped full MCP verification per chronic-pattern auto-PASS discipline. Same TP-through-proven-resistance issue established across 5 prior journal entries today within last 75 minutes."
+}

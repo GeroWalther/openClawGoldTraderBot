@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import threading
+from datetime import datetime, timezone
 from typing import Any
 
 from app.config import Settings
@@ -66,6 +67,7 @@ class ICMarketsClient:
         self._msg_counter = 0
         self._loop: asyncio.AbstractEventLoop | None = None
         self._reconnect_lock = asyncio.Lock()
+        self._reconnecting = False
         self._shutting_down = False
 
     # ------------------------------------------------------------------
@@ -108,6 +110,8 @@ class ICMarketsClient:
             ProtoOASymbolByIdRes,
             ProtoOADealListByPositionIdReq,
             ProtoOADealListByPositionIdRes,
+            ProtoOAGetTrendbarsReq,
+            ProtoOAGetTrendbarsRes,
         )
         from twisted.internet import reactor as twisted_reactor
 
@@ -139,6 +143,8 @@ class ICMarketsClient:
             "ProtoOASymbolByIdRes": ProtoOASymbolByIdRes,
             "ProtoOADealListByPositionIdReq": ProtoOADealListByPositionIdReq,
             "ProtoOADealListByPositionIdRes": ProtoOADealListByPositionIdRes,
+            "ProtoOAGetTrendbarsReq": ProtoOAGetTrendbarsReq,
+            "ProtoOAGetTrendbarsRes": ProtoOAGetTrendbarsRes,
         }
 
         # Determine host
@@ -217,8 +223,8 @@ class ICMarketsClient:
         logger.warning("cTrader disconnected: %s", reason)
         self._connected = False
         self._subscribed_symbols.clear()  # Must resubscribe after reconnect
-        # Schedule auto-reconnect with backoff
-        if self._loop and not self._shutting_down:
+        # Schedule auto-reconnect with backoff (skip if already reconnecting or shutting down)
+        if self._loop and not self._shutting_down and not self._reconnecting:
             self._loop.call_soon_threadsafe(
                 asyncio.ensure_future, self._auto_reconnect()
             )
@@ -309,6 +315,13 @@ class ICMarketsClient:
         if payload_type == ExecEvent().payloadType:
             self._handle_execution_event(extracted)
             return
+
+        # Log unhandled messages for debugging (helps diagnose missing response routing)
+        if self._pending:
+            logger.debug(
+                "Unhandled message: payloadType=%s clientMsgId=%r pending=%s",
+                payload_type, client_msg_id, list(self._pending.keys()),
+            )
 
     def _send_account_auth(self):
         """Send account auth request (called from Twisted thread)."""
@@ -584,18 +597,24 @@ class ICMarketsClient:
 
     async def _auto_reconnect(self, max_retries: int = 5):
         """Auto-reconnect with exponential backoff after unexpected disconnect."""
-        for attempt in range(max_retries):
-            delay = min(2 ** attempt, 30)  # 1, 2, 4, 8, 16, 30s
-            await asyncio.sleep(delay)
-            if self._connected or self._shutting_down:
-                return
-            try:
-                await self._reconnect()
-                logger.info("IC Markets reconnected after %d attempt(s)", attempt + 1)
-                return
-            except Exception as e:
-                logger.warning("Reconnect attempt %d/%d failed: %s", attempt + 1, max_retries, e)
-        logger.error("IC Markets: gave up reconnecting after %d attempts", max_retries)
+        if self._reconnecting:
+            return
+        self._reconnecting = True
+        try:
+            for attempt in range(max_retries):
+                delay = min(2 ** attempt, 30)  # 1, 2, 4, 8, 16, 30s
+                await asyncio.sleep(delay)
+                if self._connected or self._shutting_down:
+                    return
+                try:
+                    await self._reconnect()
+                    logger.info("IC Markets reconnected after %d attempt(s)", attempt + 1)
+                    return
+                except Exception as e:
+                    logger.warning("Reconnect attempt %d/%d failed: %s", attempt + 1, max_retries, e)
+            logger.error("IC Markets: gave up reconnecting after %d attempts", max_retries)
+        finally:
+            self._reconnecting = False
 
     async def disconnect(self):
         """Disconnect from cTrader."""
@@ -661,6 +680,167 @@ class ICMarketsClient:
             if key in self._prices:  # Was previously subscribed
                 await self._subscribe_spots(key)
 
+    # ------------------------------------------------------------------
+    # Historical data
+    # ------------------------------------------------------------------
+
+    # cTrader trendbar period enum values
+    _TRENDBAR_PERIODS = {
+        "1m": 1, "M1": 1,
+        "2m": 2, "M2": 2,
+        "3m": 3, "M3": 3,
+        "5m": 5, "M5": 5,
+        "10m": 6, "M10": 6,
+        "15m": 7, "M15": 7,
+        "30m": 8, "M30": 8,
+        "1h": 9, "H1": 9,
+        "4h": 10, "H4": 10,
+        "12h": 11, "H12": 11,
+        "1d": 12, "D1": 12,
+        "1w": 13, "W1": 13,
+    }
+
+    async def get_trendbars(
+        self,
+        instrument_key: str,
+        interval: str = "5m",
+        from_ts: int | None = None,
+        to_ts: int | None = None,
+        count: int | None = None,
+    ) -> list[dict]:
+        """Fetch historical OHLCV bars from IC Markets via GetTrendbarsReq.
+
+        Args:
+            instrument_key: e.g. "NZDUSD", "AUDUSD"
+            interval: bar period — "5m", "1h", "1d", etc.
+            from_ts: start timestamp in milliseconds (UTC epoch)
+            to_ts: end timestamp in milliseconds (UTC epoch)
+            count: max bars to return (optional, cTrader may ignore)
+
+        Returns:
+            List of dicts with keys: date, open, high, low, close, volume
+        """
+        await self.ensure_connected()
+
+        period_val = self._TRENDBAR_PERIODS.get(interval)
+        if period_val is None:
+            raise ValueError(f"Unsupported interval '{interval}'. Use: {list(self._TRENDBAR_PERIODS.keys())}")
+
+        symbol_id = self._symbol_ids.get(instrument_key)
+        if symbol_id is None:
+            raise ValueError(f"Unknown instrument '{instrument_key}'. Resolved: {list(self._symbol_ids.keys())}")
+
+        digits = self._symbol_digits.get(instrument_key, 5)
+        divisor = 10 ** digits
+
+        Req = self._proto_modules["ProtoOAGetTrendbarsReq"]
+        request = Req()
+        request.ctidTraderAccountId = self._account_id
+        request.symbolId = symbol_id
+        request.period = period_val
+        if from_ts is not None:
+            request.fromTimestamp = from_ts
+        if to_ts is not None:
+            request.toTimestamp = to_ts
+        if count is not None:
+            request.count = count
+
+        response = await self._send_request(request, timeout=30.0)
+
+        bars = []
+        for tb in response.trendbar:
+            low_price = tb.low / divisor
+            open_price = low_price + (tb.deltaOpen / divisor)
+            close_price = low_price + (tb.deltaClose / divisor)
+            high_price = low_price + (tb.deltaHigh / divisor)
+            ts_seconds = tb.utcTimestampInMinutes * 60
+            dt = datetime.fromtimestamp(ts_seconds, tz=timezone.utc)
+
+            bars.append({
+                "date": dt,
+                "open": round(open_price, digits),
+                "high": round(high_price, digits),
+                "low": round(low_price, digits),
+                "close": round(close_price, digits),
+                "volume": tb.volume,
+            })
+
+        return bars
+
+    async def get_trendbars_df(
+        self,
+        instrument_key: str,
+        interval: str = "5m",
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ):
+        """Fetch historical bars and return as a pandas DataFrame.
+
+        Paginates automatically for large date ranges (cTrader limits ~4320 bars/request).
+
+        Args:
+            instrument_key: e.g. "NZDUSD"
+            interval: "5m", "1h", "1d"
+            start_date: ISO date string e.g. "2026-03-01"
+            end_date: ISO date string e.g. "2026-04-01"
+
+        Returns:
+            DataFrame with columns: date, open, high, low, close, volume
+        """
+        import pandas as pd
+
+        if start_date:
+            from_dt = datetime.fromisoformat(start_date).replace(tzinfo=timezone.utc)
+        else:
+            from_dt = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0) - __import__("datetime").timedelta(days=30)
+
+        if end_date:
+            to_dt = datetime.fromisoformat(end_date).replace(tzinfo=timezone.utc)
+        else:
+            to_dt = datetime.now(timezone.utc)
+
+        from_ms = int(from_dt.timestamp() * 1000)
+        to_ms = int(to_dt.timestamp() * 1000)
+
+        # cTrader limits bars per request. Paginate in chunks.
+        # M5 = 288 bars/day, safe chunk = 14 days (~4032 bars)
+        interval_minutes = {"1m": 1, "5m": 5, "15m": 15, "30m": 30, "1h": 60, "4h": 240, "1d": 1440}.get(interval, 5)
+        chunk_ms = int(4000 * interval_minutes * 60 * 1000)  # ~4000 bars worth
+
+        all_bars = []
+        cursor = from_ms
+
+        while cursor < to_ms:
+            chunk_end = min(cursor + chunk_ms, to_ms)
+            try:
+                bars = await self.get_trendbars(
+                    instrument_key=instrument_key,
+                    interval=interval,
+                    from_ts=cursor,
+                    to_ts=chunk_end,
+                )
+                all_bars.extend(bars)
+                logger.info(
+                    "Fetched %d %s bars for %s (%s to %s)",
+                    len(bars), interval, instrument_key,
+                    datetime.fromtimestamp(cursor / 1000, tz=timezone.utc).strftime("%Y-%m-%d"),
+                    datetime.fromtimestamp(chunk_end / 1000, tz=timezone.utc).strftime("%Y-%m-%d"),
+                )
+            except Exception as e:
+                logger.warning("Failed to fetch trendbars chunk: %s", e)
+            cursor = chunk_end
+            # Small delay between requests to avoid rate limiting
+            await asyncio.sleep(0.5)
+
+        if not all_bars:
+            return None
+
+        df = pd.DataFrame(all_bars)
+        df = df.sort_values("date").reset_index(drop=True)
+        # Remove duplicates (overlapping chunks)
+        df = df.drop_duplicates(subset=["date"], keep="last").reset_index(drop=True)
+        return df
+
     async def get_price(self, instrument_key: str = "BTC") -> dict:
         """Get current bid/ask/last for an instrument from cached spot data."""
         await self.ensure_connected()
@@ -677,7 +857,7 @@ class ICMarketsClient:
         await self._subscribe_spots(instrument_key)
 
         # Wait for price data to arrive
-        for _ in range(50):  # 5 seconds max
+        for _ in range(100):  # 10 seconds max
             await asyncio.sleep(0.1)
             if instrument_key in self._prices:
                 return self._prices[instrument_key]
@@ -968,7 +1148,6 @@ class ICMarketsClient:
         close_price = None
 
         if order:
-            # order.executionPrice is the actual fill price for the close
             exec_price = getattr(order, "executionPrice", None)
             if exec_price:
                 digits = self._symbol_digits.get(instrument_key, 5)
@@ -979,14 +1158,10 @@ class ICMarketsClient:
         if not close_price:
             spot = self._prices.get(instrument_key)
             if spot:
-                close_price = spot["ask"] if direction == "SELL" else spot["bid"]
-                logger.info("Close fill price from spot fallback: %s", close_price)
-
-        # Get actual P&L and close price from broker deal history
-        details = await self.get_position_close_details(position_id)
-        broker_pnl = details["pnl"] if details else None
-        if details and details.get("close_price"):
-            close_price = details["close_price"]
+                spot_price = spot["ask"] if direction == "SELL" else spot["bid"]
+                if spot_price and spot_price > 0:
+                    close_price = spot_price
+                    logger.info("Close fill price from spot fallback: %s", close_price)
 
         return {
             "orderId": position_id,
@@ -995,7 +1170,6 @@ class ICMarketsClient:
             "size": size,
             "fillPrice": close_price,
             "dealId": str(position_id),
-            "pnl": broker_pnl,
         }
 
     async def get_position_close_details(self, position_id: int) -> dict | None:
@@ -1009,6 +1183,10 @@ class ICMarketsClient:
             request = Req()
             request.ctidTraderAccountId = self._account_id
             request.positionId = position_id
+            # Required fields: search last 7 days of deals
+            now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+            request.fromTimestamp = now_ms - 7 * 24 * 60 * 60 * 1000
+            request.toTimestamp = now_ms
 
             response = await self._send_request(request, timeout=10.0)
 
@@ -1082,29 +1260,26 @@ class ICMarketsClient:
                 {f.name: getattr(pos, f.name) for f in pos.DESCRIPTOR.fields},
             )
 
-            # Ensure spot price subscription for this instrument
-            if inst_key not in self._prices:
-                try:
-                    await self._subscribe_spots(inst_key)
-                    for _ in range(20):  # wait up to 2s
-                        await asyncio.sleep(0.1)
-                        if inst_key in self._prices:
-                            break
-                except Exception:
-                    pass
-
-            # Calculate unrealized P&L from cached spot price (converted to EUR)
+            # Calculate unrealized P&L from spot price (converted to EUR)
+            # Uses get_price() which handles subscription + 10s wait internally
             unrealized_pnl = None
+            unrealized_pnl_usd = None
             current_price = None
-            spot = self._prices.get(inst_key)
-            if spot and price:
-                current_price = spot["bid"] if is_buy else spot["ask"]
-                if current_price and current_price > 0:
-                    if is_buy:
-                        raw_pnl = (current_price - price) * size
-                    else:
-                        raw_pnl = (price - current_price) * size
-                    unrealized_pnl = round(self.usd_to_eur(raw_pnl), 2)
+            try:
+                price_data = await self.get_price(inst_key)
+                spot_bid = price_data.get("bid", 0)
+                spot_ask = price_data.get("ask", 0)
+                if price and (spot_bid > 0 or spot_ask > 0):
+                    current_price = spot_bid if is_buy else spot_ask
+                    if current_price and current_price > 0:
+                        if is_buy:
+                            raw_pnl = (current_price - price) * size
+                        else:
+                            raw_pnl = (price - current_price) * size
+                        unrealized_pnl_usd = round(raw_pnl, 2)
+                        unrealized_pnl = round(self.usd_to_eur(raw_pnl), 2)
+            except Exception:
+                logger.debug("Cannot get spot price for %s in get_open_positions", inst_key)
 
             result.append({
                 "instrument": inst_key,
@@ -1113,6 +1288,7 @@ class ICMarketsClient:
                 "direction": "BUY" if is_buy else "SELL",
                 "avg_cost": price,
                 "unrealized_pnl": unrealized_pnl,
+                "unrealized_pnl_usd": unrealized_pnl_usd,
                 "current_price": current_price,
                 "size_unit": "lots",
                 "positionId": pos.positionId,

@@ -1,0 +1,16 @@
+{
+  "action": "BUY",
+  "instrument": "BTCUSD",
+  "order_type": "MARKET",
+  "entry_price": 79751,
+  "stop_loss": 78450,
+  "take_profit": 82833,
+  "stop_distance": 1301,
+  "limit_distance": 3082,
+  "risk_reward": 2.37,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "D1 uptrend intact. H1 tested 78704 swing low (low exact at 78704) with strong volume (247-366) and rejected, printing two consecutive higher closes (79065, 79489) into current bar 79751. Current H1 high 79779 already tagged EMA (79778), RSI recovering 41.7. Stabilization at 78700-79000 support zone is the regime playbook trigger and it is met. SL 78450 below structure ($1301 risk, > $1200 minimum). TP at D1 resistance 82833. R:R 2.37.",
+  "invalidation": "H1 close below 78704.",
+  "strategy": "ai_sr_bounce_with_trend"
+}

@@ -1,0 +1,5 @@
+{
+  "action": "PASS",
+  "instrument": "NZDUSD",
+  "reasoning": "Already have an open BUY position in NZDUSD at 0.59216 with SL 0.59045 and TP 0.59685."
+}

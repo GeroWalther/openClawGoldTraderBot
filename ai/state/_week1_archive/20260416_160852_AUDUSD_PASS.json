@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "R:R fails from current price 0.71702: 17 pips risk to 0.71530 / 27 pips reward to 0.71970 = 1.58:1, below 2:1 minimum. No M15 momentum confirmation: M15 RSI 48.28 still below 50, M15 EMA 0.71694 barely below price. Price 0.71702 remains 1.2 pips below H1 EMA (0.71714) — the same failed-EMA-reclaim pattern flagged in 9 prior AUDUSD evaluations today (journal IDs 4,6,7,9,10,28,29,34,35,36,37). Last M15 bars show repeated rejections at 0.71715-0.71722 (15:15, 15:30, 15:45 bars all wicked to EMA then faded). A limit order at 0.7162 support would improve R:R but there's no evidence the market will return there — and if it does, the prior swing low 0.71610 is only 9 pips above the stop, leaving minimal buffer. No convincing bullish reversal candle on M15 or H1.",
+  "re_verification": "Checked H1 and M15 at 16:08 UTC. H1 EMA 0.71714, RSI 51.93. M15 EMA 0.71694, RSI 48.28. Current H1 bar (16:00 UTC) range 0.71664-0.71704. Bounce from 0.71610 support is structural but lacks momentum confirmation, and current price has eroded the R:R below threshold."
+}

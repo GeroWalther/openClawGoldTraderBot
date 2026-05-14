@@ -1,0 +1,5 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "Price at 79,249 is below scanner's entry zone of 79,500-80,000; H1 bar still bearish with no reversal confirmation above 79,500 trigger, and price is testing 79,168 support directly without the required bullish engulf."
+}

@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "GBPUSD",
+  "order_type": "LIMIT",
+  "entry_price": 1.35050,
+  "stop_loss": 1.34800,
+  "take_profit": 1.35570,
+  "stop_distance": 0.00250,
+  "limit_distance": 0.00520,
+  "risk_reward": 2.08,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "Spring/failed-breakdown at 1.3500 H4 range floor — high-probability pattern. Verified live: M15 10:00 UTC spike to 1.34939 on session-high volume 4593 (vs avg ~2500), close back above 1.3500 at 1.35098. Live M15 10:15 bar re-tested 1.35000 EXACTLY at low, holding 1.35112. H1 RSI 35.48 oversold confirms range-floor exhaustion (rsi_below_50_invalidates_pullback_long insight is specific to pullback-to-EMA setups and does not apply to range-extreme fade). Regime explicitly mandates this trade: 'Range fade BUY at 1.3500-1.3507 floor, target EMA cluster 1.3527-1.3557, stop below 1.3490.' GBPUSD is instruments_in_play. SL 1.3480 sits 14 pips below spike low 1.34939 (buffer ~0.9× H1 ATR 0.00161) and meets 20-pip GBPUSD minimum. TP 1.3557 = documented range resistance / EMA cluster top. R:R 2.08 meets 1:2 floor; market entry would fail (1.47 R:R) so LIMIT is required. Per rule 12, zone is 5pt above current price = well within 0.5× ATR for high fill probability.",
+  "invalidation": "Cancel order if not filled within 4 hours (by 14:30 UTC). Thesis killed if H1 closes below 1.34939 (spike low). If price punches through 1.3490 on momentum, regime flips this to SELL.",
+  "pine_verification": null,
+  "strategy": "ai_range_extreme_fade"
+}

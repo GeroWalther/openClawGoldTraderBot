@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "AUDUSD",
+  "order_type": "LIMIT",
+  "entry_price": 0.71640,
+  "stop_loss": 0.71390,
+  "take_profit": 0.72200,
+  "stop_distance": 0.00250,
+  "limit_distance": 0.00560,
+  "risk_reward": 2.24,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "D1/H4/H1 all aligned bullish with high-confidence trending_up regime. H1 EMA20 at 0.71621, RSI 55.90 (healthy, not overbought). Price currently 0.71723 testing 0.7177 intermediate resistance after printing bullish bar (H 0.71773). LIMIT entry at 0.71640 targets a pullback to EMA20 zone — natural retest if 0.7177 rejects. SL 0.71390 is 25 pips (1.75× H1 ATR 14 pips, exceeds 15-pip AUDUSD minimum) below M15 swing-low structure at 0.71422 with buffer. TP 0.72200 at prior D1 range high (regime resistance). RR 2.24. D1 sequence of higher highs (0.7148 → 0.7198 → 0.7222) supports continuation. 3 prior AUDUSD skips today were under different conditions (ranging regime + RSI <50); current state materially improved.",
+  "invalidation": "H1 close below 0.71500 before fill, OR fill + H1 close below 0.71390 after fill. Cancel limit if not filled within 4 hours.",
+  "pine_verification": null,
+  "strategy": "ai_pullback_to_ema"
+}

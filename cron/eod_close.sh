@@ -1,15 +1,15 @@
 #!/bin/bash
-# End-of-day close — runs at 20:55 UTC, Mon-Fri.
-# Closes all open positions to avoid overnight swap fees.
+# Friday close — runs at 20:55 UTC, Friday only.
+# Closes all open positions to avoid weekend gap risk.
 
 source "$(dirname "$0")/common.sh"
 
-log "EOD CLOSE starting"
+log "FRIDAY CLOSE starting"
 
 # Fetch open positions
 json=$(api_get "/api/v1/positions/status")
 if [ -z "$json" ]; then
-    log "EOD CLOSE: Failed to fetch positions"
+    log "FRIDAY CLOSE: Failed to fetch positions"
     exit 0
 fi
 
@@ -25,7 +25,7 @@ for p in d.get('positions', []):
 " 2>/dev/null)
 
 if [ -z "$positions" ]; then
-    log "EOD CLOSE: No open positions — nothing to close"
+    log "FRIDAY CLOSE: No open positions — nothing to close"
     exit 0
 fi
 
@@ -35,7 +35,7 @@ total_pnl=0
 while IFS='|' read -r inst direction size pnl; do
     [ -z "$inst" ] && continue
 
-    log "EOD CLOSE: Closing $direction $inst (size=$size, unrealized=$pnl)"
+    log "FRIDAY CLOSE: Closing $direction $inst (size=$size, unrealized=$pnl)"
 
     close_payload=$(python3 -c "
 import json
@@ -43,12 +43,12 @@ print(json.dumps({
     'instrument': '$inst',
     'direction': '$direction',
     'size': float('$size'),
-    'reasoning': 'EOD auto-close: avoiding overnight swap fees'
+    'reasoning': 'Friday auto-close: avoiding weekend gap risk'
 }))
 " 2>/dev/null || echo "")
 
     if [ -z "$close_payload" ]; then
-        log "EOD CLOSE: Failed to build payload for $inst"
+        log "FRIDAY CLOSE: Failed to build payload for $inst"
         continue
     fi
 
@@ -56,17 +56,17 @@ print(json.dumps({
     if [ -n "$result" ]; then
         status=$(echo "$result" | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','UNKNOWN'))" 2>/dev/null || echo "UNKNOWN")
         result_pnl=$(echo "$result" | python3 -c "import sys,json; print(json.load(sys.stdin).get('pnl', 0) or 0)" 2>/dev/null || echo "0")
-        log "EOD CLOSE: $inst result=$status pnl=$result_pnl"
+        log "FRIDAY CLOSE: $inst result=$status pnl=$result_pnl"
         closed=$((closed + 1))
         total_pnl=$(python3 -c "print(float('$total_pnl') + float('$result_pnl'))" 2>/dev/null || echo "$total_pnl")
     else
-        log "EOD CLOSE: $inst FAILED — no response"
+        log "FRIDAY CLOSE: $inst FAILED — no response"
     fi
 done <<< "$positions"
 
-log "EOD CLOSE done — closed $closed position(s), total P&L: $total_pnl"
+log "FRIDAY CLOSE done — closed $closed position(s), total P&L: $total_pnl"
 
 # Send summary via Telegram
 if [ "$closed" -gt 0 ]; then
-    send_telegram "🌙 EOD Auto-Close: $closed position(s) closed, P&L: ${total_pnl}€ (avoiding swap fees)"
+    send_telegram "🌙 Friday Close: $closed position(s) closed, P&L: ${total_pnl}€ (avoiding weekend gap)"
 fi

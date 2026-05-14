@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     # ATR-based dynamic stops
     atr_enabled: bool = True
     atr_period: int = 14
-    atr_sl_multiplier: float = 2.0
+    atr_sl_multiplier: float = 2.5
     atr_tp_multiplier: float = 2.0
     atr_cache_ttl_seconds: int = 3600
 
@@ -51,8 +51,8 @@ class Settings(BaseSettings):
     # Conviction-based position sizing (matches backtest: HIGH=100%, MED=75%, LOW=50% of base)
     conviction_sizing_enabled: bool = True
     conviction_high_risk_pct: float = 3.0
-    conviction_medium_risk_pct: float = 2.25
-    conviction_low_risk_pct: float = 1.5
+    conviction_medium_risk_pct: float = 3.0
+    conviction_low_risk_pct: float = 3.0
 
     # Telegram
     telegram_bot_token: str
@@ -73,7 +73,7 @@ class Settings(BaseSettings):
 
     # M5 scalp signal threshold (default 6, lower = more trades but lower quality)
     m5_signal_threshold: float = 8.0
-    m5_high_conviction_threshold: float = 11.0
+    m5_high_conviction_threshold: float = 12.0
 
     # M5 Scalp BTC (separate flag + separate thresholds from FX)
     scalp_btc_enabled: bool = False

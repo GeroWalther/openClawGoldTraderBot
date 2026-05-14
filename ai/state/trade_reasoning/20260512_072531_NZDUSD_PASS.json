@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "NZDUSD",
+  "reasoning": "OPPOSITE-DIRECTION EXPOSURE CONFLICT — open NZDUSD SELL position (deal_id 30744494, size -1000, entry 0.59647, SL 0.59647 [breakeven], TP 0.588) is currently working and +$2.11 in profit, thesis intact (same range_extreme_fade structure, just from the 0.5969 ceiling side). Submitting a BUY at 0.594-0.5946 with SL 0.5924 creates contradictory committed exposure on the same instrument on a $140 account: if the BUY hits SL 0.5924 the SELL is still working toward TP 0.588 — guaranteed loss on the BUY while the SELL plays out (or worse, both positions trapped if range breaks down). Per system rule 'already have a position in this instrument? PASS' and journal #107 precedent (2026-05-11 same-instrument auto-PASS) this is a deterministic skip. Existing SELL is already managing the range-fade thesis from the correct side — D1 RSI 56.7 with mild bullish D1 tilt favors the SELL closing into mid-range rather than reversing for a fresh BUY here.",
+  "re_verification": "No MCP verification needed — hard-stop fires on positions[] check alone. Existing NZDUSD SELL (-1000 @ 0.59647) is currently open per /positions/status snapshot."
+}

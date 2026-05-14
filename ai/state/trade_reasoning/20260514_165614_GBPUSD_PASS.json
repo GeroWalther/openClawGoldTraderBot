@@ -1,0 +1,5 @@
+{
+  "action": "PASS",
+  "instrument": "GBPUSD",
+  "reasoning": "Price at 1.34395 is ~48 pips below entry zone (1.3483-1.3492) and bounce has not occurred — H1 RSI still 23.89, current bar still flushing; conditional setup is not live."
+}

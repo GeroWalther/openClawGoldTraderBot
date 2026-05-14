@@ -1,0 +1,17 @@
+{
+  "action": "SELL",
+  "instrument": "XAUUSD",
+  "order_type": "LIMIT",
+  "entry_price": 4740.00,
+  "stop_loss": 4766.00,
+  "take_profit": 4668.00,
+  "stop_distance": 26.00,
+  "limit_distance": 72.00,
+  "risk_reward": 2.77,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "D1 regime trending_down (medium confidence) after -12.6% flush from 5419 high. All three timeframes aligned bearish: D1 RSI 47.96, H4 RSI 42.25, H1 RSI 44.42, M15 sub-50. Setup is a textbook rally-to-EMA-then-rejection short. Prior H1 bars printed a lower-high structure: 4760.99 -> 4757.53 -> 4750.20, and the live H1 bar (20:00 UTC) opened AT the EMA (4740.38), wicked to 4740.55, and has fallen to 4738.08 — losing the 19:00 reclaim attempt (close 4741.81). RSI 44 confirms bearish momentum in the direction of the short (NOT the long-invalidation insight). Limit at 4740 waits for a final EMA retest for optimal location; SL at 4766 sits above the 4760 local resistance AND D1 EMA 4761 with a ~5pt buffer (well above the 25pt XAUUSD minimum at 26pt actual). Target 4668 is the documented prior structural low and lines up with regime's first support zone. Stop is 2.17× H1 ATR (safely inside the 3× ceiling). RR 2.77 is above the 1:2 floor. Regime has shifted out of volatile_choppy (which triggered 15:09/18:40 skips today) to a cleaner directional read.",
+  "invalidation": "H1 close above 4760 (reclaim of D1 EMA / local resistance) kills short thesis. Also cancel limit if not filled within 2 hours (setup will have moved on by then).",
+  "pine_verification": null,
+  "strategy": "ai_sr_bounce_with_trend"
+}

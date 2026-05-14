@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "No M15 bullish confirmation yet. Price bounced from 74530 (H4 EMA zone) but M15 RSI at 43.88 shows bearish momentum, and price at 74718 is 100 pts below M15 EMA (74819). Current M15 bar (08:15 UTC) is still open — it wicked down to 74544 and rallied to 74750 high but hasn't closed yet. The prior 5 completed M15 bars show accelerating selling: 74930 → 74911 → 74888 → 74717 → 74557. Scanner required M15 follow-through above 74750 on a closed bar — not met. H1 EMA at 74829 is 110 pts above current price, confirming active selling pressure. The wick to 74530 touching H4 EMA is structurally valid, but entering on an unconfirmed bounce with RSI 43.88 and price below both M15 and H1 EMAs is premature. Need at minimum a completed M15 close above 74750 with RSI crossing back above 50.",
+  "re_verification": "Checked H1 and M15 at 08:24 UTC. H1 current bar: O 74717, H 74750, L 74530, C 74721. M15 current bar: O 74544, H 74750, L 74544, C 74718 (still open). M15 EMA 74819, RSI 43.88. Bounce from H4 EMA valid but unconfirmed."
+}

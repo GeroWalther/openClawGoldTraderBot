@@ -1,0 +1,16 @@
+{
+  "action": "BUY",
+  "instrument": "GBPUSD",
+  "order_type": "MARKET",
+  "entry_price": 1.35172,
+  "stop_loss": 1.3478,
+  "take_profit": 1.3654,
+  "stop_distance": 0.00392,
+  "limit_distance": 0.01368,
+  "risk_reward": 3.49,
+  "conviction": "HIGH",
+  "hold_style": "intraday",
+  "reasoning": "Range extreme fade at D1 support 1.3485. H1 printed low 1.34846 then reversed sharply (+296 pips off low to 1.35142 close). Current bar extending gains to 1.35208. Price now above H1 EMA (1.35150), RSI 44.07 recovering. SL 39 pips below swing low with buffer. TP at upper D1 range 1.3654 = 3.5R.",
+  "invalidation": "H1 close below 1.34780.",
+  "strategy": "ai_range_extreme_fade"
+}

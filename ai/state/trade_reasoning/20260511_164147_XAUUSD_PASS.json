@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "R:R FAILS MANDATORY 1:2 to honest near target. Verified H1: price 4719.64, EMA20 4706.77, RSI 56.62. Best-case math: limit at 4712 (top of zone) with SL 4660 / TP 4764 = 52pt stop / 52pt target = 1.0 R:R; limit at 4705 = 45pt stop / 59pt target = 1.31 R:R. Scanner's own estimated_rr 1.1 confirms the floor failure. The 5.9 R:R to 5000 is fantasy — that target requires breaking through regime-documented 4748-4765 supply zone where today's 4748.95 high was JUST rejected 4 hours ago, with prior 50-bar D1 history of decline from 5419. Setup trigger ALSO not met: price 4719.64 still $7-15 above entry zone 4705-4712, no pullback completed, no bullish rejection candle has fired. Pattern-recurrence: journal #93 at 14:41 today PASSED on near-identical XAUUSD pullback for the same R:R reason; trades #2, #3 (XAUUSD BUY range-fades) already failed today. Compounded auto-PASS.",
+  "re_verification": "Checked XAUUSD H1 at 16:40 UTC. Price 4719.64 (matches scanner 4720.05), H1 EMA20 4706.77 (matches scanner 4706.85), H1 RSI 56.62 (slightly decayed from 56.76). Live H1 bar bearish -12.7pt (O 4732.37 -> H 4733.73 -> L 4717.81 -> C 4719.64) but has NOT reached entry zone. Last closed H1 bar (15:00 UTC) was +6.7pt green at 4732 — no rejection sequence yet."
+}

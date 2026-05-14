@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "AUDUSD",
+  "order_type": "LIMIT",
+  "entry_price": 0.71680,
+  "stop_loss": 0.71465,
+  "take_profit": 0.72220,
+  "stop_distance": 0.00215,
+  "limit_distance": 0.00540,
+  "risk_reward": 2.51,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "D1/H4/H1 all aligned uptrend with price above rising EMAs. H1 RSI reclaimed 50 at verification (58.15, up from earlier sub-50 readings that correctly blocked prior entries) — momentum confirmation per rsi_below_50_invalidates_pullback_long insight satisfied. Last closed H1 bar was a strong bullish breakout candle (0.71602→0.71750) closing well above EMA 0.71667. The 0.7149-0.7152 H1 swing-low cluster was tested 3x and held with rejection wicks — clean structural invalidation point. Current 0.71772 is already past the entry zone, so market chase would yield only 1.46R (fails rr_below_2 hard stop per insight). LIMIT at 0.71680 sits at the upper-mid of the scanner's entry zone right above EMA, requiring ~9-pip pullback for fill — realistic in active pullback setups. SL 0.71465 placed below swing-low cluster with ~25-pip buffer (2.3× 0.25×ATR buffer). Target 0.72220 = D1 resistance and H1 50-bar high with no intervening S/R. R:R 2.51 qualifies. Regime explicitly endorses pullback-to-EMA buys in AUDUSD (instruments_in_play).",
+  "invalidation": "Cancel if not filled within 4h (by 18:30 UTC) — momentum has begun; if no pullback retest comes, the setup has morphed into a breakout continuation and must be re-scanned, not chased. H1 close below 0.71465 kills thesis entirely.",
+  "pine_verification": null,
+  "strategy": "ai_pullback_to_ema"
+}

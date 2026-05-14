@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Regime explicitly classifies XAUUSD as volatile_choppy and places it in instruments_avoid — 'Sit on hands, no clean directional edge.' Price action confirms: 4830→4787→4810 in 3 hours is textbook whipsaw, not a trending pullback. Current H1 bar (16:00 UTC) is still live with price at 4810.47 below EMA 4812.51 — setup requires confirmed H1 close above EMA, not met. Even if it closes above, the proposed stop at 4784 is only 3 pts below the 4787 swing low (15:00 bar low 4787.15, 09:00 bar low 4786.08) — that's 0.16× H1 ATR cushion in a market printing 30-43 pt intra-hour swings, virtually guaranteed to get swept. R:R from EMA entry (~4813) is 29 risk / 58 reward = 2.0:1, barely minimum and insufficient to justify a trade in a choppy regime where win rate is structurally lower. This is the 3rd XAUUSD setup today — all correctly passed for the same structural reasons. No edge here.",
+  "re_verification": "Checked H1 at 16:37 UTC. EMA 4812.51, RSI 50.51, price 4810.47. Last 3 completed H1 bars: 4828→4815→4801 — progressively lower closes, bearish sequence into current bounce. Current bar still open with 23 min remaining."
+}

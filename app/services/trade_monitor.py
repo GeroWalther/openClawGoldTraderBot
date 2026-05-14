@@ -116,23 +116,35 @@ class TradeCloseMonitor:
         """Mark trade as CLOSED, calculate P&L, notify."""
         now = datetime.now(timezone.utc)
         spec = INSTRUMENTS.get(trade.epic)
+        broker = self._get_broker(trade.epic)
 
-        # Try to get actual P&L and close price from broker deal history
+        # Try to get actual P&L from broker deal history (most accurate)
+        # Retry a few times — deal may not be available immediately after SL close
         pnl = None
         close_price = 0.0
-        if self.icm and spec and spec.broker == "icmarkets" and trade.deal_id:
-            try:
-                details = await self.icm.get_position_close_details(int(trade.deal_id))
-                if details:
-                    pnl = details["pnl"]
-                    if details.get("close_price"):
-                        close_price = details["close_price"]
-            except Exception:
-                logger.warning("Failed to get broker close details for trade #%d", trade.id)
 
-        # Fallback: use current market price (inaccurate if delayed)
+        if trade.deal_id and isinstance(broker, ICMarketsClient):
+            for attempt in range(3):
+                try:
+                    details = await broker.get_position_close_details(int(trade.deal_id))
+                    if details:
+                        pnl = details.get("pnl")
+                        close_price = details.get("close_price") or 0.0
+                        logger.info(
+                            "Trade #%d close details from broker: pnl=%.2f close_price=%s",
+                            trade.id, pnl or 0, close_price,
+                        )
+                        break
+                except Exception:
+                    if attempt < 2:
+                        logger.info("Trade #%d deal details attempt %d failed — retrying in 3s", trade.id, attempt + 1)
+                        await asyncio.sleep(3)
+                    else:
+                        logger.warning("Cannot get close details for trade #%d after 3 attempts — falling back to market price", trade.id)
+
+        # Fallback: use current market price (less accurate)
         if not close_price:
-            broker = self._get_broker(trade.epic)
+            logger.warning("Trade #%d using market price fallback — close price may be inaccurate", trade.id)
             try:
                 price_data = await broker.get_price(trade.epic)
                 close_price = price_data.get("last") or price_data.get("bid") or 0.0
@@ -146,6 +158,9 @@ class TradeCloseMonitor:
                     pnl = (close_price - trade.entry_price) * trade.size * multiplier
                 else:
                     pnl = (trade.entry_price - close_price) * trade.size * multiplier
+                # Convert USD P&L to EUR for IC Markets forex pairs
+                if spec and spec.broker == "icmarkets" and isinstance(broker, ICMarketsClient):
+                    pnl = broker.usd_to_eur(pnl)
             else:
                 pnl = 0.0
 

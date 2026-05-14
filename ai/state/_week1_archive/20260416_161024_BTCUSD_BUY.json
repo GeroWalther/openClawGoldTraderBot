@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "BTCUSD",
+  "order_type": "LIMIT",
+  "entry_price": 74650,
+  "stop_loss": 74180,
+  "take_profit": 76120,
+  "stop_distance": 470,
+  "limit_distance": 180,
+  "risk_reward": 3.13,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "BTCUSD D1 uptrend intact (+10%, RSI 62.58, price above D1 EMA 73099). H1 bar at 14:00 UTC touched 73309 key support EXACTLY (confirmed on bar data: low 73309) and reversed with the next two H1 bars closing progressively higher (73985 then 74718). Current H1 at 74830 above H1 EMA 74530, RSI 54.73 — clean reclaim. Market entry R:R is only 1.98 (650pt risk/1290pt reward) — chasing after a 1521pt bounce violates discipline. LIMIT at 74650 (middle of 74500–74800 entry zone) waits for shallow M15 dip to H1 EMA zone, yielding R:R 3.13. Stop 74180 below the M15 HL cited by scanner and 0.63x H1 ATR (750). Target 76120 at next H1 resistance with clear air.",
+  "invalidation": "H1 close below 74180 kills thesis (breaks structure). Cancel if not filled within 4h — if price keeps rallying without pullback, the chase-risk materializes and setup ages out.",
+  "pine_verification": null,
+  "strategy": "ai_sr_bounce_with_trend"
+}

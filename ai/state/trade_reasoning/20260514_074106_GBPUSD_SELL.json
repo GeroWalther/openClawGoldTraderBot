@@ -1,0 +1,16 @@
+{
+  "action": "SELL",
+  "instrument": "GBPUSD",
+  "order_type": "MARKET",
+  "entry_price": 1.35182,
+  "stop_loss": 1.3550,
+  "take_profit": 1.3450,
+  "stop_distance": 0.00318,
+  "limit_distance": 0.00682,
+  "risk_reward": 2.14,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "GBPUSD short at H1 EMA resistance 1.35229. Price tagged 1.35326 high then printed a bearish rejection candle closing at 1.35180 — current price 1.35182 inside 1.3515-1.3522 entry zone. D1 in confirmed downtrend (5 consecutive lower closes from 1.3658), H4 RSI 41.21 bearish, H1 RSI 45.66 fading below 50. SL 1.3550 (1 pip above D1 EMA structural invalidation), 31.8 pips. TP 1.3450 at next D1 support, 68.2 pips.",
+  "invalidation": "H1 close above D1 EMA 1.3549.",
+  "strategy": "ai_lower_high_entry"
+}

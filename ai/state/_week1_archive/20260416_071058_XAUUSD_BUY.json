@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "XAUUSD",
+  "order_type": "LIMIT",
+  "entry_price": 4824.00,
+  "stop_loss": 4809.00,
+  "take_profit": 4871.00,
+  "stop_distance": 15.00,
+  "limit_distance": 47.00,
+  "risk_reward": 3.13,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "H1 EMA pullback setup confirmed — first clean confirmation after multiple valid PASSes yesterday. Price 4830 is above H1 EMA 4823.08, H1 RSI 56.81 > 50, M15 forming higher lows (4811→4814→4823) with RSI 56.64 confirming recovery momentum. Using limit at 4824 near H1 EMA for entry on next retest — recent pattern shows repeated EMA retouches (05:00 bar pulled to 4821, 06:00 bar to 4814, current bar dipped to 4823). Stop at 4809 is below structural H1 swing low at 4811.33 (04:00 UTC bar) with 2.33 pts buffer. Target 4871 is D1 resistance per regime. London session just opened — strong liquidity window for XAUUSD. MEDIUM not HIGH due to: (1) D1 context shows extreme prior volatility (4099-5419 range), (2) price rejected from 4838 twice in last 3 H1 bars showing sellers active above 4835, (3) multiple failed XAUUSD setups yesterday warrant caution even though conditions have now improved.",
+  "invalidation": "H1 close below 4812 kills thesis. Cancel limit if not filled within 6h (by 13:00 UTC). If price breaks 4838 without filling limit, cancel — setup has moved away.",
+  "pine_verification": "No Pine script verification performed — standard EMA/RSI confirmation via chart indicators sufficient for this setup type.",
+  "strategy": "ai_pullback"
+}

@@ -1,0 +1,16 @@
+{
+  "action": "SELL",
+  "instrument": "GBPUSD",
+  "order_type": "MARKET",
+  "entry_price": 1.35148,
+  "stop_loss": 1.35360,
+  "take_profit": 1.34200,
+  "stop_distance": 0.00212,
+  "limit_distance": 0.00948,
+  "risk_reward": 4.47,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "H1 lower high confirmed at 1.35326 (below prior range high 1.35532). Price at 1.35148 inside entry zone (1.3511-1.3519), below H1 EMA 1.35193 and H4 EMA 1.35254. D1 shows 5 consecutive lower closes. RSI 45.35 bearish lean. SL above lower high at 1.35360 (21.2 pips). TP at structural support 1.3420 per playbook.",
+  "invalidation": "H1 close above 1.35326.",
+  "strategy": "ai_lower_high_entry"
+}

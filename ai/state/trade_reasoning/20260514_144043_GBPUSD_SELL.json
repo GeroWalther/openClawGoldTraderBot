@@ -1,0 +1,16 @@
+{
+  "action": "SELL",
+  "instrument": "GBPUSD",
+  "order_type": "MARKET",
+  "entry_price": 1.35088,
+  "stop_loss": 1.35380,
+  "take_profit": 1.34490,
+  "stop_distance": 0.00292,
+  "limit_distance": 0.00598,
+  "risk_reward": 2.05,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "GBPUSD pinned at H1 EMA 1.35099 (current 1.35088). Multi-TF bearish: D1 in 5-bar decline, H4 below EMA, H1 EMA acting as resistance. Prior H1 bar rejected (high 1.35104, close 1.35002). RSI 45.48 neutral-bearish, no oversold bounce fuel. SL 1.3538 above key resistance 1.3535 with 29 pip buffer (1.6x ATR). TP at 1.3449 structural support for 2.05R.",
+  "invalidation": "H1 close above 1.3535.",
+  "strategy": "ai_sr_bounce_with_trend"
+}

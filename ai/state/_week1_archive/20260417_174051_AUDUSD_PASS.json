@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "Scanner itself rejected — no trigger. H1 price 0.71814 sits below H1 EMA 0.71872; regime playbook explicitly requires EMA reclaim before entry. Four consecutive H1 lower closes from 0.7222 high with no reversal signal, RSI neutral at 52. No entry/stop/target defined by scanner. This is the 20+ identical AUDUSD pullback-to-EMA failure today — same distribution-at-EMA pattern documented in journal ids 4,6,7,9,10,28,29,31-37,39,40,44-46,49,53,57-60. Friday 17:40 UTC with NY close in ~3h 20m — liquidity thinning further degrades any marginal pullback thesis. No edge here.",
+  "re_verification": "Scanner pass at 17:30 UTC already confirmed H1 below EMA with no reversal trigger. No fresh MCP check needed — the invalidation is structural, not timing-dependent."
+}

@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "No M15 bullish confirmation. Price at 74,875 is below M15 EMA (74,962) and falling — M15 RSI at 47.56 shows bearish momentum, not the bullish flip the setup requires. Last 3 completed M15 bars are declining: 75,056 → 74,930 → 74,911, with the current bar printing 74,875 (new low). The current H1 bar (07:00 UTC) opened at 75,055 and has sold off 180 pts to 74,876 — this is active selling into the EMA zone, not a bounce from it. H1 EMA at 74,888 is being tested from above but price is slicing through it, not holding. Scanner required 'bullish M15 candle reclaiming 74,950+' — opposite is happening. This is the 3rd BTCUSD PASS today for the same pattern: price approaches H1 EMA but M15 never confirms a reversal.",
+  "re_verification": "Checked H1 and M15 at 07:38 UTC. H1 RSI 56.13, M15 RSI 47.56. Price 74,875 below M15 EMA 74,962. No trigger candle formed."
+}

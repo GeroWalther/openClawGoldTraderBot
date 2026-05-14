@@ -1,0 +1,16 @@
+{
+  "action": "BUY",
+  "instrument": "NZDUSD",
+  "order_type": "MARKET",
+  "entry_price": 0.59206,
+  "stop_loss": 0.59020,
+  "take_profit": 0.59690,
+  "stop_distance": 0.00186,
+  "limit_distance": 0.00484,
+  "risk_reward": 2.6,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "H1 hammer rejection at range floor: prior bar spiked to 0.59144 (new range extreme low) and closed 0.59186, current H1 follow-through open 0.59189, last 0.59206. Price in entry zone 0.5917-0.5922. RSI 39.82 turning up from oversold. SL 0.5902 sits 18.6 pips below entry (below 0.5914 H1 support by ~12 pips, ~2.3x ATR) — beyond range extreme. TP at range top 0.5969 gives 48.4 pips, R:R 2.6.",
+  "invalidation": "H1 close below 0.5910.",
+  "strategy": "ai_range_extreme_fade"
+}

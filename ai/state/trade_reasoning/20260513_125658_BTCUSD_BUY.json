@@ -1,0 +1,16 @@
+{
+  "action": "BUY",
+  "instrument": "BTCUSD",
+  "order_type": "LIMIT",
+  "entry_price": 80000,
+  "stop_loss": 78600,
+  "take_profit": 82833,
+  "stop_distance": 1400,
+  "limit_distance": 2833,
+  "risk_reward": 2.02,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "BTC H1 verified: bar low tagged 79825 (exact 79820 playbook support), recovered to 80156 with long lower wick. H1 RSI 36.00 just above 35 threshold, EMA overhead at 80752. D1 uptrend intact. LIMIT 80000 places entry at lower half of 79820-80200 zone (156 pts below market, within 0.5x ATR). SL 78600 below 79168 secondary support ($1400 stop, > $1200 min). TP 82833 prior swing high.",
+  "invalidation": "H1 close below 79168.",
+  "strategy": "ai_sr_bounce_with_trend"
+}

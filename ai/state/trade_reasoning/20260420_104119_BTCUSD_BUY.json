@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "BTCUSD",
+  "order_type": "LIMIT",
+  "entry_price": 75100,
+  "stop_loss": 73700,
+  "take_profit": 78384,
+  "stop_distance": 1400,
+  "limit_distance": 3284,
+  "risk_reward": 2.35,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "D1 uptrend intact (+14.35%, RSI 58.96, price above rising EMA). H1 setup has materially improved vs earlier PASSes at 08:24/08:54: RSI recovered from 46.16 to 54.37 (back above 50, bullish momentum confirmation), price pushed back through H1 EMA 74842 to 75223, last 4 H1 bars forming higher lows (74647→75093) and current bar printed new intraday high 75424. Structural bounce from 74139/73753 support zone held on the retest. Entry LIMIT 75100 sits inside scanner zone 75050-75250 and near rising M15 EMA 75133 for a small dip fill. SL 73700 is just below the structural 73753 session low (scanner-identified support) with room for noise. TP 78384 = prior session high, the next real resistance with no D1 structure between. Overhead 75590 rejection wick is the only caveat but RSI/EMA reclaim suggests it will be absorbed.",
+  "invalidation": "H1 close below 73753 kills thesis (structural support break). Cancel order if not filled within 4 hours — if price runs to target without a dip, the pullback entry thesis is stale. Note overhead supply at 75590 from prior rejection wick — expect test there before target.",
+  "pine_verification": null,
+  "strategy": "ai_sr_bounce_with_trend"
+}

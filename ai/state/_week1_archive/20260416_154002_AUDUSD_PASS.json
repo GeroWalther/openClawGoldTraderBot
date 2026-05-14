@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "8th AUDUSD evaluation today — same pattern persists. Price at 0.71709 is 1.1 pips below H1 EMA (0.71720), failing to reclaim it. Current H1 bar (15:00 UTC) is still open with ~21 min remaining — it rallied from 0.71610 low to 0.71722 high (touching EMA) but has already faded back to 0.71709. This is the same touch-and-fade behavior seen all day. M15 RSI at 48.55 remains below 50 — no bullish momentum confirmation. The last completed M15 bar (15:15 UTC) was bearish: O 0.71698 → C 0.71646, a 5.2-pip selloff that printed a new low. Current M15 bar (15:30 UTC) is recovering to 0.71706 but is still open and only 1.2 pips above M15 EMA (0.71694). Scanner trigger required H1 close above 0.71710 EMA or M15 close above 0.71710 with RSI > 50 — neither condition met on any closed bar. H1 sequence since the 0.71920 high shows 6 consecutive lower closes (0.71884 → 0.71833 → 0.71747 → 0.71692 → 0.71672 → 0.71736 → 0.71723 → 0.71723 → 0.71627) — persistent distribution, not accumulation for reversal.",
+  "re_verification": "Checked H1 and M15 at 15:38 UTC. H1 EMA 0.71720, price 0.71709 (below). M15 EMA 0.71694, RSI 48.55 (below 50). No closed-bar EMA reclaim on either timeframe. Trigger not met."
+}

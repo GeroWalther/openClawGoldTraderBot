@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "M15 confirmation insufficient. Current H1 bar (09:00 UTC) is still open with ~23 min remaining — price at 74,804 is 14 pts below H1 EMA (74,818), not above it. M15 RSI at 48.25 is below 50, showing no bullish momentum. The bounce from 74,530-74,642 lows produced M15 higher lows (74,544→74,581→74,642→74,749) but the last two completed M15 bars show fading momentum: 74,842→74,803 (lower close). M15 price at 74,803 is only 16 pts above M15 EMA (74,787) — barely holding, not convincingly reclaimed. The current M15 bar is bearish (O 74,828 → C 74,803). Previous pass at 09:24 UTC noted the same pattern — M15 had not confirmed. Since then, price briefly spiked to 74,916 but immediately sold off back to 74,803, a 113-pt rejection. This is the 7th BTCUSD evaluation today — all previous PASS for the same reason: no sustained M15 bullish follow-through above EMA. Pattern of repeated failed reclaims suggests sellers are active at 74,850-74,920 zone.",
+  "re_verification": "Checked H1 and M15 at 09:37 UTC. H1 bar still open, price 74,804 below H1 EMA 74,818. M15 RSI 48.25 < 50. No confirmed bullish trigger."
+}

@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "BTCUSD",
+  "order_type": "LIMIT",
+  "entry_price": 75050,
+  "stop_loss": 73600,
+  "take_profit": 78384,
+  "stop_distance": 1450,
+  "limit_distance": 3334,
+  "risk_reward": 2.30,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "H1 pullback to EMA(20) at 74748 printed textbook touch-and-go: current bar low 74737, close 75097, RSI recovered from 46 (08:54 skip) to 52.45 — momentum reclaimed. D1 uptrend intact, price above D1 EMA(74384) and H1 EMA. Regime confirms pullback-to-EMA playbook. Prior swing low 73753 defines structural invalidation; SL at 73600 adds ~150pt buffer (0.27× H1 ATR550). Above BTC minimum stop 1200 and below 3× ATR cap 1650. Target 78384 is prior ATH-of-period and the regime's identified resistance zone. Two earlier skips today were correct (RSI <50 then); conditions now confirm entry.",
+  "invalidation": "H1 close below 74384 (D1 EMA) kills thesis. Cancel limit if not filled within 3h.",
+  "pine_verification": null,
+  "strategy": "ai_pullback_to_ema"
+}

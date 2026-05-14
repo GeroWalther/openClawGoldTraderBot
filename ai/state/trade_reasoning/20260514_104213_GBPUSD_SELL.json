@@ -1,0 +1,16 @@
+{
+  "action": "SELL",
+  "instrument": "GBPUSD",
+  "order_type": "LIMIT",
+  "entry_price": 1.35180,
+  "stop_loss": 1.35420,
+  "take_profit": 1.34600,
+  "stop_distance": 0.00240,
+  "limit_distance": 0.00580,
+  "risk_reward": 2.42,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "H1 EMA at 1.35180 is capping every rally (last 5 H1 highs: 1.35326→1.35276→1.35209→1.35208→1.35210, all rejected). Current price 1.35154 just below EMA, H1 RSI 46.3, H4 RSI 41.9 — confirmed bearish structure. Limit sell at the EMA; SL 1.35420 above swing high 1.35326 + buffer (24 pips); TP at 1.34600 second support (58 pips, 2.42R).",
+  "invalidation": "H1 close above 1.35420 or H4 close above 1.3553.",
+  "strategy": "ai_sr_bounce_with_trend"
+}

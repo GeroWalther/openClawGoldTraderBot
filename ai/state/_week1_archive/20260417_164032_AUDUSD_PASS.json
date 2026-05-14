@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "Target 0.7222 is a freshly-rejected swing high from only 2-3 hours ago (15:00 UTC H1: O 0.72115 → H 0.7222 → C 0.72108, clear wick rejection). Price then printed two consecutive lower-close H1 bars (0.72018 → 0.71905) showing active distribution off the high, not consolidation. First retest of a freshly-rejected swing high is statistically low-probability — same disqualifier applied in journal ids 57, 58, and multiple BTCUSD passes today (54, 55, 56). Pullback structure to H1 EMA (0.71891) is genuinely clean and the M15 wick at 0.71848 shows buyers defending, but current H1 bar is still open and has not yet posted a confirmed EMA reclaim close. Conservative target below the rejection (e.g. 0.7215) would drop R:R to ~1.94, below the 2:1 minimum. Only path to meeting R:R is using 0.7222 exactly, which the journal has repeatedly flagged as a setup killer. Holding the discipline.",
+  "re_verification": "Checked H1 at 16:39 UTC. Current H1 bar: O 0.71906, H 0.7193, L 0.71848, C 0.71906 (still forming). H1 EMA 0.71891, RSI 58.27. Pullback structure intact but target invalidates trade."
+}

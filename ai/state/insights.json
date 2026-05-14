@@ -1,0 +1,23 @@
+{
+  "insights": [
+    {
+      "key": "rr_below_2_hard_stop_even_if_thesis_valid",
+      "text": "Even when directional thesis is intact and price has moved favorably, hard-skip if current entry yields R:R < 1:2 to structural SL. Do not chase. BTCUSD 14:39 setup was thesis-correct but gave only 1.57R \u2014 correctly skipped.",
+      "evidence": "BTCUSD 14:39 trade: pullback bounced exactly as predicted, but entering at 75519 with SL 73700 gave R:R 1.57. Chasing would have been a rule break on an already-played move.",
+      "added_date": "2026-04-20"
+    },
+    {
+      "key": "ranging_regime_mid_level_skip",
+      "text": "In ranging regime, ONLY trade the documented extremes (support/resistance). Scanner-generated mid-range setups (e.g., pullback-to-EMA) contradict regime and must be skipped even if technicals look clean.",
+      "evidence": "XAUUSD 07:10: scanner suggested pullback at 4796 mid-range 4736-4891. Regime playbook explicitly said skip mid-range. Correctly passed.",
+      "added_date": "2026-04-20"
+    },
+    {
+      "key": "scanner_ignoring_regime_avoid_list",
+      "text": "Scanner continues to generate setups on instruments explicitly tagged instruments_avoid by the regime layer. Treat any scanner signal on an avoid-listed instrument as auto-PASS without running full verification \u2014 saves decision cycles. Additionally, log these events as scanner bugs for the regime-gate fix.",
+      "evidence": "XAUUSD 2026-04-22: 2 scanner signals (15:09, 18:40) both on volatile_choppy/instruments_avoid regime. Same pattern seen earlier in week (XAUUSD 2026-04-20 ranging mid-level). Third occurrence of same class of scanner leak.",
+      "added_date": "2026-04-22"
+    }
+  ],
+  "last_updated": "2026-05-14"
+}

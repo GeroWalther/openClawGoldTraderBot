@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Setup deteriorating not confirming. H1 09:00 bar closed RED at 4656.895 (no rejection candle — the very confirmation #89 was waiting for failed to print). M15 rising-floor narrative broken: 09:00 bar low 4650.795 took out the prior 4656.49 swing low. H1 RSI 38.68 has FALLEN from scanner's 40.88 — momentum decaying further, not recovering. Price 4661.58 is $9 below H1 EMA20 (4670.27), trend filter not reclaimed. Two identical XAUUSD BUY attempts already today (#2 at 4671 failed, #3 at 4665 failed) — running the same range-fade BUY a 3rd time on weakening conditions is undisciplined. Scanner confidence self-rated medium (not HIGH). Wait for either (a) actual H1 bullish rejection close above 4660 with RSI reclaiming 45+ or (b) clean break-and-fail of 4648 invalidating the long thesis.",
+  "re_verification": "Verified XAUUSD H1 at 10:38 UTC. Price 4661.58, EMA20 4670.27, RSI 38.68. Live H1 (10:00 UTC) bar is green but only +5pt off open with 22min to close — not yet a confirmed reversal."
+}

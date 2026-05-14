@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "Fifth AUDUSD evaluation today — same pattern persists. Price at 0.71749 is 0.3 pips below H1 EMA (0.71752), touching it as the bar high but failing to break above. The prior completed H1 bar (12:00 UTC) peaked at 0.71752 and closed at 0.71723 — a clear EMA rejection. The current H1 bar (13:00 UTC, still open with ~37 min left) has also hit exactly 0.71752 as its high. M15 shows marginal improvement versus last pass — RSI 51.29 (just above 50), price 0.71748 above M15 EMA (0.71727), and higher lows forming from 0.71642. However, the M15 bar at 12:00 rejected from 0.71746 to 0.71679, then the 12:45 bar rejected from 0.71752 to 0.71720, then 13:00 rejected from 0.71750 to 0.71716. This is the fourth consecutive M15 test of the H1 EMA zone (0.71746-0.71752) that fails to hold above it. Distribution pattern, not accumulation. A pullback-to-EMA buy requires price to reclaim the EMA and hold — not grind against it as a ceiling for 3+ hours. The D1 uptrend thesis remains valid, but execution is poor: buying into repeated resistance tests is chasing, not a high-probability pullback entry.",
+  "re_verification": "Checked H1 and M15 at 13:23 UTC. H1 EMA 0.71752 acting as resistance. M15 RSI 51.29. Price 0.71749. Same rejection pattern as prior 4 passes."
+}

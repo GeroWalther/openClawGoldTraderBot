@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Regime classification explicitly says SKIP mid-range XAUUSD entries around 4796 (exactly where price is now at 4795.88). The ranging regime playbook only trades extremes at 4736 support or 4891 resistance. The scanner's 'pullback to EMA' thesis conflicts with the regime analysis — D1 is mid-range, not cleanly trending. H1 RSI 46.19 is below 50 (no bullish momentum confirmation). Recent H1 action is wildly choppy: two bars ago ranged 4771-4814 ($43 spread), prior bar crashed to 4736 then rebounded to 4814 — this is volatile_choppy behavior, not a controlled pullback. Price is hugging EMA 4797.52 with no directional bias. With medium confidence + ranging regime + mid-range entry + choppy structure + only $140 account, the asymmetric edge isn't there. Wait for price to reach 4736 support (BUY zone) or 4891 resistance (SELL zone) per regime playbook.",
+  "re_verification": "Checked H1 XAUUSD at 07:09 UTC. Price 4795.88, EMA 4797.52, RSI 46.19. Within stated entry zone but regime analysis explicitly rules this out as mid-range. Recent bars show $78 range — volatility too high for tight thesis."
+}

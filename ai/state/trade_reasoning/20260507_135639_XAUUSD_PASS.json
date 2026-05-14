@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "OPPOSITE-DIRECTION EXPOSURE CONFLICT — pending SELL LIMIT order #34270168 still working on XAUUSD at 4557 (SL 4584, TP 4501) from 2026-05-05, listed in recent_trades with status 'pending_order'. Per system rule 'already have a position in this instrument? PASS' and consistent journal precedent today (#76 13:24, #75 13:10, #73 11:39) plus yesterday (#67, #70) — all five XAUUSD BUY proposals auto-PASSED on this exact basis. A BUY fill at 4730-4737 with SL 4700 creates contradictory committed exposure on the same instrument: if price collapses, both the BUY position stops out AND the working SELL fills, doubling losses. Additional setup-side concerns: current price 4743 is 6-13pts ABOVE entry zone 4730-4737 (pullback not yet occurred), and H4 RSI at 71 flagged extended by regime — but exposure conflict alone is dispositive.",
+  "re_verification": "Positions check confirms pending SELL LIMIT #34270168 still active on XAUUSD per recent_trades (entry 4557, status pending_order). Setup also fails trigger condition — price 4743.25 above entry zone, no pullback to H1 EMA yet."
+}

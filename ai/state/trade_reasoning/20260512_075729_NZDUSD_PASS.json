@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "NZDUSD",
+  "reasoning": "OPPOSITE-DIRECTION EXPOSURE CONFLICT — open NZDUSD SELL position #30744494 (size -1000, entry 0.59647, SL 0.59647 breakeven, TP 0.588) is currently working +$2.03 in profit, thesis intact (range_extreme_fade from 0.5969 ceiling). Adding a BUY at 0.5944 with SL 0.5920 on a $140 account creates contradictory committed exposure: if BUY hits SL 0.5920 the SELL is still working toward TP 0.588 = guaranteed loss on the BUY while SELL drifts in profit; if BUY hits TP 0.5991 the SELL gets stopped out at breakeven and the BUY captures the move that would have killed the SELL anyway. Per system rule 'already have a position in this instrument? PASS'. This is the 2nd identical scanner repeat in 32 minutes — journal #109 (07:25 UTC) auto-PASSED on the exact same basis. Additionally, scanner self-rated LOW confidence which alone mandates PASS per system rule. Setup deserves no further verification cycles while the opposing position is live.",
+  "re_verification": "No MCP verification performed — deterministic auto-PASS on opposite-direction exposure conflict. Existing NZDUSD SELL position is the gating constraint, not the technical setup."
+}

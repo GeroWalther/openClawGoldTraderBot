@@ -34,8 +34,10 @@ NEW_CRON=$(cat <<'CRONTAB'
 # M5 Scalp — every 5 min, 07-21 UTC, every day (matches backtest frequency)
 2-59/5 7-21 * * *  /opt/gold-trader/cron/scan_scalp.sh >> /opt/gold-trader/journal/cron.log 2>&1
 
-# NY ORB — every 5 min, 13-16 UTC, Mon-Fri (NY open window: 9:30-12:00 ET)
-3-59/5 13-16 * * 1-5  /opt/gold-trader/cron/scan_ny_orb.sh >> /opt/gold-trader/journal/cron.log 2>&1
+# NY ORB — every 5 min, 13:48-16:58 UTC, Mon-Fri
+# Starts at 13:48 so the 15-min opening range (13:30-13:45 EDT) has closed
+48,53,58 13 * * 1-5  /opt/gold-trader/cron/scan_ny_orb.sh >> /opt/gold-trader/journal/cron.log 2>&1
+3-59/5 14-16 * * 1-5  /opt/gold-trader/cron/scan_ny_orb.sh >> /opt/gold-trader/journal/cron.log 2>&1
 
 # Trade monitor — every 5min during market hours, every day (active risk management)
 */5 7-21 * * *  /opt/gold-trader/cron/monitor.sh >> /opt/gold-trader/journal/cron.log 2>&1

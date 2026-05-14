@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "BTCUSD",
+  "order_type": "LIMIT",
+  "entry_price": 75250.00,
+  "stop_loss": 74050.00,
+  "take_profit": 78384.00,
+  "stop_distance": 1200.00,
+  "limit_distance": 3134.00,
+  "risk_reward": 2.61,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "BTCUSD regime = trending_up with HIGH confidence, cleanest structure of all five instruments. Re-verified H1 at 15:22 UTC: price 75493, EMA20 75138, RSI 57.84. Current H1 bar completed a genuine EMA bounce — dipped to 74738 (well below EMA), reclaimed with a strong reversal back to 75493 above EMA. D1 uptrend intact (price 15% above D1 50-bar open, above D1 EMA 74504). H4 higher-highs/lows structure still valid. Entry at 75250 (top of pullback zone) on any retest. SL 74050 placed below M15 50-bar swing low 74139 with ~89pt buffer — meets $1200 non-negotiable minimum. TP 78384 is next identified resistance from regime. Skipped trade #6 earlier had only 1.57 R:R at market; this limit entry achieves 2.61.",
+  "invalidation": "H1 close below 74050 kills thesis. Cancel if not filled within 4h — momentum may continue without pullback.",
+  "pine_verification": null,
+  "strategy": "ai_pullback_to_ema"
+}

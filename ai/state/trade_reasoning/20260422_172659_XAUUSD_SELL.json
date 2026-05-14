@@ -1,0 +1,17 @@
+{
+  "action": "SELL",
+  "instrument": "XAUUSD",
+  "order_type": "LIMIT",
+  "entry_price": 4741.00,
+  "stop_loss": 4776.00,
+  "take_profit": 4668.00,
+  "stop_distance": 35.00,
+  "limit_distance": 73.00,
+  "risk_reward": 2.09,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "XAUUSD regime trending_down with HIGH confidence; playbook explicitly calls for selling rallies to H1 EMA zone (~4739) or supply cluster 4760-4772 — setup aligns perfectly. Verified 17:24 UTC: price 4735.97, H1 EMA20 4740.70, H1 RSI 43.15 (bearish, not exhausted). Live H1 bar tagged entry zone at 4739.64 and is rejecting back (open 4728.62, high 4739.64, current 4735.97) — classic rally-to-EMA rejection in progress. Prior H1 bars show lower highs (4760.99 → 4740.40 → 4735.04 → 4739.64) confirming supply cluster active. D1 engulf bar yesterday (open 4825 close 4720) + price below all EMAs across D1/H4/H1 sustain the short thesis. Entry 4741 placed just above EMA (4740.70) to catch a potential second tag; fill requires +5pt rally from current. SL 4776 sits 3.61pt above M15 session high 4772.39 (~0.23× H1 ATR buffer), above both swing structure and supply cluster top — avoids the scanner's paper-thin 0.61pt buffer that would get whipsawed. Target 4668 is first regime support level, clear air between here and there. Stop distance 35 = 2.19× H1 ATR (within 3× ceiling, above $25 minimum). R:R 2.09 — just clears 1:2 gate. Conviction MEDIUM: multi-TF alignment + clean regime match + RSI bearish, but bar not yet closed as confirmed rejection and RSI not extreme.",
+  "invalidation": "H1 close clearly above 4760 kills short thesis (would breach supply cluster base). Cancel limit if not filled within 4 hours or if price breaks above 4755 without filling.",
+  "pine_verification": null,
+  "strategy": "ai_pullback_to_ema"
+}

@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Entry zone already tagged and rejected within the live H1 bar (09:00 UTC): high 4580.75 hit the EMA20 at 4580.985 (top of 4574-4582 zone) and was rejected to 4563.765 currently — price now $11-18 BELOW the entry zone. Setup-already-invalidated per setup_played_out_vs_pending_taxonomy insight. Market entry at 4563.76 with SL 4610 / TP 4500 yields R:R 1.38 (46.2pt stop vs 63.8pt target), fails mandatory 1:2. A limit at 4574 would require a counter-trend bounce against fresh rejection with H1 RSI at 33.05 (flush mode), zero momentum support. Regime playbook explicitly warns 'do not chase into lows' — selling 4563 with RSI 33 violates that, and the rally that the setup needed to fade has already happened and been sold. Wait for a fresh rally to H1 EMA (now 4581) or H4 EMA (~4605) with a closed M15 bearish rejection candle to re-trigger.",
+  "re_verification": "Verified XAUUSD H1 at 09:39 UTC. Live H1 bar: O 4573.41, H 4580.75, L 4562.60, C 4563.76. EMA20 4580.99, RSI 33.05. Entry zone 4574-4582 tagged at 4580.75 and decisively rejected. Setup played out."
+}

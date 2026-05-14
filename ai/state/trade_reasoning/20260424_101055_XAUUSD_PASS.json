@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Directional thesis valid — H1 lower-high sequence (4711→4697), bearish engulfing close at 4682.33 below EMA20 4686.17 confirmed, H1 RSI 43.78 supports short. However, R:R math fails once honest S/R targets are used. Scanner's TP 4630 sits below BOTH regime-documented supports (4658 and 4640). The recent swing low 4658.03 was tested and bounced $30 within the last 6 hours — shorting into a proven support with TP below it is low-probability. Targeting nearest real S/R at 4658 gives RR only ~1.08 from a 4686 limit (fails 1:2). Target at 4640 gives RR ~1.77 (still fails). Market entry at current 4683.80 with scanner's SL/TP gives only 1.91 RR — fails 1:2 gate. Per rule #10, no 'guess' target below documented levels. H1 is range-bound 4658-4711; this is a range short from top, and honest range-target math doesn't clear 1:2.",
+  "re_verification": "Checked XAUUSD H1 at 10:09 UTC. Price 4683.80, below entry zone 4685-4692. H1 EMA20 4686.17, H1 RSI 43.78. Confirmation bar (09:00 UTC) closed at 4682.33 with rejection wick to 4696.76 — setup did print but price has already moved past the optimal entry and R:R to real S/R fails 1:2."
+}

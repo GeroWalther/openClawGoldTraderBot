@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "Multiple hard-stops. (1) Regime classifies AUDUSD as ranging and explicitly places it in instruments_avoid — only BTCUSD is in play. (2) Scanner's own status is 'WATCH — needs confirmation candle' with confidence 'low' and its own reasoning says 'DO NOT enter yet'. (3) Verified H1 state at 13:09 UTC: price 0.71576, EMA20 0.71563, RSI 48.97 — still below 50, no momentum reversal. Current H1 bar is mildly bearish (open 0.71586, close 0.71576) with upper-wick rejection at 0.71634. (4) Price is mid-range between 0.7116 support and 0.7222 resistance; regime playbook only permits fade entries at extremes, not mid-range pullbacks. (5) Required trigger (H1/M15 bullish close > 0.71580 with RSI > 50) has not printed. Trading a low-confidence, unconfirmed pullback in an avoided ranging regime with a $140 account is exactly the kind of trade the discipline rules exclude.",
+  "re_verification": "Chart switched to AUDUSD H1 at 13:09 UTC. EMA20=0.71563, RSI=48.97, price=0.71576. Last 5 H1 bars oscillating 0.71464–0.71646 around EMA with no directional break. Confirmation trigger still absent."
+}

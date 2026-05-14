@@ -1,0 +1,46 @@
+//@version=5
+indicator("Krabbe: Divergence Check (RSI+MACD)", overlay=false)
+
+// AI injects this to verify claimed divergence quantitatively.
+// Outputs clear labels on the chart: "BULL DIV", "BEAR DIV", or nothing.
+
+rsi_len = input.int(14, "RSI Length")
+macd_fast = input.int(12, "MACD Fast")
+macd_slow = input.int(26, "MACD Slow")
+macd_signal = input.int(9, "MACD Signal")
+lookback = input.int(30, "Lookback bars")
+
+rsi = ta.rsi(close, rsi_len)
+[macdLine, signalLine, _] = ta.macd(close, macd_fast, macd_slow, macd_signal)
+
+// Detect swing highs/lows in price over lookback
+priceHighIdx = ta.highestbars(high, lookback)
+priceLowIdx = ta.lowestbars(low, lookback)
+
+// Bullish divergence: price lower low, RSI higher low
+priceLL = low < ta.lowest(low[1], lookback - 1)
+rsiHL = rsi > ta.lowest(rsi[1], lookback - 1)
+bullDiv = priceLL and rsiHL and rsi < 40
+
+// Bearish divergence: price higher high, RSI lower high
+priceHH = high > ta.highest(high[1], lookback - 1)
+rsiLH = rsi < ta.highest(rsi[1], lookback - 1)
+bearDiv = priceHH and rsiLH and rsi > 60
+
+plot(rsi, "RSI", color.purple)
+hline(30, "Oversold", color.green)
+hline(70, "Overbought", color.red)
+hline(50, "Mid", color.gray)
+
+plotshape(bullDiv, "Bull Div", shape.labelup, location.bottom, color.green, text="BULL DIV", textcolor=color.white)
+plotshape(bearDiv, "Bear Div", shape.labeldown, location.top, color.red, text="BEAR DIV", textcolor=color.white)
+
+// Output last detection for AI to read
+var table infoTable = table.new(position.top_right, 2, 3, bgcolor=color.new(color.black, 80))
+if barstate.islast
+    table.cell(infoTable, 0, 0, "RSI", text_color=color.white)
+    table.cell(infoTable, 1, 0, str.tostring(rsi, "#.##"), text_color=color.yellow)
+    table.cell(infoTable, 0, 1, "Bull Div", text_color=color.white)
+    table.cell(infoTable, 1, 1, bullDiv ? "YES" : "no", text_color=bullDiv ? color.lime : color.gray)
+    table.cell(infoTable, 0, 2, "Bear Div", text_color=color.white)
+    table.cell(infoTable, 1, 2, bearDiv ? "YES" : "no", text_color=bearDiv ? color.red : color.gray)

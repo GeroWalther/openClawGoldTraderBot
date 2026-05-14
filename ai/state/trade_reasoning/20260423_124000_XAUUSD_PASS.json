@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Hard-stop via ranging_regime_mid_level_skip insight. Regime explicitly tags XAUUSD as ranging with documented resistance zone at 4798-4891, not 4731. Price 4736.49 is dead mid-range — regime playbook says 'skip mid-range' verbatim. Scanner's claim that H4 EMA 4731 constitutes resistance conflicts with regime's defined extremes. Additionally, setup requires a bearish rejection candle that has NOT fired: live M15 bar at 12:30 UTC is still green (open 4733.20 → high 4741.44 → current 4736.49), and the last 10 M15 bars are net +50 points with RSI 69.96 and rising — this is an active rally, not a reversal. Shorting into unconfirmed momentum at a non-regime level = two hard-stop violations. Fourth consecutive XAUUSD PASS today on variations of the same thesis (entries #18-21) — pair is structurally not offering a valid setup. Wait for price to reach genuine 4798-4891 resistance OR for clear H4 break below 4684 support before re-engaging.",
+  "re_verification": "Checked M15 at 12:38 UTC. Price 4736.49, M15 EMA20 4718.06, M15 RSI 69.96 (rising). Current bar still green with higher high at 4741.44 — no rejection candle. Price is mid-range per regime's 4668/4891 bounds."
+}

@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "No M15 bullish confirmation — price at 0.71664 is 32 pips below H1 EMA (0.71711) and 32 pips below M15 EMA (0.71696). M15 RSI at 42.30 shows active bearish momentum, not recovery. The prior M15 bar (15:45 UTC) was a sharp selloff from 0.71706 to 0.71612 low, closing at 0.71627 — new session low. Current M15 bar (15:00 UTC) is recovering slightly to 0.71664 but remains well below both EMAs. H1 shows 6 consecutive bars of lower closes since the 0.71884 high (0.71884→0.71833→0.71747→0.71692→0.71672→0.71736→0.71723→0.71723→0.71627) — this is an active downtrend on H1, not a pullback that has found support. The scanner's key level of 0.7164 (H4 EMA) was just breached with the M15 bar printing a low of 0.71610 — invalidation zone tested. No reversal candle has formed. This is the 6th AUDUSD evaluation today — same persistent pattern of price failing to reclaim H1 EMA and making lower lows. Wait for a confirmed M15 close above M15 EMA with RSI >50 before reconsidering.",
+  "re_verification": "Checked H1 and M15 at 15:06 UTC. H1 EMA 0.71711, RSI 48.49. M15 EMA 0.71696, RSI 42.30. Price 0.71664 below both EMAs. Session low 0.71610 breached the scanner's key support level of 0.7164."
+}

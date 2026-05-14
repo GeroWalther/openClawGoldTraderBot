@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Three independent disqualifiers: (1) Regime explicitly classifies XAUUSD as volatile_choppy and places it in instruments_avoid — playbook is 'SIT ON HANDS.' Scanner claims 'D1 uptrend intact' but regime says post-ATH whipsaw with 1320-point D1 range and no clean directional edge. (2) R:R fails from current price — price at 4819.14, stop at 4787 = 32.14 pts risk, target 4871 = 51.86 pts reward, R:R = 1.61:1, well below 2:1 minimum. The favorable 4812 entry was the 10:00 bar low — that dip already happened and price has moved away. (3) H1 structure shows lower highs over the last 6 bars: 4838 → 4831 → 4830 → 4822 → 4818 — this is a descending pattern, not a clean uptrend pullback to EMA. The 10:00 UTC bullish candle (4805→4817) is a bounce within a decline, not a trend continuation signal. Current 11:00 bar is range-bound 4815-4820 with no momentum follow-through. This is the 4th XAUUSD setup evaluated in 2 days — all correctly passed for similar reasons.",
+  "re_verification": "Checked H1 at 11:38 UTC. Price 4819.14, EMA 4818.41, RSI 52.21. Last 6 H1 bars confirm lower-high sequence. Regime conflict and sub-2:1 R:R both independently disqualify."
+}

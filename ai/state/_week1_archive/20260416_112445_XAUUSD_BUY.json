@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "XAUUSD",
+  "order_type": "LIMIT",
+  "entry_price": 4818.00,
+  "stop_loss": 4800.00,
+  "take_profit": 4871.00,
+  "stop_distance": 18.00,
+  "limit_distance": 53.00,
+  "risk_reward": 2.94,
+  "conviction": "HIGH",
+  "hold_style": "intraday",
+  "reasoning": "H1 pullback to EMA (4818.03) in confirmed D1 uptrend. Last completed H1 bar (10:00 UTC) bounced from 4805.17 low to close 4817.49 — textbook bullish momentum candle recovering the entire prior sell-off. M15 confirms: large reversal bar at 10:30 UTC (4806.77→4817.49), followed by two bars holding above M15 EMA (4814.6) with price now at 4818.13 reclaiming H1 EMA. RSI neutral at 51.3 (H1) and 51.7 (M15) — healthy pullback, no exhaustion. Multiple swing lows cluster at 4805-4807 providing structural stop zone. 4800 round number stop gives 5pt buffer below the cluster. Target 4871 is next key resistance with clear air. London session active, NY overlap approaching — optimal gold liquidity window.",
+  "invalidation": "H1 close below 4805 kills the bounce thesis. Cancel limit if not filled within 3 hours or if price breaks below 4810 before fill.",
+  "pine_verification": "N/A — verified via raw OHLCV and indicator values. Bounce from 4805 support cluster confirmed across 4 M15 bars and 3 H1 bars.",
+  "strategy": "ai_pullback"
+}

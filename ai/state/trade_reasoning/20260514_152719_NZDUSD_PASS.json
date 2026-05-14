@@ -1,0 +1,5 @@
+{
+  "action": "PASS",
+  "instrument": "NZDUSD",
+  "reasoning": "Price at 0.5918 has broken below the 0.5919 range support; no M15 bullish reversal close above 0.5922 has formed, so the conditional entry trigger is not active and the setup is making fresh lower lows."
+}

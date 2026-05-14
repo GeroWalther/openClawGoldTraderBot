@@ -74,6 +74,15 @@ class Backtester:
                 start_date, end_date,
             )
 
+        # Realistic M5 scalp: matches live execution (spread, ratchet, no partial TP, EOD close)
+        if strategy == "m5_scalp_realistic":
+            return self._run_m5_scalp_realistic(
+                instrument_key, instrument, period,
+                initial_balance, risk_percent,
+                session_filter, max_trades,
+                start_date, end_date,
+            )
+
         # Intraday strategies use H1+M15 data with S/R-based SL/TP
         if strategy.startswith("intraday_"):
             return self._run_intraday_backtest(
@@ -161,12 +170,12 @@ class Backtester:
         # Generate M5 scalp signals
         signals = self._m5_scalp_signals(m5_df, h1_df)
 
-        # Simulate with M5 ATR multipliers: SL 1.0×, runner mode (trail at 1R behind peak)
+        # Simulate with H1 ATR-based SL: 2.5× H1 ATR, runner mode (trail at 1R behind peak)
         trades, equity_curve = self._simulate(
             m5_df, signals, instrument,
             initial_balance=initial_balance,
             risk_percent=risk_percent,
-            atr_sl_mult=1.0,   # Tighter SL for scalps
+            atr_sl_mult=2.5,   # H1 ATR-based SL (signals carry h1_atr)
             atr_tp_mult=2.0,   # Fallback if runner=False
             session_filter=session_filter,
             partial_tp=True,   # Close half at 1R
@@ -177,6 +186,74 @@ class Backtester:
 
         return self._compile_results(
             instrument_key, "m5_scalp", period,
+            initial_balance, trades, equity_curve,
+        )
+
+    def _run_m5_scalp_realistic(
+        self,
+        instrument_key: str,
+        instrument: InstrumentSpec,
+        period: str,
+        initial_balance: float,
+        risk_percent: float,
+        session_filter: bool,
+        max_trades: int | None,
+        start_date: str | None,
+        end_date: str | None,
+        spread_pips: float = 1.5,
+        m5_data: pd.DataFrame | None = None,
+        h1_data: pd.DataFrame | None = None,
+    ) -> dict:
+        """Realistic M5 scalp backtest matching live execution conditions.
+
+        Key differences from the original backtest:
+        - Spread cost applied on entry (ask for BUY, bid for SELL)
+        - No partial TP — full position rides until ratchet SL or EOD
+        - Discrete ratchet SL levels (0.5R@1R, +0.7R per level) instead of continuous trail
+        - Friday close at 20:55 UTC
+        - One trade at a time (no re-entry until position fully closed)
+        - Position sizing with 1000-unit rounding and min_size=1000
+
+        If m5_data/h1_data are provided, uses those instead of yfinance.
+        """
+        from app.services.indicators import compute_indicators, compute_scalp_indicators
+
+        if m5_data is not None:
+            m5_df = m5_data.copy()
+        else:
+            m5_df = self._fetch_data(
+                instrument, period, start_date=start_date, end_date=end_date, interval="5m",
+            )
+        if m5_df is None or len(m5_df) < 60:
+            return {"error": f"Insufficient M5 data for {instrument_key} ({period})"}
+
+        if h1_data is not None:
+            h1_df = h1_data.copy()
+        else:
+            h1_df = self._fetch_data(instrument, "1mo", interval="1h")
+        if h1_df is None or len(h1_df) < 20:
+            return {"error": f"Insufficient H1 data for {instrument_key}"}
+
+        compute_indicators(m5_df)
+        compute_scalp_indicators(m5_df)
+        compute_indicators(h1_df)
+
+        fx_map = self._fetch_fx_series(instrument, period, start_date, end_date)
+
+        signals = self._m5_scalp_signals(m5_df, h1_df)
+
+        trades, equity_curve = self._simulate_realistic(
+            m5_df, signals, instrument,
+            initial_balance=initial_balance,
+            risk_percent=risk_percent,
+            atr_sl_mult=2.5,
+            max_trades=max_trades,
+            fx_map=fx_map,
+            spread_pips=spread_pips,
+        )
+
+        return self._compile_results(
+            instrument_key, "m5_scalp_realistic", period,
             initial_balance, trades, equity_curve,
         )
 
@@ -237,12 +314,15 @@ class Backtester:
 
             conviction = result["conviction"] or "MEDIUM"
 
+            # Include H1 ATR for structure-based SL sizing
+            _h1_atr = h1_row.get("atr") if hasattr(h1_row, "get") else None
             signals.append({
                 "index": i,
                 "direction": direction,
                 "conviction": conviction,
                 "price": row["close"],
                 "atr": row["atr"],
+                "h1_atr": _h1_atr if _h1_atr is not None and not pd.isna(_h1_atr) else None,
                 "score": result["total_score"],
             })
 
@@ -916,6 +996,10 @@ class Backtester:
             if pd.isna(atr) or atr is None or atr <= 0:
                 continue
 
+            # Use H1 ATR for SL if available (structure-based stop)
+            h1_atr = signal.get("h1_atr")
+            sl_atr = h1_atr if h1_atr is not None and h1_atr > 0 else atr
+
             # Session filter: skip weekends for instruments with sessions
             if session_filter and instrument.trading_sessions:
                 dt = df.iloc[idx]["date"]
@@ -923,7 +1007,7 @@ class Backtester:
                     continue
 
             # Calculate SL/TP
-            sl_dist = max(atr * atr_sl_mult, instrument.min_stop_distance)
+            sl_dist = max(sl_atr * atr_sl_mult, instrument.min_stop_distance)
             sl_dist = min(sl_dist, instrument.max_stop_distance)
             tp_dist = atr * atr_tp_mult
             tp_dist = max(tp_dist, sl_dist)  # minimum 1:1
@@ -1097,6 +1181,237 @@ class Backtester:
                 exit_price=round(exit_price, 4),
                 sl_price=round(sl_price, 4),
                 tp_price=round(tp_price, 4),
+                size=size,
+                pnl=round(pnl, 2),
+                conviction=conviction,
+                exit_reason=exit_reason,
+            ))
+
+            equity_curve.append({
+                "date": exit_date.isoformat() if hasattr(exit_date, "isoformat") else str(exit_date),
+                "equity": round(balance, 2),
+            })
+
+        return trades, equity_curve
+
+    def _simulate_realistic(
+        self,
+        df: pd.DataFrame,
+        signals: list[dict],
+        instrument: InstrumentSpec,
+        initial_balance: float,
+        risk_percent: float,
+        atr_sl_mult: float,
+        max_trades: int | None = None,
+        fx_map: dict[object, float] | None = None,
+        spread_pips: float = 1.5,
+    ) -> tuple[list[BacktestTrade], list[dict]]:
+        """Simulate M5 scalp trades matching live execution conditions exactly.
+
+        Matches: scan_scalp.sh → trade_executor.py → monitor.sh ratchet → eod_close.sh
+        """
+        import math
+
+        balance = initial_balance
+        trades: list[BacktestTrade] = []
+        equity_curve = [{"date": df.iloc[0]["date"].isoformat() if hasattr(df.iloc[0]["date"], "isoformat") else str(df.iloc[0]["date"]), "equity": balance}]
+
+        in_position = False
+        cooldown_until = -1
+        consecutive_losses = 0
+        daily_trades: dict[str, int] = {}
+
+        # Spread in price units (e.g., 1.5 pips = 0.00015 for 5-digit FX)
+        spread = spread_pips * (instrument.tick_size * 10)  # tick_size=0.00005, *10=0.0005=1pip, *spread_pips
+
+        _fx_fallback = list(fx_map.values())[-1] if fx_map else 1.0
+
+        def _get_fx(bar_date) -> float:
+            if fx_map is None:
+                return 1.0
+            date_key = bar_date.date() if hasattr(bar_date, "date") else bar_date
+            return fx_map.get(date_key, _fx_fallback)
+
+        def _calc_ratchet_lock(level: int) -> float:
+            """Match monitor.sh calc_lock exactly."""
+            if level <= 0:
+                return 0.0
+            if level == 1:
+                return 0.5
+            return 0.5 + (level - 1) * 0.7
+
+        def _is_friday_close(bar_date) -> bool:
+            """Check if bar is Friday at/past 20:55 UTC (weekend close)."""
+            if not hasattr(bar_date, "hour"):
+                return False
+            dt = bar_date
+            if dt.tzinfo is not None:
+                dt = dt.astimezone(datetime.now(timezone.utc).tzinfo)
+            if dt.weekday() != 4:  # Not Friday
+                return False
+            return dt.hour >= 21 or (dt.hour == 20 and dt.minute >= 55)
+
+        for signal in signals:
+            if max_trades is not None and len(trades) >= max_trades:
+                break
+
+            idx = signal["index"]
+            if idx >= len(df) - 1:
+                continue
+
+            if in_position:
+                continue
+
+            if idx < cooldown_until:
+                continue
+
+            date_key = str(df.iloc[idx]["date"])[:10]
+            if daily_trades.get(date_key, 0) >= 5:
+                continue
+
+            atr = signal.get("atr")
+            if pd.isna(atr) or atr is None or atr <= 0:
+                continue
+
+            # Session filter: skip outside 07-21 UTC (matching cron schedule)
+            dt = df.iloc[idx]["date"]
+            if hasattr(dt, "hour"):
+                dt_check = dt
+                if dt_check.tzinfo is not None:
+                    dt_check = dt_check.astimezone(datetime.now(timezone.utc).tzinfo)
+                if dt_check.hour < 7 or dt_check.hour >= 21:
+                    continue
+                if dt_check.weekday() >= 5:
+                    continue
+
+            # SL distance: H1 ATR × 2.5 (matching live common.sh)
+            h1_atr = signal.get("h1_atr")
+            sl_atr = h1_atr if h1_atr is not None and h1_atr > 0 else atr
+            sl_dist = max(sl_atr * atr_sl_mult, instrument.min_stop_distance)
+            sl_dist = min(sl_dist, instrument.max_stop_distance)
+
+            # Entry price with spread (live fills at ask for BUY, bid for SELL)
+            raw_price = signal["price"]
+            direction = signal["direction"]
+            if direction == "BUY":
+                entry_price = raw_price + spread / 2  # ask = mid + half spread
+            else:
+                entry_price = raw_price - spread / 2  # bid = mid - half spread
+
+            # Spread-to-SL ratio check (matching trade_executor max 40%)
+            if spread / sl_dist > 0.40:
+                continue
+
+            # SL price
+            if direction == "BUY":
+                sl_price = entry_price - sl_dist
+            else:
+                sl_price = entry_price + sl_dist
+
+            # Position sizing: match live (1000-unit rounding, min 1000)
+            conviction = signal.get("conviction", "MEDIUM")
+            risk_pct = risk_percent  # Flat 3% for all convictions (live config)
+            risk_amount = balance * (risk_pct / 100)
+            entry_fx = _get_fx(df.iloc[idx]["date"])
+            sl_dist_usd = sl_dist * entry_fx * instrument.multiplier
+            raw_size = risk_amount / sl_dist_usd if sl_dist_usd > 0 else 0
+
+            if instrument.sec_type == "CASH":
+                size = max(round(raw_size / 1000) * 1000, instrument.min_size)
+            else:
+                size = max(round(raw_size, 1), 0.1)
+
+            # Cap to max position size (live uses MAX_POSITION_SIZE=1000 for testing)
+            size = min(size, 1000)
+
+            # Simulate trade bar-by-bar
+            in_position = True
+            exit_price = None
+            exit_reason = "end_of_data"
+            exit_idx = len(df) - 1
+            last_ratchet_level = 0
+
+            for j in range(idx + 1, len(df)):
+                bar = df.iloc[j]
+                bar_date = bar.get("date")
+
+                # Friday close at 20:55 UTC (avoid weekend gap)
+                if _is_friday_close(bar_date):
+                    if direction == "BUY":
+                        exit_price = bar["close"] - spread / 2
+                    else:
+                        exit_price = bar["close"] + spread / 2
+                    exit_reason = "friday_close"
+                    exit_idx = j
+                    break
+
+                if direction == "BUY":
+                    # Check SL hit
+                    if bar["low"] <= sl_price:
+                        exit_price = sl_price
+                        exit_reason = "ratchet_sl" if last_ratchet_level >= 1 else "sl"
+                        exit_idx = j
+                        break
+
+                    # Ratchet: check profit in R-multiples, move SL at integer levels
+                    current_profit_r = (bar["high"] - entry_price) / sl_dist
+                    new_level = max(0, int(math.floor(current_profit_r)))
+                    if new_level > last_ratchet_level and new_level >= 1:
+                        lock_r = _calc_ratchet_lock(new_level)
+                        new_sl = entry_price + lock_r * sl_dist
+                        if new_sl > sl_price:
+                            sl_price = new_sl
+                            last_ratchet_level = new_level
+
+                else:  # SELL
+                    if bar["high"] >= sl_price:
+                        exit_price = sl_price
+                        exit_reason = "ratchet_sl" if last_ratchet_level >= 1 else "sl"
+                        exit_idx = j
+                        break
+
+                    current_profit_r = (entry_price - bar["low"]) / sl_dist
+                    new_level = max(0, int(math.floor(current_profit_r)))
+                    if new_level > last_ratchet_level and new_level >= 1:
+                        lock_r = _calc_ratchet_lock(new_level)
+                        new_sl = entry_price - lock_r * sl_dist
+                        if new_sl < sl_price:
+                            sl_price = new_sl
+                            last_ratchet_level = new_level
+
+            if exit_price is None:
+                exit_price = df.iloc[exit_idx]["close"]
+
+            # P&L: full position, no partial TP
+            exit_fx = _get_fx(df.iloc[exit_idx]["date"])
+            if direction == "BUY":
+                pnl = (exit_price - entry_price) * size * instrument.multiplier * exit_fx
+            else:
+                pnl = (entry_price - exit_price) * size * instrument.multiplier * exit_fx
+
+            balance += pnl
+            in_position = False
+
+            daily_trades[date_key] = daily_trades.get(date_key, 0) + 1
+
+            # Cooldown after consecutive losses (matching live risk manager)
+            if pnl < 0:
+                consecutive_losses += 1
+                if consecutive_losses >= 2:
+                    cooldown_bars = 2 * (2 ** (consecutive_losses - 2))
+                    cooldown_until = exit_idx + cooldown_bars
+            else:
+                consecutive_losses = 0
+
+            exit_date = df.iloc[exit_idx]["date"]
+            trades.append(BacktestTrade(
+                entry_date=df.iloc[idx]["date"].isoformat() if hasattr(df.iloc[idx]["date"], "isoformat") else str(df.iloc[idx]["date"]),
+                exit_date=exit_date.isoformat() if hasattr(exit_date, "isoformat") else str(exit_date),
+                direction=direction,
+                entry_price=round(entry_price, 5),
+                exit_price=round(exit_price, 5),
+                sl_price=round(sl_price, 5),
+                tp_price=0.0,  # No TP in realistic mode
                 size=size,
                 pnl=round(pnl, 2),
                 conviction=conviction,

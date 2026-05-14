@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "NZDUSD",
+  "reasoning": "10th stacked NZDUSD range_extreme_fade BUY scan today (journals #121, #122, #124-#132 all SKIPPED on same basis). Multiple stacked hard-stops fire deterministically: (1) SCANNER SELF-RATED LOW CONFIDENCE — system rule explicitly mandates PASS on low conviction, full stop. (2) RSI<50 INVALIDATION per rsi_below_50_invalidates_pullback_long — H1 RSI 38.81 per scanner is well below 50 threshold and consistent with the persistent sub-40 readings seen all session (39.68 → 36.79 → 34.93 → 32.66); momentum still in flush mode, no valid bounce thesis. (3) DUPLICATE per chronic-leak pattern — identical setup re-scanned 10 times today without confirmation trigger ever firing. (4) THIN LIQUIDITY WARNING — scanner itself flags wider spreads on this pair; on a $299 account this materially worsens fill economics. (5) ACCOUNT IS AT $299.92 (DOWN FROM $300 START) — no positions open, drawdown small, but no reason to chase a low-conviction setup that has failed to trigger across a full trading session.",
+  "re_verification": "Auto-PASS without MCP verification per chronic-leak pattern established earlier today (9 prior identical scans). Scanner-flagged confidence='low' is itself a deterministic hard-stop; no further verification can elevate this."
+}

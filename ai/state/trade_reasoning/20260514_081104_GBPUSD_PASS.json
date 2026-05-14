@@ -1,0 +1,5 @@
+{
+  "action": "PASS",
+  "instrument": "GBPUSD",
+  "reasoning": "Price at 1.35085 is 14+ pips below the 1.3522-1.3526 entry zone — bounce/rejection trigger has not occurred, and a market sell here with a structural SL above 1.3540 yields only ~1.9 R:R to 1.3450 target."
+}

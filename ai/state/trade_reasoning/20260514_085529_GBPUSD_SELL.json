@@ -1,0 +1,16 @@
+{
+  "action": "SELL",
+  "instrument": "GBPUSD",
+  "order_type": "MARKET",
+  "entry_price": 1.35172,
+  "stop_loss": 1.35400,
+  "take_profit": 1.34200,
+  "stop_distance": 0.00228,
+  "limit_distance": 0.00972,
+  "risk_reward": 4.26,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "GBPUSD H1 sell rally into EMA confirmed. Price 1.35172 in entry zone 1.3515-1.3522, sitting just below H1 EMA 1.35198 which rejected last bar (high 1.35209). Prior bar bearish marubozu (open 1.35274 close 1.35060) confirming rejection from 1.35330 lower-high cluster. RSI 46.63 bearish-aligned. D1 five consecutive lower closes intact. SL 1.35400 above lower-high cluster (22.8 pips, just above 20-pip minimum). TP 1.34200 at D1 support, 97 pips away.",
+  "invalidation": "H1 close above 1.35400 invalidates lower-high structure.",
+  "strategy": "ai_lower_high_entry"
+}

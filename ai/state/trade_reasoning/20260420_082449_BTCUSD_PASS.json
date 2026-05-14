@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "Setup deteriorated since scanner ran. H1 RSI dropped from 50.54 to 49.23 (now below 50 — no bullish momentum confirmation). Prior H1 bar printed a strong rejection wick: high 75,590 → close 74,846, a ~744 point rejection (nearly 2x H1 ATR) showing aggressive supply overhead right above current price. Current bar is neutral consolidation, not continuation. Medium-conviction pullback-bounce setup that required momentum confirmation now lacks it. Buying into proven supply with weakening RSI is low-edge. Account size $140 also makes BTC position sizing marginal at a proper 1200+ SL buffer.",
+  "re_verification": "Checked BTCUSD H1 at 08:23 UTC. Last price 74,904, RSI 49.23, H1 EMA 74,689. Rejection wick from 75,590 on prior bar invalidates the momentum-continuation thesis. Would re-engage only on a clean H1 close above 75,100 with RSI > 55, or a deeper pullback to 74,150 area with a new bullish reversal bar."
+}

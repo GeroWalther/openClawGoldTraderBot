@@ -121,28 +121,28 @@ async def test_conviction_high_full_risk(settings):
 
 @pytest.mark.asyncio
 async def test_conviction_medium_reduced_risk(settings):
-    """MEDIUM conviction uses 2.25% risk."""
+    """MEDIUM conviction uses 3.0% risk (aggressive flat sizing)."""
     sizer = PositionSizer(settings)
     instrument = get_instrument("XAUUSD")
     size = await sizer.calculate(
         account_balance=10000, stop_distance=50,
         instrument=instrument, conviction="MEDIUM",
     )
-    # 2.25% of 10000 = 225 / 50 = 4.5 → rounds to 4 (banker's rounding)
-    assert size == 4.0
+    # 3.0% of 10000 = 300 / 50 = 6
+    assert size == 6.0
 
 
 @pytest.mark.asyncio
 async def test_conviction_low_reduced_risk(settings):
-    """LOW conviction uses 1.5% risk."""
+    """LOW conviction uses 3.0% risk (aggressive flat sizing)."""
     sizer = PositionSizer(settings)
     instrument = get_instrument("XAUUSD")
     size = await sizer.calculate(
         account_balance=10000, stop_distance=50,
         instrument=instrument, conviction="LOW",
     )
-    # 1.5% of 10000 = 150 / 50 = 3
-    assert size == 3.0
+    # 3.0% of 10000 = 300 / 50 = 6
+    assert size == 6.0
 
 
 @pytest.mark.asyncio
@@ -187,7 +187,8 @@ async def test_conviction_with_larger_balance(settings):
         instrument=instrument, conviction="LOW",
     )
 
-    # HIGH: 3.0% of 50000 = 1500 / 100 = 15 → capped at 10
-    # LOW: 1.5% of 50000 = 750 / 100 = 7.5 → rounds to 8
+    # HIGH: 3.0% of 50000 = 1500 / 100 = 15 → capped at 10 (max_size)
+    # LOW: 3.0% of 50000 = 1500 / 100 = 15 → capped at 10 (max_size)
+    # With flat 3% risk, both are identical
     assert size_high == 10.0
-    assert size_low == 8.0
+    assert size_low == 10.0

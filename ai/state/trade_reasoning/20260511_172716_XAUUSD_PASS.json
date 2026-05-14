@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "R:R FAILS MANDATORY 1:2 TO HONEST TARGET. Verified H1 at 17:26 UTC: price 4721.10, EMA20 4709.13, RSI 56.83. Scanner TP 4764 sits ABOVE today's intraday high 4748.95 which was tagged and rejected exactly 4 hours ago (13:00 H1 bar: H 4748.95 → C 4736.14, $13 upper wick on 56k volume). Per scanner_tp_must_clear_proven_intraday_support, honest nearest TP is 4748. Math: best-case limit at 4710 (zone bottom), SL 4683, honest TP 4748 = 27pt stop / 38pt target = 1.41 R:R — fails 1:2. Even with optimistic 4764 target: limit 4710 gives exactly 2.0 R:R (borderline); mid-zone 4712 gives 1.79 (fail); zone top 4714 gives 1.61 (fail); market entry 4721 gives 1.13 (chase). Setup also partially played out: prior H1 bar (16:00) wicked to 4708.01 tagging EMA, closed at 4716.49 (above EMA), live 17:00 bar extending green to 4721.10 — the EMA bounce already happened, requiring a SECOND retrace for limit fill is speculative. Journal #95 (45 min ago, 16:41 UTC) skipped identical XAUUSD BUY setup at 4719.64 on the same R:R failure — re-issuing without material change.",
+  "re_verification": "Checked H1 at 17:26 UTC. Price 4721.10 above entry zone 4710-4714. Scanner's CONDITIONAL trigger (retrace to zone) is unmet and momentum is recovering, not retracing. TP target 4764 blocked by freshly-proven 4748.95 supply."
+}

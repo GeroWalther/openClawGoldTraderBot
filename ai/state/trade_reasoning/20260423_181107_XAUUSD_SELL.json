@@ -1,0 +1,17 @@
+{
+  "action": "SELL",
+  "instrument": "XAUUSD",
+  "order_type": "LIMIT",
+  "entry_price": 4720.00,
+  "stop_loss": 4752.00,
+  "take_profit": 4640.00,
+  "stop_distance": 32.00,
+  "limit_distance": 80.00,
+  "risk_reward": 2.50,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "H1 trending_down regime confirmed across all TFs (price below D1 4752, H4 4729, H1 EMA 4718.76). Prior H1 bar was a momentum collapse (open 4733 -> low 4664 = 3x ATR, vol 132k vs avg 42k = 3.1x) — strong bearish conviction. Live H1 bar (18:00 UTC) is the dead-cat bounce: wicked to exactly 4722.24 (in entry zone, $3.5 above H1 EMA) and immediately rejected back to 4710.47. RSI H1 45.06 confirms bearish momentum, sub-50 throughout. SL 4752 sits above today's swing high cluster (4737-4743) + 8.8pt buffer (~0.26x H1 ATR 34) and at the D1 EMA — a true H1 close above this kills the entire trending_down regime. TP 4640 is regime's documented second support, below the 4664 spike low and above the 4600 long-tail support. Stop 32pt > 25pt minimum, < 3x ATR. Limit at EMA captures the textbook fade-the-rally entry per regime playbook verbatim ('Sell rallies to H1/H4 EMA zone 4718-4729').",
+  "invalidation": "Cancel limit if not filled within 4h. Cancel immediately if H1 closes above 4729 (H4 EMA reclaim) — that voids the bearish thesis before our entry triggers.",
+  "pine_verification": null,
+  "strategy": "ai_pullback_to_ema"
+}

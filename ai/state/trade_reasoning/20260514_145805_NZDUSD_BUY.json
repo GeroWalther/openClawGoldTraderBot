@@ -1,0 +1,16 @@
+{
+  "action": "BUY",
+  "instrument": "NZDUSD",
+  "order_type": "MARKET",
+  "entry_price": 0.59259,
+  "stop_loss": 0.5898,
+  "take_profit": 0.5991,
+  "stop_distance": 0.00279,
+  "limit_distance": 0.00651,
+  "risk_reward": 2.33,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "H1 range-floor fade at 0.5919 confirmed. Recent bar tagged 0.59190 swing low, M15 bullish engulfing rejected the support. Price now 0.59259, holding inside 0.5919-0.5928 BUY zone. RSI H1 40.29, price at EMA 0.59266. SL 0.5898 sits below 0.5900 psych level with 0.25x ATR buffer beneath 0.5919 structural low. TP extended to 0.5991 (range resistance upper) gives 2.33:1 R:R since first target 0.5966 alone yields only 1.44.",
+  "invalidation": "H1 close below 0.5919.",
+  "strategy": "ai_range_extreme_fade"
+}

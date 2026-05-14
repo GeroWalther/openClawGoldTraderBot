@@ -198,8 +198,19 @@ print(json.dumps({'instrument': '$p_inst', 'direction': '$p_dir'}))
         # Ratchet SL: tighten by 0.5×sl_dist each time price moves 1R in profit
         state_file="$JOURNAL_DIR/monitors/ratchet_${inst}_${direction}.json"
 
-        if [ ! -f "$state_file" ]; then
-            # First detection: create state file, no SL move yet
+        # Check if state file exists AND matches current trade's entry price
+        needs_init="yes"
+        if [ -f "$state_file" ]; then
+            stored_entry=$(python3 -c "import json; print(json.load(open('$state_file')).get('entry_price',0))" 2>/dev/null || echo "0")
+            if python3 -c "import sys; sys.exit(0 if abs(float('$stored_entry') - float('$entry')) < 1e-5 else 1)" 2>/dev/null; then
+                needs_init="no"
+            else
+                log "MONITOR $inst: Ratchet state stale (stored entry=$stored_entry, current=$entry) — reinitializing"
+            fi
+        fi
+
+        if [ "$needs_init" = "yes" ]; then
+            # First detection or stale state: create fresh state file
             log "MONITOR $inst: Ratchet init — sl_dist=$stop_dist entry=$entry"
             python3 -c "
 import json
@@ -242,12 +253,11 @@ else:
 # Ratchet level = floor of profit R (only positive)
 ratchet_level = max(0, int(math.floor(profit_r)))
 
-# Calculate new SL: 0.2R at 1R, +0.7R/level to 3R, +1.0R/level from 4R
+# Calculate new SL: 0.5R at 1R, +0.7R/level after (matches backtest)
 def calc_lock(level):
     if level <= 0: return 0.0
-    if level == 1: return 0.2
-    if level <= 3: return 0.2 + (level - 1) * 0.7
-    return 0.2 + 2 * 0.7 + (level - 3) * 1.0
+    if level == 1: return 0.5
+    return 0.5 + (level - 1) * 0.7
 
 if ratchet_level > last_level and ratchet_level >= 1:
     lock = calc_lock(ratchet_level)
@@ -268,20 +278,8 @@ if ratchet_level > last_level and ratchet_level >= 1:
         locked_r = calc_lock(last_level)
         print(f'HOLD|{current_sl:.6f}|{last_level}|{locked_r:.1f}|{profit_r:.1f}')
 elif last_level >= 1:
-    # Verify broker SL matches expected ratchet level — re-apply if drifted
-    lock = calc_lock(last_level)
-    if direction == 'BUY':
-        expected_sl = entry_price + lock * sl_dist
-        sl_drifted = current_sl < expected_sl - 1e-5
-    else:
-        expected_sl = entry_price - lock * sl_dist
-        sl_drifted = current_sl > expected_sl + 1e-5
-    if sl_drifted:
-        locked_r = calc_lock(last_level)
-        print(f'TRAIL|{expected_sl:.6f}|{last_level}|{locked_r:.1f}|{profit_r:.1f}')
-    else:
-        locked_r = calc_lock(last_level)
-        print(f'HOLD|{current_sl:.6f}|{last_level}|{locked_r:.1f}|{profit_r:.1f}')
+    locked_r = calc_lock(last_level)
+    print(f'HOLD|{current_sl:.6f}|{last_level}|{locked_r:.1f}|{profit_r:.1f}')
 else:
     print(f'HOLD|{current_sl:.6f}|{last_level}|{last_level * 0.5:.1f}|{profit_r:.1f}')
 " 2>/dev/null || echo "ERROR")

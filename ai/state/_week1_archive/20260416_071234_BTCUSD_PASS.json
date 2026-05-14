@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "No M15 bounce confirmation at H1 EMA. Price 74,940 is now BELOW M15 EMA (75,004) with M15 RSI at 50.20 — neutral/weak, no bullish momentum. Current M15 bar is bearish (O 75,055 → C 74,940), actively selling off. Current H1 bar opened at 75,055 and has dropped 110 pts with no reversal signal. H1 EMA at 74,902 is only 38 pts below — price is approaching the zone but hasn't bounced. Additionally, scanner's proposed stop at 74,650 is NOT structural: H1 swing low at 74,455 (5 bars ago) is 195 pts below that stop — a structural stop below 74,455 (~74,400) gives R:R of 2.16:1 from current price, which passes minimum but is far weaker than the scanner's claimed 4.1:1. Setup structure on H1 remains valid (tight consolidation above EMA, healthy RSI), but entry requires a confirmed M15 reversal candle above M15 EMA — not present.",
+  "re_verification": "Checked H1 + M15 at 07:11 UTC. H1 EMA 74,902, RSI 57.87. M15 EMA 75,004, RSI 50.20. Price 74,940 below M15 EMA, current bar bearish. No trigger."
+}

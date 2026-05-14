@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "Setup forming but trigger NOT confirmed. Current H1 bar (19:00 UTC) is still open and actively bearish: O 77208 → L 77052 → 77117, printing a new intraday low below prior bar's 77126 low. Price is slicing THROUGH the EMA (77060), not bouncing FROM it. Scanner's own entry trigger — bullish H1 close OR M15 recapture of 77349 — is unmet. Current bar is the 4th consecutive bearish H1 (77907→77562→77211→77117), active selling not a confirmed pullback-bounce. Target 78384 is the same freshly-rejected cycle high flagged in journal ids 54/55/56 as a statistical low-probability first retest, and here just ~3 hours old. Conditional R:R looks good on paper (~3.0 from current, higher on limit at EMA), but without a bullish reversal candle this is catching a falling knife at end-of-week. Regime is high-confidence bullish but discipline rule: no trigger = no trade. Identical rejection rationale as journal id 65 only 15 minutes ago — pattern unchanged.",
+  "re_verification": "Verified on TradingView at 19:08 UTC. H1 EMA 77,060, RSI 62.74. Current H1 bar O 77,208, L 77,052, close 77,117 — still open, still net-bearish, low pierced EMA. Prior 3 H1 closes all bearish (77,562 / 77,211 / 77,117). No M15 reclaim of 77,349."
+}

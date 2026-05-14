@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Hard-stop: regime explicitly places XAUUSD in instruments_avoid with 'sit on hands' playbook (volatile_choppy, whipsaw risk high). Regime requires H4 EMA reclaim+RSI>50 OR clean breakdown below 4668 before action — neither has occurred. Also: prior H1 bar was a +13.74pt recovery candle (low 4723.99 -> close 4737.36), not the rejection the scanner described — weakens the 'ceiling rejection' thesis. SL 4762 is only 25pts from entry = bare minimum per table with zero buffer above 4760 resistance, and recent H1 ranges include a 24.4pt bar (bar 5), so a single noise candle could stop the trade. Target 4668 requires breaking through 4715 support and the entire 15pt intraday range in a no-conviction regime — low probability. R:R 2.75 is not enough to override a clear regime veto on a choppy instrument.",
+  "re_verification": "Verified H1 at 18:38 UTC. Price 4736.92 (up from scanner's 4732.60, now inside entry zone), H1 EMA20 4740.165 still ceiling, RSI 43.67. Structurally bearish but prior H1 bar closed green reclaiming from 4723.99 — momentum is mixed, not a decisive rejection sequence."
+}

@@ -152,8 +152,10 @@ async def close_position(
         result_row = await db_session.execute(stmt)
         trade = result_row.scalar_one_or_none()
         if trade:
+            if pnl is None:
+                pnl = 0.0  # Never store None — ensures P&L always displays
             trade.status = TradeStatus.CLOSED
-            trade.pnl = pnl
+            trade.pnl = round(pnl, 2)
             trade.closed_at = datetime.now(timezone.utc)
             await db_session.commit()
 
@@ -246,18 +248,24 @@ async def modify_position(
             trade.take_profit = request.new_take_profit
         await db_session.commit()
 
-    # Telegram notification
-    notifier = TelegramNotifier(settings)
-    await notifier.send_modify_update(
-        instrument=instrument,
-        direction=request.direction,
-        old_sl=result["old_sl"],
-        old_tp=result["old_tp"],
-        new_sl=result["new_sl"],
-        new_tp=result["new_tp"],
-        entry_price=trade.entry_price if trade else None,
-        size=trade.size if trade else None,
+    # Telegram notification — skip if called from cron monitor (it sends its own)
+    is_cron_modify = request.reasoning and (
+        request.reasoning.startswith("Ratchet:")
+        or request.reasoning.startswith("Auto trail:")
+        or request.reasoning.startswith("Auto SL-to-BE:")
     )
+    if not is_cron_modify:
+        notifier = TelegramNotifier(settings)
+        await notifier.send_modify_update(
+            instrument=instrument,
+            direction=request.direction,
+            old_sl=result["old_sl"],
+            old_tp=result["old_tp"],
+            new_sl=result["new_sl"],
+            new_tp=result["new_tp"],
+            entry_price=trade.entry_price if trade else None,
+            size=trade.size if trade else None,
+        )
 
     return ModifyPositionResponse(
         status="modified",

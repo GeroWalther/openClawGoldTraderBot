@@ -1,0 +1,17 @@
+{
+  "action": "SELL",
+  "instrument": "XAUUSD",
+  "order_type": "LIMIT",
+  "entry_price": 4740.00,
+  "stop_loss": 4773.00,
+  "take_profit": 4644.00,
+  "stop_distance": 33.00,
+  "limit_distance": 96.00,
+  "risk_reward": 2.91,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "Re-verified H1 at 17:40 UTC: price 4736.115, H1 EMA20 4740.727, H1 RSI 43.23 — all three TFs (D1/H4/H1) trending_down with price sub-EMA. Live H1 bar is the rejection: open 4728.615 → high 4739.64 (kissed EMA from below) → close 4736.115, forming a clean upper-wick rejection right at resistance. Prior 4 H1 bars printed the full setup: 4 bars ago spiked to 4760.99 (supply cluster top 4772.38 confirmed), then dumped to 4723.995 low, now retraced back to EMA — textbook dead-cat. D1 bearish engulf (5419 ATH → 4720 yesterday) frames the larger structure. Limit at 4740 captures any final EMA retest; SL 4773 sits $0.62 above supply cluster top (4772.38) — structural invalidation. TP 4644 is prior swing low in trending_down regime. Stop 33pts = 1.83× H1 ATR (18), above XAUUSD minimum 25. RSI<50 is bearish CONFIRMATION for short thesis (rsi_below_50 insight applies to long pullbacks only).",
+  "invalidation": "H1 close above 4773 breaches the supply cluster and kills the bearish structure. Cancel limit if not filled within 6 H1 bars (~6h) or if H1 RSI closes above 55 before fill.",
+  "pine_verification": null,
+  "strategy": "ai_pullback_to_ema"
+}

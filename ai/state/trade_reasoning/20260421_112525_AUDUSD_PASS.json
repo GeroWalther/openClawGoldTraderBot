@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "H1 RSI at verification is 47.83 — BELOW 50, which triggers the rsi_below_50_invalidates_pullback_long insight (accumulated from 4+ prior PASS decisions on identical setups). Scanner's own trigger condition requires 'H1 close above EMA with RSI reclaim above 50' — neither is confirmed: current H1 bar is still LIVE (not closed), and RSI is still sub-50 despite recent recovery. The 09:54 UTC journal entry today already skipped this same AUDUSD setup at RSI 37.88; market has only partially recovered momentum, not reversed it. D1 uptrend and pullback structure are intact, but momentum confirmation is absent. Waiting for a closed H1 bar above 0.71611 with RSI back above 50 would give a cleaner entry. Taking a marginal setup here on a $140 account with no positions and a run of 7 consecutive SKIPs is the correct discipline — another setup will come.",
+  "re_verification": "Checked AUDUSD H1 at 11:24 UTC: price 0.71623, H1 EMA20 0.71611, H1 RSI 47.83. Live H1 bar O=0.71584 H=0.71635 L=0.71518 C=0.71623 — green but unclosed. Prior two bars closed at 0.71583 and 0.71520 — below EMA. No closed H1 bar above EMA yet; RSI still sub-50. Invalidation per documented insight."
+}

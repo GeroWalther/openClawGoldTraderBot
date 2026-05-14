@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "GBPUSD",
+  "reasoning": "R:R math forces TP to 1.3650, but that requires breaking through 1.3623 (50-bar high) which was just tagged at 1.36228 four hours ago and rejected 33 pips (~1.7x H1 ATR) on heavy volume — freshly-proven resistance per scanner_tp_must_clear_proven_intraday_support insight (long mirror). Honest nearest TP at 1.3623 gives only 1.05 R:R from limit 1.3600, fails 1:2 minimum. Market entry at current 1.36092 gives only 1.31 R:R even with the optimistic 1.3650 target. Additionally, H1 bars show descending highs since the 1.36228 peak (1.36228→1.36148→1.36122→1.36100), consistent with distribution under resistance rather than constructive pullback. Live H1 bar is still open — second EMA test bounce unconfirmed until close.",
+  "re_verification": "Verified H1 GBPUSD at 10:25 UTC: price 1.36092, EMA20 1.36020, RSI 63.67. Live bar low 1.3592 tagged the entry zone and recovered to 1.36092, but 1.3623 freshly-proven resistance blocks any clean R:R. Setup is location-correct but reward path is contested — better to wait for a clean break of 1.3623 with retest, OR a deeper pullback to 1.3587/1.3545 support that gives room for R:R 2 to honest TP."
+}

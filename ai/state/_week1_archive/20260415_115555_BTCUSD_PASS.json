@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "H1 EMA reclaim NOT confirmed — last completed H1 bar closed at 73,889, which is 230 points below the H1 EMA (74,119). The scanner's claim of 'H1 close above EMA' was based on the current still-open H1 bar, not a confirmed close. M15 data shows extreme choppiness with repeated failed rallies: the 10:45 M15 bar spiked to 74,259 but closed at 73,889 — a 401-point rejection candle. The same pattern could repeat before the H1 close. While M15 higher lows are forming (73,822 → 73,892 → 73,959 → 73,983 → 74,069) and the current bar at 74,251 looks strong, entering before the H1 bar closes is premature. If the 12:00 UTC H1 close prints above 74,119 with RSI holding >50, this becomes a valid setup for re-evaluation.",
+  "re_verification": "Checked H1 and M15 at 11:54 UTC. H1 EMA reclaim unconfirmed — current bar still open. M15 shows recovery structure but prior spike-and-dump pattern at same levels (74,259) warrants caution. Re-scan after 12:00 UTC H1 close."
+}

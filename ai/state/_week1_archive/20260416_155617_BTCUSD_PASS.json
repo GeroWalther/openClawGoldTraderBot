@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "Scanner flagged this as PENDING with low confidence — setup requires pullback to 74350-74450 zone, but price is at 74675, already 225+ points above the entry zone and only ~220pts off the H1 bar high of 74896. From current price to target 76120 = 1445pt reward; structural SL below 73800 = 875pt risk; R:R = 1.65 — below 2:1 minimum. Current H1 bar (still open) has already rallied 910pts off the 73957 low, so a limit at 74350-74450 means waiting for a 300+ pt retrace against strong intraday momentum that hasn't started fading. Chasing at market here is buying the top of an extended recovery bar. H1 RSI 52.64 is neutral, not confirming continuation. Better to wait for either (a) a clean pullback that actually reaches the EMA zone or (b) an H1 close above 74900 with follow-through before re-engaging.",
+  "re_verification": "Checked BTCUSD H1 at 15:55 UTC. Current price 74675, H1 EMA 74447, H1 RSI 52.64. Current H1 bar open with range 73957-74896. Price above EMA but outside entry zone, extended from low. Scanner's trigger (M15 pullback bounce in 74350-74450 with bullish reversal candle) not present — price is above the zone, not at it."
+}

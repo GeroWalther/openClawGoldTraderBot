@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Regime explicitly classifies XAUUSD as 'ranging' and places it in instruments_avoid with playbook 'Fade range extremes only — BUY near 4767 support, SELL near 4841 resistance. Skip the middle.' Current price 4797 is mid-range (4767-4841), exactly where the regime says no edge exists. Additional disqualifiers: (1) H1 RSI at 49.66 — below 50, no bullish momentum confirmation, directly contradicting scanner's 'healthy momentum' claim. (2) Last completed H1 bar closed 4796.11, only ~3pts above EMA (4793.09) — a marginal touch, not a convincing reclaim. (3) Recent H1 price action is choppy range, not trending: last 12 H1 bars show 4795→4791→4794→4789 (wicked to 4767!)→4784→4793→4803→4794→4785→4784→4796→4797. The 4767 wick 9 bars ago is textbook ranging behavior. (4) Scanner claim 'D1 trend up intact' contradicts regime's read that D1 is consolidating 4790-4800 after pulling back from 5419 high. (5) Journal shows 5+ prior XAUUSD pullback-buy evaluations today/yesterday (IDs 2,15,16,18,30) all passed for identical reasons — same failing pattern. This is the same 'touch EMA and fade in mid-range' trap.",
+  "re_verification": "Checked XAUUSD H1 at 09:09 UTC. Price 4797.21, H1 EMA 4793.09, H1 RSI 49.66 (below 50). Mid-range, no momentum, regime conflict — no edge to trade."
+}

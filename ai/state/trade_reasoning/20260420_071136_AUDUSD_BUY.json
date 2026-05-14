@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "AUDUSD",
+  "order_type": "LIMIT",
+  "entry_price": 0.71565,
+  "stop_loss": 0.71360,
+  "take_profit": 0.72200,
+  "stop_distance": 0.00205,
+  "limit_distance": 0.00635,
+  "risk_reward": 3.10,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "AUDUSD trend-pullback long verified live. D1 uptrend intact (price 0.7158 > rising EMA 0.7112, RSI 62). H4 pulling back to EMA support. H1 stop-hunt confirmed: prior bar wicked to 0.71422 then closed at 0.71563 (strong bullish reversal). Current bar (London open) continuing higher to 0.71582, holding above H1 EMA 0.71546. LIMIT 0.71565 catches a minor pullback into the upper entry zone. SL 0.71360 = 20.5 pips, ~6 pips below the wick low 0.71422 (buffer = 0.7x H1 ATR 0.0009, comfortable). TP 0.72200 just under regime resistance 0.7220 — 63.5 pips. R:R 3.10. Stop distance 20.5 pips > 15 pip AUDUSD minimum and 2.3x H1 ATR (within 3x cap). MEDIUM conviction: H1 RSI 48 not yet >50 confirmation, scanner+regime both medium confidence. No open positions, no conflicts, journal shows only one prior SKIP today.",
+  "invalidation": "H1 close below 0.71422 wick low kills thesis. Cancel limit if not filled within 4 hours.",
+  "pine_verification": null,
+  "strategy": "ai_sr_bounce_with_trend"
+}

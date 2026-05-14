@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Setup is structurally valid and R:R math works (entry 4639, SL 4668, TP 4560 = 2.75R; stop 28.83 vs $25 minimum vs 1.25x H1 ATR — all clean). Live H1 bar (14:00 UTC) shows textbook tag-and-reject: pierced zone to 4660.59 then rejected to 4639.17 ($21 upper wick). H1 RSI 63.06, EMA20 4603.08. BUT bar is still LIVE with ~22 min to close. Scanner's own instructions explicitly require waiting for H1 close confirmation, and live_bar_rejection_wait_for_close insight forbids acting on unclosed-bar rejection. If 15:00 UTC bar closes bearish in/below the zone (≤4647), the next scanner cycle will catch a confirmed setup; if it reclaims the zone (>4654), thesis is invalidated. Defer decision to post-close scan.",
+  "re_verification": "Verified XAUUSD H1 at 14:38 UTC via TradingView MCP. Live H1 bar O 4625.67, H 4660.59, L 4625.16, current 4639.17. Pierced zone, rejected, but bar unclosed. RSI 63.06 (rising), EMA20 4603.08. Wait for H1 close at 15:00 UTC — re-evaluate on next scan."
+}

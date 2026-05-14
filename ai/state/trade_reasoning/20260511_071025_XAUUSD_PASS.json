@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Counter-trend BUY against fresh regime guidance. Regime block (07:00 UTC, 9min old) explicitly requires H4 EMA reclaim (4694) AND H1 RSI>50 before revisiting BUY bias — both unmet: price 4675.42 is $19 below H4 EMA, H1 RSI 41.79 is well below 50 and DETERIORATING (was 43.05 at regime, 42.6 at scan, now 41.79). Directly triggers rsi_below_50_invalidates_pullback_long insight. Additionally, H1 EMA20 reclaim has FAILED on first attempt: live H1 bar (07:00 UTC) tested EMA20 at high 4680.39 and was rejected back to 4675.42 (red rejection bar, $5 below EMA). The 'spring at support' narrative on bar -1 is real but momentum has not followed through — RSI is decaying not basing. Scanner's claim that regime is 3-days stale is false; the regime block is 9 minutes old.",
+  "re_verification": "Checked H1 at 07:09 UTC: price 4675.42, EMA20 4679.95 (below), RSI 41.79 (below 50, falling). Live H1 bar is small red rejection at EMA. Regime layer is current (07:00 UTC timestamp)."
+}

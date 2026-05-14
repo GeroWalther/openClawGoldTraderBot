@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Scanner self-rated LOW confidence — system rule mandates PASS on low conviction. Entry at 4670 is $22 above regime's documented BUY zone (4648-4658) — this is mid-range, not at the extreme being faded. H1 RSI 40.67 still below 50 and flat (vs scanner's 41.3), no bullish momentum confirmation. The bullish engulfing 5 bars ago has failed to extend — last 2 closed H1 bars are red (4678.56 → 4667.86) with price drifting below H1 EMA20 (4676.81). Critically, an IDENTICAL trade (#2: entry 4671.63, SL 4626.99, TP 4763.99, ai_range_extreme_fade) was attempted today at 08:13 UTC and FAILED. Re-issuing the same parameters 30min later with deteriorated technicals (RSI down 0.6, price still below EMA20, no follow-through after engulfing) is a chase of a stale setup.",
+  "re_verification": "H1 verified at 08:42 UTC: price 4670.28, EMA20 4676.81 (price below), RSI 40.67. Last 2 closed bars red, retreating from 4680 area. Setup is structurally intact (4648 held) but entry quality is poor and follow-through has stalled."
+}

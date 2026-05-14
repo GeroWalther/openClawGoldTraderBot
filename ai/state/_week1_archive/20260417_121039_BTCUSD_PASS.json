@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "Target 76372 is the exact cycle high that was violently rejected only ~2 hours ago (10:00 UTC H1 bar: O 75800 → L 75124, 1248pt distribution). First retest of a freshly-rejected swing high is statistically low-probability — sellers defend it. Current price 75637 has already moved above the 75450-75620 entry zone, so a limit fill is required: with SL at 75200, R:R works only at the zone midpoint (~75535) and even then the target sits at proven rejection resistance. The bullish M15 structure (higher lows 75124→75278→75342→75402→75571, both EMAs reclaimed, H1 RSI 59.73, M15 RSI 58.60) is genuine but is a first recovery from a major distribution, not a confirmed trend continuation. Prudent play is to wait either for (a) a clean H1 close above 76372 for breakout continuation, or (b) a deeper pullback that lets the target be reset lower. Conviction is LOW — per system prompt, LOW = PASS.",
+  "re_verification": "Checked H1+M15 at 12:09 UTC. H1 EMA 75373, RSI 59.73. M15 EMA 75510, RSI 58.60. Price 75637 above both EMAs and above 75620 entry zone top. M15 higher-low structure intact. Setup is technically recovering but target/entry geometry is unfavorable and recent rejection risk remains dominant."
+}

@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Setup-already-invalidated per setup_played_out_vs_pending_taxonomy. The rejection at D1 EMA played out exactly as scanner predicted: H1 11:00 UTC bar tagged 4660.585 and rejected, then price collapsed through entry zone (4620-4635) to Friday close 4613.835 — now $6-21 BELOW the sell zone. Market entry at 4613.84 with SL 4660 / TP 4543 yields RR 1.53, fails 1:2 mandatory. Limit at 4620 yields RR 1.93, still fails. Limit at 4625 (mid-zone) gives RR 2.34 but requires weekend gap reversal against the played-out move and the recently-confirmed bearish momentum (last 4 H1 bars all bearish, -28pt cumulative).",
+  "re_verification": "Checked OANDA:XAUUSD H1 at 2026-05-02 08:04 UTC. Market closed (Saturday). Last 10 H1 bars confirm rejection-and-collapse already complete. Scanner's current_price 4625.89 is stale — actual last close 4613.835 is $12 lower. Adding: account is $140 — no live trades on a closed market in any case. Scanner data is from Friday 15:00 UTC, 17+ hours old."
+}

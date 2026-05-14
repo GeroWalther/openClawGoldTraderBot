@@ -1,0 +1,16 @@
+{
+  "action": "BUY",
+  "instrument": "GBPUSD",
+  "order_type": "MARKET",
+  "entry_price": 1.35132,
+  "stop_loss": 1.3475,
+  "take_profit": 1.3654,
+  "stop_distance": 0.00382,
+  "limit_distance": 0.01408,
+  "risk_reward": 3.68,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "Range-fade long at H1 support 1.3485. Verified live: prior H1 bar wicked to 1.34846 (fakeout below support) then current bar opened at low 1.34904 and recovered to 1.35132 — bullish engulfing intact. Price inside entry zone 1.35077-1.35164. RSI 42.14 (room to run), price reclaiming EMA at 1.35143. SL 1.3475 below fakeout low (38.2 pips, above 20pip minimum). TP 1.3654 at H1 range resistance, R:R 3.68.",
+  "invalidation": "H1 close below 1.3475 voids the fakeout-recovery thesis.",
+  "strategy": "ai_range_extreme_fade"
+}

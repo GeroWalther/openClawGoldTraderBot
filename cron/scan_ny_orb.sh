@@ -1,5 +1,5 @@
 #!/bin/bash
-# NY Opening Range Breakout scanner — runs every 5 min, 13-16 UTC (NY session window).
+# NY Opening Range Breakout scanner — runs every 5 min, 13:48-16:58 UTC (after opening range closes).
 # Scans NZDUSD using the NY ORB scoring engine.
 # Identifies the opening range from the first M15 candle after NY open (9:30 ET),
 # then watches M5 bars for breakout or false-breakout entries.
@@ -75,12 +75,8 @@ with open('$DEBOUNCE_FILE', 'w') as f:
 ORB_INSTRUMENTS=("NZDUSD")
 
 for inst in "${ORB_INSTRUMENTS[@]}"; do
-    # Skip if we already have an open position for this instrument
+    # Check for open position (gates trade execution, not scanning)
     open=$(has_open_position "$inst")
-    if [ "$open" = "yes" ]; then
-        log "NY_ORB $inst: SKIP scan — already has open position"
-        continue
-    fi
 
     json=$(api_get "/api/v1/technicals/${inst}/nyorb")
     if [ -z "$json" ]; then
@@ -114,6 +110,12 @@ for inst in "${ORB_INSTRUMENTS[@]}"; do
         if [ -n "$conviction" ] && [ "$conviction" != "None" ] && [ "$conviction" != "null" ]; then
             signals_found=$((signals_found + 1))
             log "NY_ORB $inst: SIGNAL detected ($signal, score=$score)"
+
+            # Skip trade if already has open position
+            if [ "$open" = "yes" ]; then
+                log "NY_ORB $inst: SKIP trade — already has open position"
+                continue
+            fi
 
             # Journal the analysis
             api_post "/api/v1/journal" "{

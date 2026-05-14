@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "AUDUSD",
+  "order_type": "LIMIT",
+  "entry_price": 0.71720,
+  "stop_loss": 0.71640,
+  "take_profit": 0.71960,
+  "stop_distance": 0.00080,
+  "limit_distance": 0.00240,
+  "risk_reward": 3.0,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "H1 pullback-to-EMA setup in confirmed multi-TF uptrend (D1/H4/H1 all aligned, regime HIGH confidence). H1 EMA at 0.71702 tested as support — current bar wicked to 0.71672 then bounced to 0.71732. M15 confirmation finally present after 16+ failed attempts: 11:30 UTC M15 bar closed strong at 0.71743 reclaiming M15 EMA (0.71724) on widening range. Both RSIs >50 (H1: 55.43, M15: 54.88). LIMIT at 0.71720 (M15 EMA retest) gives 8-pip risk to 0.71640 (below 0.71672 swing low + buffer = 1x H1 ATR), 24-pip reward to 0.71960 (just below 0.71980 resistance). R:R 3.0. Conviction MEDIUM — entry zone partially passed and AUDUSD has produced many touch-and-fade rejections recently, so requiring price to retest M15 EMA before entry adds confirmation.",
+  "invalidation": "H1 close below 0.71672 (today's swing low) kills thesis. Cancel if not filled within 4h.",
+  "pine_verification": null,
+  "strategy": "ai_pullback_to_ema"
+}

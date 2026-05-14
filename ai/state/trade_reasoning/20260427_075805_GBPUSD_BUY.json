@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "GBPUSD",
+  "order_type": "LIMIT",
+  "entry_price": 1.35400,
+  "stop_loss": 1.35200,
+  "take_profit": 1.35950,
+  "stop_distance": 0.00200,
+  "limit_distance": 0.00550,
+  "risk_reward": 2.75,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "GBPUSD H1 pullback-to-EMA setup verified live. Price 1.35428 inside entry zone 1.3542-1.3546. H1 EMA20 at 1.35342, price 8.6 pips above. Pullback low printed at 1.35246 (3 bars ago) and recovered cleanly — last closed bar 1.3536, current live bar pushing to 1.3547 with RSI 65.68 (bullish, not overbought). D1/H4/H1 all aligned bullish (RSI 58/58/65), trending_up regime explicitly calls for H1 EMA pullback BUYS. Limit at 1.35400 captures a small pullback for better fill rather than chasing into immediate 1.3549 resistance. SL 1.35200 sits below structural pullback low 1.35246 with ~4.6 pip buffer (1.94x H1 ATR from entry — meets 20-pip GBPUSD minimum exactly). TP 1.35950 just before regime resistance / 1.3600 round number for high fill probability. Path passes through 1.3549 minor resistance (6 pips) — main risk factor — but trending H4 consolidation at highs supports breakout odds.",
+  "invalidation": "H1 close back below 1.35246 kills thesis (loss of pullback low). Cancel limit if not filled within 4 hours or if H1 RSI rises above 72 (extended). Reduce to BE if 1.3549 cleanly breaks and price holds above.",
+  "pine_verification": null,
+  "strategy": "ai_pullback_to_ema"
+}

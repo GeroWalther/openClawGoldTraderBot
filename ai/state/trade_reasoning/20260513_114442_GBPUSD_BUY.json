@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "GBPUSD",
+  "order_type": "LIMIT",
+  "entry_price": 1.34940,
+  "stop_loss": 1.34740,
+  "take_profit": 1.35400,
+  "stop_distance": 0.00200,
+  "limit_distance": 0.00460,
+  "risk_reward": 2.30,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "H1 range-extreme fade at 1.3494 D1/H4 range support, exactly per regime playbook ('Range-fade BUY near 1.3494-1.3510 targeting D1 EMA at 1.3555'). 10:00 UTC H1 bar printed strong pin bar at the level: low 1.34939 (1 pip below 1.3494 to the pip), close 1.35073 — 134-pip lower wick recovery, classic hammer reversal at range floor. Live 11:00 UTC bar making higher low at 1.34994 (above the key level), structural confirmation forming. H1 RSI 33.92 (oversold at range support = expected for fade, not invalidating — rsi_below_50 insight applies to pullback-to-EMA setups, not range fades at extremes). H1 EMA20 1.35210 sits above as cap toward TP. Limit distance 12.4 pips from current 1.35064 = ~0.65x H1 ATR (last-6-bar avg ~19 pips), within rule 12 acceptable LIMIT range. SL 1.3474 = 20 pip minimum + 19.9 pip buffer below 1.34939 swing low. TP 1.3540 sits 15 pips below D1 EMA 1.3555 with clear air (recent bars showed 1.35421/1.35463/1.35514 highs over last 12-15h, no proven intraday resistance in path).",
+  "invalidation": "H1 close below 1.3474 kills thesis. Cancel if not filled by 15:42 UTC (4-hour expiry per rule 13).",
+  "pine_verification": null,
+  "strategy": "ai_range_extreme_fade"
+}

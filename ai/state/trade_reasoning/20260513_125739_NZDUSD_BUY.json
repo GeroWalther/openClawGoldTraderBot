@@ -1,0 +1,16 @@
+{
+  "action": "BUY",
+  "instrument": "NZDUSD",
+  "order_type": "MARKET",
+  "entry_price": 0.5922,
+  "stop_loss": 0.5905,
+  "take_profit": 0.5969,
+  "stop_distance": 0.0017,
+  "limit_distance": 0.0047,
+  "risk_reward": 2.76,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "Range floor fade at D1 support 0.5920. Current H1 bar low tagged 0.5920 exactly (50-bar low) and bounced to 0.5922. H1 RSI 31.09 oversold, price holding above support. D1 range 0.5681-0.5991 intact. SL 0.5905 below support (17 pips, meets 15 pip min). TP 0.5969 at range resistance, R:R 2.76.",
+  "invalidation": "H1 close below 0.5905.",
+  "strategy": "ai_range_extreme_fade"
+}

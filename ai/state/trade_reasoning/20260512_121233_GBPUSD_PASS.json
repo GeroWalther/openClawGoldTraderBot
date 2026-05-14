@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "GBPUSD",
+  "reasoning": "Multiple stacked hard-stops, deterministic auto-PASS. (1) SCANNER SELF-RATED LOW CONFIDENCE — system rule mandates PASS on low conviction. (2) RSI<40 SHORT-FADE AUTOPASS per short_fade_rally_rsi_oversold_autopass insight: H1 RSI verified at 29.67 — deeply below 30 (vs scanner's 30.0, decayed further). The setup requires a rally to fade; oversold RSI means the market is in active flush mode and no rally exists to short into. (3) SETUP-ALREADY-PLAYED-OUT per setup_played_out_vs_pending_taxonomy: the 10:00 UTC H1 bar already tagged the entry zone (high 1.35532 = H1 EMA20 1.35436+10pip, top of 1.354-1.355 zone) and was rejected to close 1.35331. Subsequent two closed bars (11:00 UTC C 1.35326, 12:00 UTC live C 1.35242) confirm the rejection played out — price is now 16-26 pips BELOW entry zone, making fresh lower lows. Live H1 bar (12:00 UTC, 12 min in) is RED extending down (high 1.35334, low 1.35212). (4) Chronic-GBPUSD pattern — journals #110, #113, #115, #116, #117, #118 all auto-PASSED today on the exact same structural failures.",
+  "re_verification": "Verified H1 at 12:12 UTC: price 1.35242, H1 EMA20 1.35436, H1 RSI 29.67. Entry zone 1.354-1.355 was tagged and rejected at 10:00 UTC bar (high 1.35532); price now well below, live bar red, RSI in active flush. Setup hard-dead."
+}

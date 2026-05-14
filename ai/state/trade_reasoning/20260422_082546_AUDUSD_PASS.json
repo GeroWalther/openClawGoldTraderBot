@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "Setup is at correct location with valid momentum (price 0.71648 inside entry zone 0.71635-0.71660, H1 RSI 53.17 above the 50 invalidation gate, H1 EMA20 at 0.71627 being respected, prior H1 bar was textbook EMA reclaim green candle 0.7157->0.71698). BUT scanner's SL 0.71575 is only 7 pips from current price, far below the mandatory AUDUSD minimum of 15 pips per the instrument stop table (H1 ATR 0.0012, need 1.5x = 0.0018 for proper breathing room). Applying the mandatory 15-pip minimum: entry at market 0.71648 with SL 0.71498 gives stop_distance 0.0015 and limit_distance 0.00212 to target 0.71860 = R:R 1.41. Even at best-case limit entry 0.71635 with SL 0.71485, R:R = 0.00225/0.00150 = 1.50. Both fail the 1:2 minimum. Insight rr_below_2_hard_stop_even_if_thesis_valid applies: thesis correct but entry vs structural+noise-buffered SL cannot deliver the required asymmetry. Target 0.71860 is too close relative to the noise floor for a valid pullback-to-EMA trade from this price. PASS.",
+  "re_verification": "Checked H1 at 08:24 UTC. Price 0.71648 (in entry zone), H1 EMA20 0.71627, H1 RSI 53.17. Setup structurally valid but R:R math fails mandatory stop minimum."
+}

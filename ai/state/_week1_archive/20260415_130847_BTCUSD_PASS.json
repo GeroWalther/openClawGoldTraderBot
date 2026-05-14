@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "M15 trigger condition not confirmed. Scanner required convincing M15 close above 74350 — the 12:50 UTC bar spiked to 74491 but closed only 74305, and subsequent bars are fading (74305 → 74271). This is a rejection at the confirmation level, not a breakout. H1 structure is valid (price above EMA 74173, higher lows intact from 73528), and R:R at 2.25:1 from current price now passes the minimum — but entering without the M15 trigger means buying into a fade. The consolidation 74200-74350 is constructive but needs a clean close above 74350 before committing. A limit order at H1 EMA (~74170) would offer better R:R of 2.53:1 but risks not filling if the higher-low structure holds.",
+  "re_verification": "Checked H1 and M15 at 13:08 UTC. H1 EMA 74173, RSI 52.08. M15 EMA 74212, RSI 56.94. Price 74271. M15 higher lows intact but 74350 trigger not cleared. Prior spike to 74491 was sold off — distribution, not accumulation above trigger."
+}

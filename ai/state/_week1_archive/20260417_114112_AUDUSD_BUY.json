@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "AUDUSD",
+  "order_type": "LIMIT",
+  "entry_price": 0.71715,
+  "stop_loss": 0.71605,
+  "take_profit": 0.71965,
+  "stop_distance": 0.00110,
+  "limit_distance": 0.00027,
+  "risk_reward": 2.27,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "Clean H1 pullback-to-EMA in regime-confirmed trending_up instrument (HIGH confidence, multi-TF aligned: D1 EMA 0.71027 well below, H4 above EMA 0.7167, H1 above EMA 0.71705). Current H1 bar (11:00 UTC) tested EMA with low 0.71672 and rallied to 0.71742; H1 RSI 56.51, M15 RSI 57.12 both bullish. Higher-low structure intact (06:00 swing low 0.71614 > current 11:00 low 0.71672). 07:00-08:00 rally from 0.71609 to 0.71811 established the up-leg; this is the first clean pullback. Limit at 0.71715 sits mid-zone for better fill than chasing 0.71742. Stop 0.71605 invalidates the higher-low structure (9 pips below 06:00 swing). Target 0.71965 sits 5 pips shy of 0.71970 resistance to ensure fill. Stop 11 pips = 1.37× H1 ATR (0.0008) — structurally sound, not oversized.",
+  "invalidation": "H1 close below 0.71610 invalidates higher-low structure. Cancel limit if not filled within 3h or if M15 closes below 0.71680 before fill.",
+  "pine_verification": null,
+  "strategy": "ai_pullback_to_ema"
+}

@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "BTCUSD",
+  "order_type": "LIMIT",
+  "entry_price": 74200,
+  "stop_loss": 73450,
+  "take_profit": 76120,
+  "stop_distance": 750,
+  "limit_distance": 1920,
+  "risk_reward": 2.56,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "H1 pullback-to-EMA setup in strongest D1 trend (+16%). H1 EMA reclaim confirmed (11:00 close 74207 > EMA 74155). M15 shows textbook higher-low staircase from 73822 with EMA reclaim and RSI 58.77 — trigger conditions now met for the first time today. Price at 74334 is 0.4× ATR above entry zone — LIMIT at 74200 (M15 EMA / top of H1 EMA cluster) avoids chasing while entering at structural support. SL below 73528 M15 swing low (the pullback wick extreme) with buffer. Target 76120 is prior swing high with clean air. Stop distance 750 pts = 2.1× H1 ATR — structural and reasonable.",
+  "invalidation": "H1 close below 73707 kills thesis — cancel limit. Also cancel if not filled within 4h (setup decays).",
+  "pine_verification": "No Pine script verification performed — setup verified via raw OHLCV and indicator values directly.",
+  "strategy": "ai_pullback"
+}

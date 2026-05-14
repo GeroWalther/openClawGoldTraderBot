@@ -100,8 +100,20 @@ api_get() {
 api_post() {
     local endpoint="$1"
     local data="$2"
-    curl -sf -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
-        -d "$data" "${BOT_URL}${endpoint}" 2>/dev/null
+    local http_code body tmpfile
+    tmpfile=$(mktemp)
+    http_code=$(curl -s -o "$tmpfile" -w '%{http_code}' -X POST \
+        -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
+        -d "$data" "${BOT_URL}${endpoint}" 2>/dev/null) || true
+    body=$(cat "$tmpfile" 2>/dev/null)
+    rm -f "$tmpfile"
+    if [ "$http_code" -ge 200 ] 2>/dev/null && [ "$http_code" -lt 300 ] 2>/dev/null; then
+        echo "$body"
+    elif [ -n "$http_code" ] && [ "$http_code" != "000" ]; then
+        # Return a JSON error so callers can parse status/message
+        echo "{\"status\":\"error\",\"message\":\"HTTP $http_code: $body\"}"
+    fi
+    # If http_code is 000 or empty, curl couldn't connect — return nothing (existing "no response" path)
 }
 
 # Ensure CSV has header if file doesn't exist
@@ -384,20 +396,24 @@ if timeframe == 'm15' and strategy == 'm15_sensei':
     sys.exit()
 
 # Per-instrument minimum stop distances (must match app/instruments.py)
-# Scalp (M5): SL only — ratchet exit tightens SL by 0.5R each 1R of profit
+# Scalp (M5): SL based on H1 ATR (structure-level stop), ratchet exit tightens SL
 if timeframe == 'm5':
-    m5_atr = float(d.get('technicals', {}).get('m5', {}).get('atr', 0) or 0)
-    if m5_atr > 0:
+    # FX: use H1 ATR for wider, structure-based SL; BTC: keep M5 ATR
+    if inst == 'BTC':
+        atr_val = float(d.get('technicals', {}).get('m5', {}).get('atr', 0) or 0)
+        sl_mult = 1.5
+    else:
+        atr_val = float(d.get('technicals', {}).get('h1', {}).get('atr', 0) or 0)
+        sl_mult = 2.5
+    if atr_val > 0:
         MIN_STOP_M5 = {'BTC': 250.0, 'XAUUSD': 3.0, 'AUDUSD': 0.0005, 'NZDUSD': 0.0005, 'EURUSD': 0.0005, 'GBPUSD': 0.0005}
         min_sd = MIN_STOP_M5.get(inst, 0)
         digits = 5 if inst in ('AUDUSD','NZDUSD','EURUSD','GBPUSD') else 2
-        # BTC uses 1.5×ATR SL (tighter), FX uses 2.0×ATR
-        sl_mult = 1.5 if inst == 'BTC' else 2.0
-        sd = round(max(m5_atr * sl_mult, min_sd), digits)
+        sd = round(max(atr_val * sl_mult, min_sd), digits)
         payload['stop_distance'] = sd
         payload['order_type'] = 'MARKET'
         print(json.dumps(payload))
-    # No M5 ATR data — skip trade
+    # No ATR data — skip trade
     sys.exit()
 
 MIN_STOP = {'BTC': 250.0, 'XAUUSD': 5.0, 'IBUS500': 2.0, 'MES': 2.0}

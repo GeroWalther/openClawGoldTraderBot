@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "GBPUSD",
+  "reasoning": "Setup trigger NOT met. Price at 1.35549 is 7.5 pips below H1 EMA (1.35624), failing to reclaim the key level. RSI at 50.73, below the required >55 threshold. Current H1 candle (09:00 UTC) opened at 1.35644 near EMA but sold off to 1.35549 — another rejection. Last 5 H1 bars show a pattern of highs touching 1.3564-1.3570 then selling off, with progressively lower closes (1.35655→1.35596→1.35602→1.35644→1.35549). This is distribution at the EMA, not accumulation for a breakout. Scanner confidence was already LOW, requiring EMA reclaim + RSI >55 — neither condition present. Third consecutive PASS on this instrument for same reason.",
+  "re_verification": "Checked H1 at 09:10 UTC. Quote: 1.35548. H1 EMA: 1.35624. RSI: 50.73. No bullish reclaim candle formed."
+}

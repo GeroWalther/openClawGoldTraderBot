@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "Three disqualifiers. (1) R:R fails from market. Current 77380, SL 76750 = 630pt risk; TP 78384 = 1004pt reward; RR = 1.59, below 2:1 minimum. (2) Price is 80pt above entry zone top (77300) with no pullback in progress — current H1 (19:00 UTC) already bounced from EMA 77113 tag (wick 77052) up to 77380, M15 structure making higher lows (77052→77267→77383). A limit fill in the 77050-77300 zone requires a retrace against active bullish momentum with NY close in ~67 min. (3) Target 78384 is the cycle high violently rejected ~4 hours ago (16:00 UTC H1: O 77835 → H 78384 → C 77907, then 3 consecutive lower-close H1 bars 77907→77562→77211). First retest of a freshly-rejected swing high is statistically low-probability — same disqualifier documented in journal ids 54/55/56/61/69 for this exact instrument. Journal id 69 rejected this identical setup 11 minutes ago; nothing has changed except price has extended further above the entry zone, worsening RR. Friday 19:53 UTC with weekend risk compounds the pass.",
+  "re_verification": "H1 EMA 77113, RSI 65.46, price 77380 (+267 from EMA). Current H1 bar open, bounced from 77052 low. Target 78384 is 4h-old rejected cycle high. Setup structurally forming but market entry RR = 1.59, limit entry requires retrace against momentum with 67 min to NY close."
+}

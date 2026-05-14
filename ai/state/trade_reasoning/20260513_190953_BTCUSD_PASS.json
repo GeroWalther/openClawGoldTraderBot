@@ -1,0 +1,5 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "Entry trigger (H1 close above 79,700 EMA reclaim) not met — price at 79,497 below EMA 79,694 with H1 RSI 38; watch setup has not fired."
+}

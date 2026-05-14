@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "XAUUSD",
+  "order_type": "MARKET",
+  "entry_price": 4664.13,
+  "stop_loss": 4625.00,
+  "take_profit": 4760.00,
+  "stop_distance": 39.13,
+  "limit_distance": 95.87,
+  "risk_reward": 2.45,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "Range_extreme_fade BUY at documented regime floor 4648 in XAUUSD's 4501-4765 H4 range. Floor tested twice in the last 5 hours: 05:00 UTC bar low 4648.09 (exact tag) bounced +26pt closing 4678.57; 09:00 UTC bar low 4650.80 closed back to 4656.90; live 10:00 UTC bar is bullish +7pt (4656.90→4664.13). Two-test support held = double-bottom structure. H1 RSI 39.85 (rising from 38.90) satisfies regime's 'RSI oversold confirmation near 4648-4501 support' playbook. H1 ATR 16.7 — stop 39.13pt = 2.34x ATR (within 3x sanity threshold) and 23pt below 4648 floor = 1.4x ATR buffer, well outside noise zone. Target 4760 just inside range top 4765 to avoid wick rejection. R:R 2.45. MEDIUM not HIGH because RSI not classically oversold <30 and live bar only 23min in.",
+  "invalidation": "H1 close below 4648 kills thesis. Exit if hit.",
+  "pine_verification": null,
+  "strategy": "ai_range_extreme_fade"
+}

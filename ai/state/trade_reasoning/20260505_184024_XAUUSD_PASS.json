@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Duplicate-exposure hard-stop. Pending SELL LIMIT order #34270168 already exists for XAUUSD at 4557.0 (size 1.0, SL 4584, TP 4501), submitted 10:26 UTC ~8h14m ago and still working. Current scanner proposal is the SAME instrument, SAME direction (SELL), SAME thesis (pullback-to-EMA short with D1 downtrend), and SAME zone (entry 4562-4566, SL 4593, TP 4505) — would create duplicate committed exposure on fill. Per system rule 'already have a position in this instrument? PASS', a working limit order at the identical level/direction counts as existing exposure. This is the 6th journal entry today (#58, #60, #61, #62, #63 + this) skipping on the same duplicate-exposure rationale. Scanner self-flagged this as 'lower-quality of the two playbook entries' with confidence='medium' and explicit 'size down accordingly' caveat — even absent the duplicate, the setup is sub-threshold (H1 RSI only 51, M15 choppy, D1 EMA at 4613 is the higher-conviction entry). Account NetLiq $140 cannot absorb 2x XAUUSD exposure at 1.0 size each.",
+  "re_verification": "Skipped MCP re-verification — duplicate-exposure rule fires deterministically before thesis check. Working order at 4557 with SL/TP overlapping proposed 4566/4593/4505 zone makes any new ticket a duplicate regardless of price action."
+}

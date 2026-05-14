@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Setup entry condition NOT triggered. Verified H1 at 19:22 UTC: price 4712.02, H1 EMA20 4735.39, H1 RSI 24.22. Price is 18-25 pts BELOW the 4730-4737 entry zone — the required rally to the EMA has not happened. Live H1 bar is only +2.47pts (open 4709.59, close 4712.02, high 4713.20), a very weak bounce from the 4692.46 low just one bar ago. RSI 24.22 is still deeply oversold (no meaningful recovery from scanner's 22.59) — no momentum for the rally portion of the setup yet. Scanner's own plan explicitly states 'wait for price to enter 4730-4737 zone, look for a bearish rejection candle as confirmation' — neither zone entry nor confirmation candle exists. Placing a blind SELL LIMIT at 4730 would violate the setup's conditional-entry requirement; pros wait for the rejection candle to confirm supply at the EMA before shorting. Additional caveat: account is $140 — even a minimum 0.01 lot on a 29pt stop risks ~20% of equity, so the trade needs to be A+ quality, which this pending/unconfirmed state is not.",
+  "re_verification": "XAUUSD H1 at 19:22 UTC: price 4712.02, EMA20 4735.39, RSI 24.22. Last 3 bars: 4711.27 / 4711.28 / 4712.02 close — flatlining, not rallying. Setup remains PENDING; re-evaluate when price reaches 4730-4737 AND M15 produces bearish rejection."
+}

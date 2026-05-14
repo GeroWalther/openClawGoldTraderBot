@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "GBPUSD",
+  "reasoning": "GBPUSD instruments_avoid auto-PASS per chronic_gbpusd_scanner_avoid_leak insight (now 6th+ occurrence). Regime explicitly tags GBPUSD volatile_choppy / SIT ON HANDS due to BoE rate decision today; even if BoE has passed, the 14:00 UTC regime block has not yet been refreshed to clear the sit-out. Additionally: scanner's own confirmation trigger ('bullish M15 reversal candle / strong close above 1.3622') has NOT fired per scanner_confirmation_trigger_precheck — auto-WAIT/PASS without full verification. Mirrors today's earlier journal #74 (12:54 UTC) GBPUSD pullback skip on the same EMA at the same level.",
+  "re_verification": "Skipped per duplicate-class auto-PASS policy. Regime instruments_avoid + scanner trigger pending = deterministic PASS without verification cycle."
+}

@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "BTCUSD",
+  "order_type": "LIMIT",
+  "entry_price": 74900.00,
+  "stop_loss": 73600.00,
+  "take_profit": 78384.00,
+  "stop_distance": 1300.00,
+  "limit_distance": 3484.00,
+  "risk_reward": 2.68,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "H1 pullback to EMA20 confirmed live. Current H1 bar low 74737 tested EMA at 74748 and strongly recovered to 75099 (345pt bounce within single bar). H1 RSI now 52.48 — crossed above 50 for first time today (08:24 skip had RSI 49.23, 08:54 skip had 46.16). The momentum confirmation that was missing from prior scanner runs is now present. D1 uptrend intact (+13.65% over 50 bars, price above D1 EMA). SL 73600 sits below 73753 swing low with buffer — stop distance 1300 clears BTCUSD 1200 minimum. TP 78384 at D1 resistance. LIMIT at 74900 for better entry on shallow pullback — fills on any retest of the EMA bounce zone.",
+  "invalidation": "H1 close below 73753 swing kills thesis. Cancel if not filled within 3h. Overhead supply at 75590 rejection wick — if price fails to break, trail stop above breakeven once 76000 reached.",
+  "pine_verification": null,
+  "strategy": "ai_pullback_to_ema"
+}

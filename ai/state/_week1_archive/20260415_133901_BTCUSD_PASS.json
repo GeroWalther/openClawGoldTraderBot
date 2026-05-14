@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "Setup invalidated — active selling through EMA zone, not bouncing from it. Current M15 bar (13:30 UTC) is a 354-point bearish candle (O 74420 → C 74066, low 73979), breaking well below both M15 EMA (74222) and H1 EMA (74138). M15 RSI at 47.04 shows bearish momentum, H1 RSI at 49.12 neutral/weak. The scanner required a confirming M15 momentum candle through 74280 to upgrade confidence — instead we got the opposite: a momentum candle DOWN through the EMA zone. Current H1 bar opened at 74300 and has sold off 300+ pts with a low of 73979, printing a bearish engulfing pattern against the prior bar's close of 74305. This is the 3rd BTCUSD evaluation today — same pattern of failed EMA holds. No entry.",
+  "re_verification": "Checked H1 and M15 at 13:37 UTC. H1 EMA 74138, price ~74066-74153. M15 EMA 74222, price well below. Last 3 M15 bars: 74343, 74420, 74066 — sharp reversal from highs. Pattern is breakdown, not pullback bounce."
+}

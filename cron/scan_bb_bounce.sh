@@ -74,12 +74,8 @@ with open('$DEBOUNCE_FILE', 'w') as f:
 BB_BOUNCE_INSTRUMENTS=("AUDUSD")
 
 for inst in "${BB_BOUNCE_INSTRUMENTS[@]}"; do
-    # Skip if we already have an open position for this instrument
+    # Check for open position (gates trade execution, not scanning)
     open=$(has_open_position "$inst")
-    if [ "$open" = "yes" ]; then
-        log "M15_BB_BOUNCE $inst: SKIP scan — already has open position"
-        continue
-    fi
 
     json=$(api_get "/api/v1/technicals/${inst}/m15bb")
     if [ -z "$json" ]; then
@@ -116,6 +112,12 @@ for inst in "${BB_BOUNCE_INSTRUMENTS[@]}"; do
         if [ "$is_signal" = "yes" ]; then
             signals_found=$((signals_found + 1))
             log "M15_BB_BOUNCE $inst: SIGNAL detected (score=$score)"
+
+            # Skip trade if already has open position
+            if [ "$open" = "yes" ]; then
+                log "M15_BB_BOUNCE $inst: SKIP trade — already has open position"
+                continue
+            fi
 
             # Journal the analysis
             api_post "/api/v1/journal" "{

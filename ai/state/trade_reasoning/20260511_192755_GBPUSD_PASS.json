@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "GBPUSD",
+  "reasoning": "5th stacked GBPUSD BUY scan in <2h, deterministic auto-PASS. (1) TP 1.3700 FAILS scanner_tp_must_clear_proven_intraday_support — 1.36536 was tagged and rejected TWICE today (15:00 UTC H1 high 1.36536 close 1.36497; 16:00 UTC lower high 1.36500 close 1.36412) on declining volume = freshly-proven intraday resistance. Honest nearest TP = 1.36500. (2) HONEST R:R FAILS 1:2: limit at zone bottom 1.3624 / SL 1.3600 / honest TP 1.36500 = 24pt stop / 26pt target = 1.08 R:R. Market entry worse. (3) SETUP-NOT-TRIGGERED + DETERIORATING: live price 1.36226 is now 14pt BELOW entry zone after 4 consecutive M15 lower closes (1.36369→1.36298→1.36290→1.36276→1.36226) — pullback extending against thesis, no bullish reversal. (4) M15 momentum remains bearish per scanner's own caveat. Per chronic_gbpusd_scanner_avoid_leak and pending_order_one_line_discipline insights, journals #97/#100/#101/#102 all skipped on this exact pattern today.",
+  "re_verification": "GBPUSD H1 verified 19:28 UTC. Price 1.36226, below entry zone, 4 sequential M15 lower closes confirming bearish continuation. 1.36536 still proven double-rejection. Setup invalidated."
+}

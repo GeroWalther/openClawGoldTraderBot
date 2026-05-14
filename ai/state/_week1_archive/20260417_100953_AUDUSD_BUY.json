@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "AUDUSD",
+  "order_type": "LIMIT",
+  "entry_price": 0.71710,
+  "stop_loss": 0.71585,
+  "take_profit": 0.71970,
+  "stop_distance": 0.00125,
+  "limit_distance": 0.00026,
+  "risk_reward": 2.08,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "H1 pullback to EMA in clear D1/H4/H1 uptrend (D1 RSI 64.7, H4 RSI 64, regime trending_up). Prior H1 bar (09:00 UTC) wicked to 0.71707 — direct EMA tap at 0.71701 — and closed back up at 0.71724. Current H1 holding 0.71736 above EMA with RSI 56.22 (healthy pullback, not oversold). Limit 0.71710 to catch a retest of the EMA zone (current bar low was 0.71704, retest plausible). SL 0.71585 below today's session low cluster 0.71588/0.71614 — structural invalidation of the uptrend structure. TP 0.71970 at regime first resistance and scanner target. Stop 12.5 pips = 0.89× H1 ATR (within 0.5-1.5× band).",
+  "invalidation": "H1 close below 0.71614 kills the higher-low structure. Cancel limit if unfilled within 4h.",
+  "pine_verification": null,
+  "strategy": "ai_pullback_to_ema"
+}

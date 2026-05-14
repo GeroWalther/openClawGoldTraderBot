@@ -1,0 +1,16 @@
+{
+  "action": "BUY",
+  "instrument": "XAUUSD",
+  "order_type": "MARKET",
+  "entry_price": 4672.64,
+  "stop_loss": 4628.00,
+  "take_profit": 4765.00,
+  "stop_distance": 44.64,
+  "limit_distance": 92.36,
+  "risk_reward": 2.07,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "Range-support fade at the regime-mandated extreme. Verified XAUUSD H1 at 08:11 UTC: price 4672.64 inside entry zone 4668-4674, H1 RSI 41.68 (recovering from scanner's 40.52), H1 EMA20 4677.28 (price -4.65pt below, normal for a support fade). Structural confirmation present: H1 05:00 UTC bar tested the documented 4648 range floor exactly (low 4648.09) and reversed; H1 06:00 UTC closed +26pt bullish (4652.62 -> 4678.57), the textbook bounce candle. Subsequent 07:00 H1 pulled back to 4664-4668 retest, live 08:00 bar already recovering (low 4664.46 -> 4672.64). Regime block (08:00 UTC, fresh) explicitly directs 'Fade range extremes — BUY near 4648–4500 support' with documented resistance 4764 — this setup IS the playbook, not a deviation. D1 EMA 4659 sits within the support cluster, double-confirming structure. No open positions or pending orders (prior SELL LIMIT #34270168 status=cancelled, not blocking). Math: SL 4628 = 44.64pt stop (above $25 min, ~2x H1 ATR 22, well under 3x cap) placed below range low + ~$20 ATR buffer per range-setup rules; TP 4765 at proven upper-range resistance = 92.36pt target = R:R 2.07. MEDIUM not HIGH because (a) entry is ~24pt above the optimal 4648 bounce trigger that already fired 2h ago, and (b) H1 RSI still <50, though directionally recovering. Counter-precedent (journal #85 07:10 PASS) was against the OLD 07:00 regime block which required H4 EMA reclaim — that requirement was dropped in the 08:00 regime refresh that now explicitly invites BUYs at 4648 support.",
+  "invalidation": "H1 close below 4648 kills the range-floor thesis — exit if still open. Pre-London volume should build; if H1 EMA20 (4677) cannot be reclaimed within 2-3 bars, momentum failed. Close before Friday EOD regardless (intraday hold).",
+  "strategy": "ai_range_extreme_fade"
+}

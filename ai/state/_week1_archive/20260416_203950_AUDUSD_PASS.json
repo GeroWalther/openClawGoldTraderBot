@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "Setup trigger NOT met — 14th+ identical AUDUSD pullback-to-EMA pass today. Current price 0.71615 is 2.1 pips BELOW H1 EMA (0.71636), not reclaiming it. H1 RSI 46.27 and M15 RSI 47.51 both below 50 — zero bullish momentum. Scanner explicitly requires a bullish M15 close above 0.71640 (engulfing/momentum bar) before entry — nothing close. Last 10 M15 bars are tiny-range Asian-session consolidation (current bar volume 78, prior 198, 334 — well under 1000), no reversal signature. Last 4 H1 bars printed 3 consecutive closes below the EMA (0.71590 → 0.71568 → 0.71577 → 0.71612). Entering without the trigger in thin Asian liquidity, near the end of the trading day, with price rejecting the EMA zone 4 bars running, is exactly the setup that keeps failing. Wait for trigger or skip the day.",
+  "re_verification": "Checked AUDUSD H1 + M15 via TradingView at 2026-04-16 20:38 UTC. Quote: 0.71615. H1: EMA 0.71636, RSI 46.27 — price below EMA. M15: EMA 0.71606, RSI 47.51 — marginal hold of M15 EMA but no momentum. No bullish M15 close above 0.71640 trigger. Asian-session volume decaying. Setup invalid."
+}

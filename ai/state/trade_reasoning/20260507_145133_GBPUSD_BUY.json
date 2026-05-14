@@ -1,0 +1,17 @@
+{
+  "action": "BUY",
+  "instrument": "GBPUSD",
+  "order_type": "LIMIT",
+  "entry_price": 1.36170,
+  "stop_loss": 1.35970,
+  "take_profit": 1.36580,
+  "stop_distance": 0.00200,
+  "limit_distance": 0.00410,
+  "risk_reward": 2.05,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "H1 pullback to EMA20 (1.36166) confirmed live. Current H1 bar (14:00 UTC) tagged 1.36139 below EMA and rejected to 1.36208 — textbook tag-and-reject. H1 RSI 61.58 healthy bullish (above 50, not overbought, scanner had 59.88 — momentum strengthening). D1/H4/H1 all aligned trending up per regime (trending_up, instruments_in_play). Limit at 1.36170 just above EMA captures any further intrabar dip with 20-pip SL = mandatory GBPUSD minimum. SL 1.35970 below H4 EMA 1.3604 and 1.3600 round-number — structural invalidation. TP 1.36580 = D1 resistance cluster top per regime key_levels. BoE risk passed (12:00 UTC announcement ~3h ago, not in next 2h). MEDIUM conviction (not HIGH) due to: (a) R:R 2.05 at exact minimum, (b) intermediate resistance at 1.3630 in path (today's 6h high 1.36306 rejected 10pts, borderline-proven per long mirror of scanner_tp_must_clear_proven_intraday_support). Per rule #8, recent filter has been too strict (last actual trade 2 days ago, all SKIPs since) — taking this clean structural setup at MEDIUM rather than auto-PASS on marginal R:R.",
+  "invalidation": "H1 close below 1.35970 kills thesis. Cancel if not filled within 4h (4 H1 bars).",
+  "pine_verification": null,
+  "strategy": "ai_pullback"
+}

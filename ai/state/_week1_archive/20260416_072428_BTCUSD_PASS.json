@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "No M15 bullish reversal confirmation. Price at 74,936 is below M15 EMA (74,989) and declining — M15 RSI at 50.06 is flat/neutral, not bullish. Current M15 bar (07:15 UTC) is printing 74,936 with a high of only 74,952 — no momentum. The prior M15 bar (07:00 UTC) was bearish: opened 75,055, dropped to 74,924, closed 74,930 — a 125-point selloff. The bar before that (06:45 UTC) also sold off from 75,050 to 74,886. This is a sequence of lower highs on M15 (75,181 → 75,158 → 75,123 → 75,102 → 75,092 → 74,952) — distribution, not accumulation. H1 EMA at 74,900 is only 36 pts below current price — while the H1 structure is intact (RSI 57.64, price above EMA), the entry trigger requires a M15 bullish reversal candle closing above 74,960 per the scanner's own conditions. No such candle has formed. This is the same pattern as the previous PASS (journal #21, 11 minutes ago): price sitting near H1 EMA but M15 showing weakness, not strength. Entering here is buying into a fade with no confirmation.",
+  "re_verification": "Checked H1 and M15 at 07:23 UTC. H1 current bar bearish (O 75,055, C 74,936). M15 below its EMA with neutral RSI. Setup structurally valid but trigger not met."
+}

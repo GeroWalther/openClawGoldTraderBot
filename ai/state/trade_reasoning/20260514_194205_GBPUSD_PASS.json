@@ -1,0 +1,5 @@
+{
+  "action": "PASS",
+  "instrument": "GBPUSD",
+  "reasoning": "Price 1.33977 is below entry zone 1.3408-1.3422 and current M15 bar is bearish (open 1.34052, close 1.33977, low 1.33964) — required M15 bullish close above 1.3420 trigger never fired, and price is drifting back toward the 1.3395 invalidation level."
+}

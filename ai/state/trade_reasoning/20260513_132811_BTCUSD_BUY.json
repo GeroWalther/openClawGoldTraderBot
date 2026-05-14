@@ -1,0 +1,16 @@
+{
+  "action": "BUY",
+  "instrument": "BTCUSD",
+  "order_type": "MARKET",
+  "entry_price": 80160,
+  "stop_loss": 78950,
+  "take_profit": 82833,
+  "stop_distance": 1210,
+  "limit_distance": 2673,
+  "risk_reward": 2.21,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "Pullback-to-EMA buy in D1 uptrend. Price 80160 in entry zone 80150-80400. H1 low 79825 held key 79820 support (within 5pt). M15 RSI 28.2 oversold at support — strong mean-reversion signal. Price below M15 EMA 80373 awaiting reclaim. SL widened from 79010 to 78950 to satisfy $1200 BTC minimum (1210 distance), still below 79168 structural support. Target 82833 = D1 swing high.",
+  "invalidation": "H1 close below 79820 — support break invalidates pullback thesis.",
+  "strategy": "ai_pullback_to_ema"
+}

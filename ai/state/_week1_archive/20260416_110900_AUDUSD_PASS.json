@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "Regime explicitly places AUDUSD in instruments_avoid due to stretched RSI (H4 RSI 67, D1 RSI 65) — 'wait for H1 RSI to reset further before adding longs.' Price at 0.71732 is still 2.8 pips BELOW H1 EMA (0.71760) — the pullback-to-EMA setup requires price to reclaim the EMA, not just approach it. M15 RSI at 46.49 is below 50, showing no bullish momentum confirmation. The current M15 bar (11:00 UTC) is still open with ~8 min remaining — the scanner claimed a closed bar at 0.71728 recapturing M15 EMA but this bar hasn't closed yet and could reverse. The M15 double bottom at 0.71642 is real, but the bounce from it has not produced a confirmed momentum candle above M15 EMA on a closed bar. This is the 8th AUDUSD evaluation in 2 days — every prior pass was correct as the setup repeatedly failed to trigger. Same pattern here: price approaches EMA zone but lacks the momentum to reclaim it convincingly.",
+  "re_verification": "Checked H1 and M15 at 11:07 UTC. H1 EMA 0.71760, price 0.71732 (below). M15 EMA 0.71704, RSI 46.49. Current M15 bar open, not confirmed. Regime: instruments_avoid."
+}

@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "Setup trigger NOT met. Scanner explicitly required M15 close back above 0.71406 (M15 EMA) before entry — current price 0.71388 remains below (EMA at 0.71405). Last 3 completed M15 bars closed at 0.71382, 0.71396, 0.71388 — all below M15 EMA, showing stabilisation but no reclaim. M15 RSI at 50.78 is barely holding above 50, indicating weak momentum rather than bullish recovery. No bullish engulfing candle has formed on M15. The H1 structure remains valid (EMA 0.71367, RSI 64.45, price above H1 EMA) but the M15 confirmation trigger that the scanner itself flagged as required has not fired. Entering without it would be anticipating, not confirming.",
+  "re_verification": "Checked H1 and M15 at 09:53 UTC. H1 EMA 0.71367, RSI 64.45 — trend intact. M15 EMA 0.71405, RSI 50.78, price 0.71388 — below M15 EMA. Setup structurally valid but trigger condition unmet."
+}

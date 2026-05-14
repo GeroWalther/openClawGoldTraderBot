@@ -1,0 +1,17 @@
+{
+  "action": "SELL",
+  "instrument": "XAUUSD",
+  "order_type": "LIMIT",
+  "entry_price": 4557.00,
+  "stop_loss": 4584.00,
+  "take_profit": 4501.00,
+  "stop_distance": 27.00,
+  "limit_distance": 56.00,
+  "risk_reward": 2.07,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "Verified at 10:24 UTC: price 4552.13, H1 EMA20 4547.28, H1 RSI 50.44 (declining from 53 over last 30min — falling RSI into resistance per rsi_direction_more_important_than_level insight, bearish for short). H4 EMA at 4556 has capped 5 consecutive H1 bars: highs 4558.46, 4559.57, 4560.44, 4557.16 with progressive failure — only one bar closed materially below zone, two closed inside but couldn't extend. Live H1 bar is rejection-shape (O 4556.53, H 4557.16, L 4550.73, C 4552.13) — using LIMIT not market resolves the live_bar_rejection_wait_for_close concern, since order is resting at the verified cap. Regime updated at 10:00 UTC explicitly mandates fade rallies to 4556 H4 EMA (regime conflict from journal #56 at 09:39 UTC has resolved). SL 4584 (27pts = 1.8x H1 ATR 15, above minimum 25). TP 4501 is documented regime support, not tagged in last 10 H1 bars (lowest 4525.47), clean path. R:R 2.07 meets mandatory 1:2.",
+  "invalidation": "H1 close above 4584 kills thesis (breaks H4 EMA cap conclusively). Cancel limit if not filled within 4h or if H1 closes below 4540 (price extending without giving us the rally back into zone).",
+  "pine_verification": null,
+  "strategy": "ai_sr_bounce_with_trend"
+}

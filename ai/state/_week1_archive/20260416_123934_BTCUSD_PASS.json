@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "H1 EMA reclaim NOT confirmed on a closed bar. Last completed H1 bar (11:00 UTC) closed at 74,586 — 88 pts below H1 EMA (74,674). Current H1 bar (12:00 UTC) pushed to 74,877 but is now pulling back to ~74,688 with ~22 min remaining — forming a rejection wick, not a clean reclaim. M15 momentum is already rolling over: last two completed M15 bars are bearish (74,757 → 74,721), current bar printing 74,688 with RSI 51.25 declining toward 50. This is the same pattern that has repeated all day — bounce from support, push through EMA intrabar, immediate M15 rollover with no follow-through. The 61 BTC volume spike on the bounce was notable institutional absorption, but without sustained buying above the H1 EMA on a closed bar, entering here is buying into a fading push. Wait for the 12:00 H1 bar to close above 74,674 with M15 RSI holding above 55 before re-evaluating.",
+  "re_verification": "Checked H1 and M15 at 12:38 UTC. H1 EMA 74,674, RSI 52.03. M15 EMA 74,604, RSI 51.25. Price 74,701 just barely above H1 EMA but current H1 bar not closed. M15 showing two consecutive bearish bars after the push to 74,877."
+}

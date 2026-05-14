@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "AUDUSD",
+  "reasoning": "M15 confirmation insufficient — same pattern as prior AUDUSD passes. Price at 0.71734 is 2.2 pips below H1 EMA (0.71756), failing to reclaim it. M15 RSI at 48.42 is below 50, showing no bullish momentum. The 12:00 UTC M15 bar printed a clear rejection from 0.71746 high down to 0.71679 low (6.7-pip wick), and the current M15 bar (12:45) peaked at 0.71752 (touching H1 EMA) but is already fading to 0.71733. This is the third consecutive M15 attempt at the H1 EMA zone that gets sold — distribution, not accumulation. Current H1 bar (12:00 UTC) has ~7 min remaining, printing 0.71736 below EMA 0.71756 — likely closes below. The double-bottom at 0.71642 is valid structure, but without M15 RSI >50 and a convincing closed bar above H1 EMA, entering here is buying into resistance. R:R from current price would be 2.03:1 (barely passing) but the probability is degraded by repeated EMA rejections.",
+  "re_verification": "Checked H1 and M15 at 12:53 UTC. H1 EMA 0.71756, RSI 55.86. M15 EMA 0.71719, RSI 48.42. Price 0.71734 below H1 EMA, repeatedly rejected at 0.71746-0.71752 zone."
+}

@@ -1,0 +1,5 @@
+{
+  "action": "PASS",
+  "instrument": "BTCUSD",
+  "reasoning": "Price 79101 is 700+ pts below entry zone 79800-80200; setup is pending bounce that hasn't occurred — entry zone is well beyond 0.5× ATR (34pts) for a LIMIT order."
+}

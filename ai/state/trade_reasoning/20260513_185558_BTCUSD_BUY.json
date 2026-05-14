@@ -1,0 +1,16 @@
+{
+  "action": "BUY",
+  "instrument": "BTCUSD",
+  "order_type": "MARKET",
+  "entry_price": 79606,
+  "stop_loss": 78400,
+  "take_profit": 82833,
+  "stop_distance": 1206,
+  "limit_distance": 3227,
+  "risk_reward": 2.67,
+  "conviction": "MEDIUM",
+  "hold_style": "intraday",
+  "reasoning": "D1 uptrend intact (+13% from 64955). H1 pullback tested 78704 swing-low support (last bar low = 78704 exact) and held — 3 consecutive higher H1 closes (78788→79065→79489→79606) confirm stabilization per regime playbook. Price climbing back toward H1 EMA (79749). SL at 78400 below 78500 invalidation with $100 buffer = $1206 risk (above $1200 BTC minimum). TP at 82833 prior swing high. R:R 2.67.",
+  "invalidation": "H1 close below 78500.",
+  "strategy": "ai_sr_bounce_with_trend"
+}

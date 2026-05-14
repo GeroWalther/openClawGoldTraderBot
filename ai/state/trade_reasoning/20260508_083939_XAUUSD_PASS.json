@@ -1,0 +1,6 @@
+{
+  "action": "PASS",
+  "instrument": "XAUUSD",
+  "reasoning": "Two stacked hard-stops, deterministic auto-PASS. (1) OPPOSITE-DIRECTION EXPOSURE CONFLICT: Pending SELL LIMIT order #34270168 still working on XAUUSD at 4557 (SL 4584, TP 4501) since 2026-05-05 \u2014 placing a BUY at 4716 creates contradictory committed exposure on the same instrument. If BUY fills then gets stopped at 4691 and price continues lower toward 4557, the SELL LIMIT also fills, producing offsetting opposing positions. Per system rule 'already have a position in this instrument? PASS' and consistent journal precedent #67, #70, #73, #75, #76, #77 \u2014 every XAUUSD BUY proposal since 2026-05-05 has been auto-PASSED on this exact basis. Per pending_order_same_setup_autopass insight (broadened to opposite-direction exposure conflicts), this class of conflict is established. (2) R:R FAILS 1:2 MANDATORY: Scanner's own estimated R:R is 1.96 (entry 4716, SL 4691 = 25pt stop, TP 4765 = 49pt target = 1.96). Below the 2.0 hard floor per rr_below_2_hard_stop_even_if_thesis_valid insight. Both gates fire independently \u2014 no further verification cycle warranted.",
+  "re_verification": "Skipped per chronic-class auto-PASS pattern. Pending order #34270168 confirmed in positions.recent_trades; R:R math computed directly from scanner output."
+}
