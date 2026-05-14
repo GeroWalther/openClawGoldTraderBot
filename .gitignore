@@ -41,3 +41,8 @@ htmlcov/
 # Runtime journal noise (high-churn logs, AI runtime artifacts)
 journal/cron.log
 journal/ai/
+
+# Per-tick scan/monitor snapshots (cron output, high churn)
+journal/monitors/[0-9]*.json
+journal/bb_bounce/scans/[0-9]*.json
+journal/scalp/scans/[0-9]*.json
