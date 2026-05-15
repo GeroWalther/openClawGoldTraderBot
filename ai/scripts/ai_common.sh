@@ -110,6 +110,10 @@ api_post() {
 send_telegram() {
     local msg="$1"
     [ -z "$TG_TOKEN" ] && return 0
+    # Honor AI_TG_NOTIFICATIONS_ENABLED kill-switch (defaults to enabled)
+    local enabled
+    enabled=$(grep -E '^AI_TG_NOTIFICATIONS_ENABLED=' "$ENV_FILE" 2>/dev/null | cut -d= -f2-)
+    [ "$enabled" = "false" ] && return 0
     curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
         -d chat_id="$TG_CHAT_ID" \
         -d parse_mode="Markdown" \
@@ -268,12 +272,10 @@ is_paper_instrument() {
     local inst="$1"
     # If global paper mode is on, everything is paper
     [ "$AI_PAPER_MODE" = "true" ] && return 0
-    # If AI_LIVE_INSTRUMENTS is set, only those instruments trade live
-    if [ -n "$AI_LIVE_INSTRUMENTS" ]; then
-        echo ",$AI_LIVE_INSTRUMENTS," | grep -qi ",$inst," && return 1 || return 0
-    fi
-    # No list set + paper mode off = everything live
-    return 1
+    # Empty AI_LIVE_INSTRUMENTS = nothing live (safer default)
+    [ -z "$AI_LIVE_INSTRUMENTS" ] && return 0
+    # Only instruments in the list trade live
+    echo ",$AI_LIVE_INSTRUMENTS," | grep -qi ",$inst," && return 1 || return 0
 }
 
 # ------------------------------------------------------------------
