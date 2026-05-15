@@ -69,13 +69,21 @@ async def test_forex_small_balance_returns_zero(settings):
 
 
 @pytest.mark.asyncio
-async def test_forex_adequate_balance_returns_min(settings):
+async def test_forex_min_size_exceeds_risk_returns_zero(settings):
+    """1000 NZDUSD × 0.003 stop = $3 loss > 3% of $50 = $1.50 budget → skip."""
     sizer = PositionSizer(settings)
     instrument = get_instrument("NZDUSD")
-    # 3% of 50 = 1.5. 1.5 / 0.003 = 500 → rounds to 1000 (min_size).
-    # Margin for 1000 NZDUSD at 1:30 ≈ $33 < 80% of $50 → allowed
     size = await sizer.calculate(account_balance=50, stop_distance=0.003, instrument=instrument)
-    assert size == 1000.0
+    assert size == 0.0
+
+
+@pytest.mark.asyncio
+async def test_forex_min_size_within_risk(settings):
+    """$500 × 3% = $15 budget, raw_size = $15 / 0.003 = 5000 units (rounded to 1000)."""
+    sizer = PositionSizer(settings)
+    instrument = get_instrument("NZDUSD")
+    size = await sizer.calculate(account_balance=500, stop_distance=0.003, instrument=instrument)
+    assert size == 5000.0
 
 
 @pytest.mark.asyncio
@@ -89,12 +97,12 @@ async def test_btc_cfd_sizing(settings):
 
 
 @pytest.mark.asyncio
-async def test_btc_min_size(settings):
+async def test_btc_min_size_exceeds_risk_returns_zero(settings):
+    """0.01 BTC × $50000 stop = $500 loss > 3% of $100 = $3 budget → skip."""
     sizer = PositionSizer(settings)
     instrument = get_instrument("BTC")
-    # Tiny balance → should return min_size 0.01
     size = await sizer.calculate(account_balance=100, stop_distance=50000, instrument=instrument)
-    assert size == 0.01
+    assert size == 0.0
 
 
 @pytest.mark.asyncio
@@ -108,7 +116,8 @@ async def test_defaults_to_xauusd(settings):
 
 @pytest.mark.asyncio
 async def test_conviction_high_full_risk(settings):
-    """HIGH conviction uses 3.0% risk."""
+    """HIGH conviction uses configured high_risk_pct."""
+    settings.conviction_high_risk_pct = 3.0
     sizer = PositionSizer(settings)
     instrument = get_instrument("XAUUSD")
     size = await sizer.calculate(
@@ -121,28 +130,30 @@ async def test_conviction_high_full_risk(settings):
 
 @pytest.mark.asyncio
 async def test_conviction_medium_reduced_risk(settings):
-    """MEDIUM conviction uses 3.0% risk (aggressive flat sizing)."""
+    """MEDIUM conviction uses its own risk_pct independent of HIGH."""
+    settings.conviction_medium_risk_pct = 2.0
     sizer = PositionSizer(settings)
     instrument = get_instrument("XAUUSD")
     size = await sizer.calculate(
         account_balance=10000, stop_distance=50,
         instrument=instrument, conviction="MEDIUM",
     )
-    # 3.0% of 10000 = 300 / 50 = 6
-    assert size == 6.0
+    # 2.0% of 10000 = 200 / 50 = 4
+    assert size == 4.0
 
 
 @pytest.mark.asyncio
 async def test_conviction_low_reduced_risk(settings):
-    """LOW conviction uses 3.0% risk (aggressive flat sizing)."""
+    """LOW conviction uses its own risk_pct."""
+    settings.conviction_low_risk_pct = 1.0
     sizer = PositionSizer(settings)
     instrument = get_instrument("XAUUSD")
     size = await sizer.calculate(
         account_balance=10000, stop_distance=50,
         instrument=instrument, conviction="LOW",
     )
-    # 3.0% of 10000 = 300 / 50 = 6
-    assert size == 6.0
+    # 1.0% of 10000 = 100 / 50 = 2
+    assert size == 2.0
 
 
 @pytest.mark.asyncio
@@ -173,8 +184,29 @@ async def test_conviction_disabled(settings):
 
 
 @pytest.mark.asyncio
+async def test_min_size_risk_floor_returns_zero(settings):
+    """Skip trade when broker's min_size at this stop would exceed risk budget.
+
+    Reproduces the €300 account / XAUUSD bug: 0.25% risk = $0.75,
+    but XAUUSD min lot (1 oz) × $36 stop = $36 loss → 12% of account.
+    Sizer must return 0 to refuse the trade.
+    """
+    settings.conviction_sizing_enabled = True
+    settings.conviction_medium_risk_pct = 0.25
+    sizer = PositionSizer(settings)
+    instrument = get_instrument("XAUUSD")
+    size = await sizer.calculate(
+        account_balance=330, stop_distance=36.73,
+        instrument=instrument, conviction="MEDIUM",
+    )
+    assert size == 0.0
+
+
+@pytest.mark.asyncio
 async def test_conviction_with_larger_balance(settings):
-    """Test conviction scaling with larger balance where difference is visible."""
+    """Conviction scaling produces different sizes on larger balances."""
+    settings.conviction_high_risk_pct = 3.0
+    settings.conviction_low_risk_pct = 1.0
     sizer = PositionSizer(settings)
     instrument = get_instrument("XAUUSD")
 
@@ -188,7 +220,6 @@ async def test_conviction_with_larger_balance(settings):
     )
 
     # HIGH: 3.0% of 50000 = 1500 / 100 = 15 → capped at 10 (max_size)
-    # LOW: 3.0% of 50000 = 1500 / 100 = 15 → capped at 10 (max_size)
-    # With flat 3% risk, both are identical
+    # LOW:  1.0% of 50000 = 500 / 100 = 5
     assert size_high == 10.0
-    assert size_low == 10.0
+    assert size_low == 5.0

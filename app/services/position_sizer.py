@@ -53,6 +53,20 @@ class PositionSizer:
         raw_size = risk_amount / (stop_distance * instrument.multiplier)
         size = min(raw_size, instrument.max_size)
 
+        # Risk-floor guard: if the broker's minimum lot would force a loss
+        # larger than the configured risk budget, skip the trade entirely.
+        # Without this, min_size silently overrides risk_pct on instruments
+        # like XAUUSD (min 1 oz) on small accounts.
+        min_size_risk = instrument.min_size * stop_distance * instrument.multiplier
+        if min_size_risk > risk_amount:
+            logger.warning(
+                "Position size 0: min_size %.4f %s at stop %.4f costs $%.2f, "
+                "exceeds %.3f%% risk budget $%.2f on balance $%.2f",
+                instrument.min_size, instrument.key, stop_distance,
+                min_size_risk, risk_pct, risk_amount, account_balance,
+            )
+            return 0.0
+
         # Rounding depends on instrument type
         if instrument.sec_type == "CASH":
             # Round to nearest 1000 for forex
