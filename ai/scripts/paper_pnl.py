@@ -50,19 +50,24 @@ HEADERS = [
     "ai_reasoning"
 ]
 
-# Pip values for P&L estimation (1 standard lot = 100k units for FX, 100 oz gold, 1 BTC)
+# EUR PnL conversion factor per unit per 1.0 of raw price change.
+# NOTE: pnl_pips in simulate_trade() is a RAW PRICE CHANGE (e.g. 0.0030 for FX),
+# not a pip count. So this factor must convert raw_price_change × size → EUR.
+# For USD-quoted instruments with size in base units: $ PnL = price_change × size,
+# then × 0.92 to convert USD → EUR (~1.08 USD/EUR). Prior FX values were
+# 10000× too small (treated as per-pip not per-price-unit) — fixed 2026-05-21.
+USD_TO_EUR = 0.92
 PIP_VALUE_PER_UNIT_EUR = {
-    # Approximations for €140 account context — small paper sizes mirror real
-    "XAUUSD": 0.085,  # per oz per $1 move, converted USD→EUR ~0.92
-    "EURUSD": 0.000092,
-    "AUDUSD": 0.000092,
-    "NZDUSD": 0.000092,
-    "GBPUSD": 0.000092,
-    "BTC":     0.92,
-    "BTCUSD":  0.92,
-    "US500":   0.92,   # $1/pt per 1 unit CFD
-    "NAS100":  0.92,
-    "JPN225":  0.0061, # ¥1/pt, converted to EUR
+    "XAUUSD": USD_TO_EUR,   # 1 oz × $1 move = $1 → €0.92
+    "EURUSD": USD_TO_EUR,
+    "AUDUSD": USD_TO_EUR,
+    "NZDUSD": USD_TO_EUR,
+    "GBPUSD": USD_TO_EUR,
+    "BTC":    USD_TO_EUR,   # 1 BTC × $1 move = $1 → €0.92
+    "BTCUSD": USD_TO_EUR,
+    "US500":  USD_TO_EUR,
+    "NAS100": USD_TO_EUR,
+    "JPN225": USD_TO_EUR / 150.0,  # ¥-quoted, ~150 JPY/USD
 }
 
 # Default paper size per instrument (smallest sensible)
@@ -325,7 +330,7 @@ def main():
         with open(HISTORY_FILE) as f:
             reader = csv.DictReader(f)
             for row in reader:
-                if row.get("exit_reason") in ("TP", "SL", "EXPIRED"):
+                if row.get("exit_reason") in ("TP", "SL", "EXPIRED", "MANUAL_CLOSE"):
                     existing_ids.add(row["paper_id"])
 
     # Load all decisions

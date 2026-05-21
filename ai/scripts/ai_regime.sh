@@ -16,7 +16,7 @@ USER_MSG=$(cat <<EOF
 Current UTC time: $(date -u '+%Y-%m-%d %H:%M:%S')
 Day of week: $(date -u '+%A')
 
-Read TradingView charts for: XAUUSD, AUDUSD, NZDUSD, GBPUSD, BTCUSD.
+Read TradingView charts for: XAUUSD, AUDUSD, NZDUSD, GBPUSD.
 
 For each, use the TradingView MCP tools to read D1/H4/H1 data, indicators, and S/R levels.
 Then classify the regime and output the JSON per the system prompt.

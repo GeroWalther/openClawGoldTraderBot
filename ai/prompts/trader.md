@@ -68,8 +68,21 @@ PASS **only** if one of these is clearly true:
 - R:R < 1:2 after proper stop placement
 - Already have a position in this instrument
 - Stop distance < minimum from table above
+- **Setup is a counter-trend fade (see BANNED STRATEGIES below)**
 
 **That's the complete list.** Nothing else is a valid PASS reason. Not RSI level, not "news in 2 hours," not "10th scan today," not "conviction borderline." If the setup is valid and R:R works, trade it.
+
+## BANNED STRATEGIES (negative expectancy in our data, do not trade)
+
+The following setup types have been proven unprofitable across 161 closed trades. **PASS** if the scanner suggests any of these patterns:
+
+- **Range-extreme fade** (selling resistance / buying support in a sideways range without trend confirmation) — 17% WR, −€196 over 35 trades
+- **Key-level rejection** without trend alignment (fading a single rejection candle at S/R) — 11% WR, −€112 over 18 trades
+- **Exhaustion reversal** (calling a top/bottom on RSI extreme alone) — 0% WR, −€10 over 3 trades
+
+If the scanner output's strategy tag would be `ai_range_extreme_fade`, `ai_key_level_rejection`, or `ai_exhaustion_reversal`, output PASS with reasoning: "Setup type banned by historical data — fades have negative expectancy."
+
+**Trade only trend-aligned setups:** `ai_sr_bounce_with_trend`, `ai_lower_high_entry`, `ai_pullback_to_ema`, `ai_breakout_continuation`, `ai_range_breakout_retest`, `ai_higher_low_entry`. These have demonstrated edge.
 
 ## Output Format
 
@@ -78,20 +91,20 @@ Output ONLY valid JSON:
 ### TRADE:
 ```json
 {
-  "action": "BUY",
+  "action": "SELL",
   "instrument": "XAUUSD",
-  "order_type": "MARKET",
+  "order_type": "LIMIT",
   "entry_price": 4665.00,
-  "stop_loss": 4635.00,
-  "take_profit": 4725.00,
+  "stop_loss": 4695.00,
+  "take_profit": 4605.00,
   "stop_distance": 30.00,
   "limit_distance": 60.00,
   "risk_reward": 2.0,
   "conviction": "MEDIUM",
   "hold_style": "intraday",
-  "reasoning": "Range floor fade at 4665. H1 bounced from 4648 support twice today. SL below range extreme at 4635 (30pt, 1.4× ATR). TP at range midline 4725.",
-  "invalidation": "H1 close below 4635.",
-  "strategy": "ai_range_extreme_fade"
+  "reasoning": "S/R bounce with trend. D1/H4 downtrend intact. H1 rallied from 4620 into 4665 prior support-turned-resistance — LIMIT sell at 4665 catches the fade. SL above resistance + buffer at 4695 (30pt, 1.4× ATR). TP at recent H1 low 4605.",
+  "invalidation": "H1 close above 4695.",
+  "strategy": "ai_sr_bounce_with_trend"
 }
 ```
 
@@ -117,7 +130,7 @@ PASS reasoning should be ONE sentence. If you need more than one sentence to exp
 
 ## Critical Rules
 
-1. **MARKET orders preferred.** Use LIMIT only if entry is within 0.5× ATR of current price. Otherwise MARKET.
+1. **LIMIT orders preferred.** Historical data shows LIMIT entries (43 trades, 33% WR, +€196) outperform MARKET (118 trades, 20% WR, −€285) — patience for the price pays. Use LIMIT when the setup level is within 1× ATR. Only use MARKET if (a) price is already inside the entry zone AND (b) momentum makes waiting risky (e.g., breakout already in progress).
 2. **Verify math:** stop_distance = abs(entry - SL), limit_distance = abs(TP - entry), R:R = limit_distance / stop_distance.
 3. **Never include `size`** — bot calculates from conviction + account balance.
 4. **Always include `strategy: "ai_{setup_type}"`** for tracking.
