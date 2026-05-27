@@ -386,19 +386,30 @@ def main():
         }
         results.append(row)
 
-    # Write CSV (append or rebuild)
-    mode = "w" if args.rebuild else ("a" if HISTORY_FILE.exists() else "w")
-    write_header = mode == "w" or not HISTORY_FILE.exists()
+    # Write CSV: always merge with existing data and dedupe by paper_id.
+    # Keep the row with the highest-priority exit_reason (terminal > OPEN > NO_DATA).
+    # Prevents the bug where every re-check of an OPEN trade appended another row.
+    existing_rows = []
+    if HISTORY_FILE.exists() and not args.rebuild:
+        with open(HISTORY_FILE) as f:
+            existing_rows = list(csv.DictReader(f))
 
-    with open(HISTORY_FILE, mode, newline="") as f:
+    _PRIORITY = {"MANUAL_CLOSE": 4, "TP": 4, "SL": 4, "EXPIRED": 3, "OPEN": 2, "NO_DATA": 1}
+    merged: dict[str, dict] = {}
+    for r in existing_rows + results:
+        pid = r["paper_id"]
+        cur = merged.get(pid)
+        if cur is None or _PRIORITY.get(r.get("exit_reason"), 0) > _PRIORITY.get(cur.get("exit_reason"), 0):
+            merged[pid] = r
+
+    with open(HISTORY_FILE, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=HEADERS)
-        if write_header:
-            writer.writeheader()
-        for row in results:
+        writer.writeheader()
+        for row in sorted(merged.values(), key=lambda r: r.get("decision_timestamp", "")):
             writer.writerow(row)
 
     # Write open paper trades separately for management
-    open_trades = [r for r in results if r["exit_reason"] == "OPEN"]
+    open_trades = [r for r in merged.values() if r["exit_reason"] == "OPEN"]
     OPEN_PAPER_FILE.write_text(json.dumps(open_trades, indent=2))
 
     closed = [r for r in results if r["exit_reason"] in ("TP", "SL")]
